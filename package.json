@@ -1,0 +1,34 @@
+{
+  "name": "rakosh",
+  "version": "0.0.12",
+  "description": "yet another knowledge base system -- this time with nuggets",
+  "author": "Duncan Rance",
+  "license": "MIT",
+  "bin": "./cli/main.js",
+  "engines": {
+    "node": ">=16"
+  },
+  "devDependencies": {
+    "eslint": "^8.30.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-react": "^7.31.11"
+  },
+  "dependencies": {
+    "arangojs": "^8.1.0",
+    "front-matter": "^4.0.2",
+    "fs-extra": "^11.1.0",
+    "gatsby": "^5.3.3",
+    "loglevel": "^1.8.1",
+    "markdownlint": "^0.27.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "uuid": "^9.0.0",
+    "yargs": "^17.6.2"
+  },
+  "scripts": {
+    "lint": "eslint ."
+  }
+}

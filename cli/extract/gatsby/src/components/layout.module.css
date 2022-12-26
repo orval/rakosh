@@ -1,0 +1,38 @@
+@import '../styles/colour.css';
+
+div {
+  color: #4D484A;
+}
+
+.container {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 5rem;
+  background-color: #F1489E;
+  color: white;
+  display: grid;
+  place-items: start;
+  padding-left: 2rem;
+}
+
+.main {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+.sidebar {
+  height: 100%;
+  background-color: #FFDBED;
+  padding: 1rem;
+}
+
+.content {
+  flex-grow: 1;
+  height: 100%;
+  padding: 1rem;
+}
