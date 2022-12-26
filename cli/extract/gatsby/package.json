@@ -1,0 +1,12 @@
+{
+  "name": "some-raskosh-site",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "gatsby": "^5.3.3",
+    "gatsby-plugin-mdx": "^5.3.1",
+    "@mdx-js/react": "^2.2.1"
+  }
+}
