@@ -54,6 +54,7 @@ exports.handler = async function (argv) {
     if (argv.format === 'gatsby') {
       copyTemplates(argv.directory)
       await extractNuggets(db, argv.directory)
+      await extractSeams(db, argv.directory)
       buildSite(argv.directory)
     }
   } catch (err) {
@@ -94,6 +95,42 @@ function getNuggetMdx (nugget) {
     '<Nugget %s>\n%s\n</Nugget>\n',
     Object.keys(nugget).filter(n => n !== 'body').map(n => `${n}="${nugget[n]}"`).join(' '),
     nugget.body
+  )
+}
+
+
+async function extractSeams (db, dir) {
+  const seamDir = join(dir, 'content', 'seams')
+
+  const cursor = await db.query(aql`
+    FOR v, e, p IN 1..100 OUTBOUND 'passage/adit' GRAPH 'primary'
+      FILTER IS_SAME_COLLECTION('seam', v)
+      RETURN { vertex: LAST(p.vertices) }
+  `)
+
+  log.info('extracting seams')
+
+  for await (const v of cursor) {
+    const seam = v.vertex
+    writeFileSync(
+      join(seamDir, `${seam._key}.mdx`),
+      format('---\nslug: "%s"\n---\n%s', seam._id, getSeamMdx(seam))
+    )
+  }
+}
+
+function getSeamMdx (seam) {
+  let nuggets = ''
+
+  if ('nuggets' in seam) {
+    nuggets = seam.nuggets.map(n => `<NuggetLink _key="${n}" />`).join('\n')
+  }
+
+  return format(
+    '<Seam %s>\n%s\n%s\n</Seam>\n',
+    Object.keys(seam).filter(s => s !== 'body').map(s => `${s}="${seam[s]}"`).join(' '),
+    seam.body,
+    nuggets
   )
 }
 

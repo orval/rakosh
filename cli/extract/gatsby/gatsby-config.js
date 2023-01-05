@@ -14,6 +14,13 @@ module.exports = {
         name: 'nuggets',
         path: './content/nuggets/'
       }
+    },
+    {
+      resolve: 'gatsby-source-filesystem',
+      options: {
+        name: 'seams',
+        path: './content/seams/'
+      }
     }
   ]
 }

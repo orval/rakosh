@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "yet another content management system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -13,7 +13,8 @@
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-n": "^15.0.0",
-    "eslint-plugin-promise": "^6.0.0"
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-react": "^7.31.11"
   },
   "dependencies": {
     "arangojs": "^8.1.0",
