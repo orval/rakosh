@@ -20,7 +20,6 @@ const Seam = (props) => {
     <>
       <p>SEAM: {props._key}</p>
       {props.children}
-      { /* {props.nuggets.map(n => <p>nug: {n._key}</p>)} */}
     </>
   )
 }
@@ -29,20 +28,7 @@ Seam.propTypes = {
   children: PropTypes.array.isRequired
 }
 
-const NuggetLink = (props) => {
-  return (
-    <>
-      <Nugget _key={props._key} />
-    </>
-  )
-}
-
-NuggetLink.propTypes = {
-  _key: PropTypes.string.isRequired
-}
-
 export const components = {
   Nugget,
-  Seam,
-  NuggetLink
+  Seam
 }

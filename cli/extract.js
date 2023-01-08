@@ -53,8 +53,8 @@ exports.handler = async function (argv) {
 
     if (argv.format === 'gatsby') {
       copyTemplates(argv.directory)
-      await extractNuggets(db, argv.directory)
-      await extractSeams(db, argv.directory)
+      const nuggetData = await extractNuggets(db, argv.directory)
+      await extractSeams(db, nuggetData, argv.directory)
       buildSite(argv.directory)
     }
   } catch (err) {
@@ -80,14 +80,18 @@ async function extractNuggets (db, dir) {
   `)
 
   log.info('extracting nuggets')
+  const nuggetData = {}
 
   for await (const v of cursor) {
     const nugget = v.vertex
+    nuggetData[nugget._key] = nugget
     writeFileSync(
       join(nuggetDir, `${nugget._key}.mdx`),
       format('---\nslug: "%s"\n---\n%s', nugget._id, getNuggetMdx(nugget))
     )
   }
+
+  return nuggetData
 }
 
 function getNuggetMdx (nugget) {
@@ -98,8 +102,7 @@ function getNuggetMdx (nugget) {
   )
 }
 
-
-async function extractSeams (db, dir) {
+async function extractSeams (db, nuggetData, dir) {
   const seamDir = join(dir, 'content', 'seams')
 
   const cursor = await db.query(aql`
@@ -114,16 +117,18 @@ async function extractSeams (db, dir) {
     const seam = v.vertex
     writeFileSync(
       join(seamDir, `${seam._key}.mdx`),
-      format('---\nslug: "%s"\n---\n%s', seam._id, getSeamMdx(seam))
+      format('---\nslug: "%s"\n%s---\n%s', seam._id, getSeamMdx(seam, nuggetData))
     )
   }
 }
 
-function getSeamMdx (seam) {
+function getSeamMdx (seam, nuggetData) {
   let nuggets = ''
 
   if ('nuggets' in seam) {
-    nuggets = seam.nuggets.map(n => `<NuggetLink _key="${n}" />`).join('\n')
+    // this is duplicating nugget MDX into the seam, which may not be
+    // ideal but doing a look-up within the template code is challenging
+    nuggets = seam.nuggets.map(n => getNuggetMdx(nuggetData[n])).join('\n')
   }
 
   return format(
