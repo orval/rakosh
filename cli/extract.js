@@ -38,6 +38,11 @@ exports.builder = (yargs) => {
         return d
       }
     })
+    .option('build', {
+      type: 'boolean',
+      default: true,
+      description: 'Run the build (use --no-build to not)'
+    })
 }
 
 exports.handler = async function (argv) {
@@ -55,7 +60,7 @@ exports.handler = async function (argv) {
       copyTemplates(argv.directory)
       const nuggetData = await extractNuggets(db, argv.directory)
       await extractSeams(db, nuggetData, argv.directory)
-      buildSite(argv.directory)
+      if (argv.build) buildSite(argv.directory)
     }
   } catch (err) {
     log.error(`ERROR: ${err}`)
@@ -117,7 +122,7 @@ async function extractSeams (db, nuggetData, dir) {
     const seam = v.vertex
     writeFileSync(
       join(seamDir, `${seam._key}.mdx`),
-      format('---\nslug: "%s"\n%s---\n%s', seam._id, getSeamMdx(seam, nuggetData))
+      format('---\nslug: "%s"\n---\n%s', seam._id, getSeamMdx(seam, nuggetData))
     )
   }
 }
