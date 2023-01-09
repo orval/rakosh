@@ -1,12 +1,20 @@
 import * as React from 'react'
-import { Link } from 'gatsby'
+import * as styles from './index.module.css'
 
 const IndexPage = () => {
   return (
     <main>
-      <p>
-        <Link to="nugget/49b70b98-48be-42f3-b314-ccfa469f7987">nug</Link>
-      </p>
+      <div className={styles.container}>
+        <div className={styles.topbar}>
+          <h1>Top</h1>
+        </div>
+        <div className={styles.sidebar}>
+          <h1>Side</h1>
+        </div>
+        <div className={styles.content}>
+          <h1>Content</h1>
+        </div>
+      </div>
     </main>
   )
 }
