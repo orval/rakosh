@@ -1,5 +1,7 @@
 .container {
   display: flex;
+  height: 100%;
+  flex-direction: column;
 }
 
 .topbar {
@@ -9,6 +11,12 @@
   color: white;
 }
 
+.main {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
 .sidebar {
   width: 200px;
   height: 100%;
@@ -16,6 +24,6 @@
 }
 
 .content {
-  flex: 1;
+  flex-grow: 1;
   height: 100%;
 }
