@@ -3,14 +3,15 @@ import PropTypes from 'prop-types'
 import { graphql } from 'gatsby'
 import { MDXProvider } from '@mdx-js/react'
 import { components } from '../components/shortcodes'
+import Layout from '../components/layout'
 
 export default function SeamTemplate ({ children }) {
   return (
-    <div>
+    <Layout>
       <MDXProvider components={components}>
         {children}
       </MDXProvider>
-    </div>
+    </Layout>
   )
 }
 
