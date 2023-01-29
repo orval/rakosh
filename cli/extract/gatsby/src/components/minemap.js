@@ -10,7 +10,7 @@ const data = [
   { id: '2', name: '/seam/ed742eb0-26e4-400d-af4d-4dfd715dfe85' }
 ]
 
-const Nav = () => {
+const MineMap = () => {
   return (
     <Tree
       initialData={data}
@@ -32,4 +32,4 @@ function Node ({ node, style, dragHandle }) {
   );
 }
 
-export default Nav
+export default MineMap
