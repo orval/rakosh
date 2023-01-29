@@ -1,3 +1,9 @@
+@import '../styles/colour.css';
+
+:root {
+  --primary-color: color-primary-0;
+}
+
 .container {
   display: flex;
   height: 100%;
@@ -7,7 +13,7 @@
 .topbar {
   width: 100%;
   height: 5rem;
-  background-color: #333;
+  background-color: #F1489E;
   color: white;
   display: grid;
   place-items: start;
@@ -22,7 +28,7 @@
 
 .sidebar {
   height: 100%;
-  background-color: #ccc;
+  background-color: #FFDBED;
   padding: 1rem;
 }
 
