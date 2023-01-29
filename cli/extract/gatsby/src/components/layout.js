@@ -8,7 +8,7 @@ const Layout = ({ children }) => {
     <>
       <div className={styles.container}>
         <header className={styles.topbar}>
-          <h1>Top</h1>
+          <h1>Rakosh</h1>
         </header>
         <main className={styles.main}>
           <div className={styles.sidebar}>
