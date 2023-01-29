@@ -27,7 +27,9 @@ function Node ({ node, style, dragHandle }) {
 }
 
 Node.propTypes = {
-  node: PropTypes.element.isRequired
+  node: PropTypes.object.isRequired,
+  style: PropTypes.object,
+  dragHandle: PropTypes.func
 }
 
 export default MineMap
