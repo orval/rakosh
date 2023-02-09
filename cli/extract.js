@@ -59,7 +59,8 @@ exports.handler = async function (argv) {
     if (argv.format === 'gatsby') {
       copyTemplates(argv.directory)
       const nuggetData = await extractNuggets(db, argv.directory)
-      await extractSeams(db, nuggetData, argv.directory)
+      const seamData = await extractSeams(db, nuggetData, argv.directory)
+      await generateMineMap(nuggetData, seamData, argv.directory)
       if (argv.build) buildSite(argv.directory)
     }
   } catch (err) {
@@ -117,14 +118,18 @@ async function extractSeams (db, nuggetData, dir) {
   `)
 
   log.info('extracting seams')
+  const seamData = {}
 
   for await (const v of cursor) {
     const seam = v.vertex
+    seamData[seam._key] = seam
     writeFileSync(
       join(seamDir, `${seam._key}.mdx`),
       format('---\nslug: "%s"\n---\n%s', seam._id, getSeamMdx(seam, nuggetData))
     )
   }
+
+  return seamData
 }
 
 function getSeamMdx (seam, nuggetData) {
@@ -142,6 +147,25 @@ function getSeamMdx (seam, nuggetData) {
     seam.body,
     nuggets
   )
+}
+
+function generateMineMap (nuggetData, seamData, dir) {
+  const contentDir = join(dir, 'content')
+  const mapFile = join(contentDir, 'minemap.json')
+  const data = []
+
+  for (const [, seam] of Object.entries(seamData)) {
+    data.push({ id: seam._id, name: seam.seam })
+    if ('nuggets' in seam) {
+      const children = []
+      for (const nug of seam.nuggets) {
+        children.push({ id: nug, name: nug })
+      }
+    }
+  }
+
+  console.log(data)
+  writeFileSync(mapFile, JSON.stringify(data))
 }
 
 function buildSite (dir) {
