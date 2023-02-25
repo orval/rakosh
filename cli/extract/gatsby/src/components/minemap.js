@@ -19,7 +19,7 @@ const MineMap = () => {
 function Node ({ node, style, dragHandle }) {
   return (
     <div style={style} ref={dragHandle} onClick={() => {
-      navigate(node.data.id)
+      navigate('/' + node.data.id)
     }}>
       {node.data.name}
     </div>
