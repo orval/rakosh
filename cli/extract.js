@@ -155,13 +155,20 @@ function generateMineMap (nuggetData, seamData, dir) {
   const data = []
 
   for (const [, seam] of Object.entries(seamData)) {
-    data.push({ id: seam._id, name: seam.seam })
+    const seamMap = { id: seam._id, name: seam.seam }
     if ('nuggets' in seam) {
       const children = []
       for (const nug of seam.nuggets) {
-        children.push({ id: nug, name: nug })
+        children.push({ id: `nugget/${nug}`, name: nug })
       }
+      seamMap.children = children
     }
+    data.push(seamMap)
+  }
+
+  for (const [, nugget] of Object.entries(nuggetData)) {
+    console.log(nugget)
+    data.push({ id: nugget._id, name: nugget._id })
   }
 
   console.log(data)
