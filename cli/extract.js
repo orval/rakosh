@@ -60,7 +60,7 @@ exports.handler = async function (argv) {
       copyTemplates(argv.directory)
       const nuggetData = await extractNuggets(db, argv.directory)
       const seamData = await extractSeams(db, nuggetData, argv.directory)
-      await generateMineMap(nuggetData, seamData, argv.directory)
+      await generateMineMap(db, nuggetData, seamData, argv.directory)
       if (argv.build) buildSite(argv.directory)
     }
   } catch (err) {
@@ -149,30 +149,20 @@ function getSeamMdx (seam, nuggetData) {
   )
 }
 
-function generateMineMap (nuggetData, seamData, dir) {
+async function generateMineMap (db, nuggetData, seamData, dir) {
   const contentDir = join(dir, 'content')
   const mapFile = join(contentDir, 'minemap.json')
-  const data = []
 
-  for (const [, seam] of Object.entries(seamData)) {
-    const seamMap = { id: seam._id, name: seam.seam }
-    if ('nuggets' in seam) {
-      const children = []
-      for (const nug of seam.nuggets) {
-        children.push({ id: `nugget/${nug}`, name: nug })
-      }
-      seamMap.children = children
-    }
-    data.push(seamMap)
+  const cursor = await db.query(aql`
+    FOR v, e, p IN 1..100 OUTBOUND 'passage/adit' GRAPH 'primary' RETURN p.vertices
+  `)
+
+  const mm = new MineMap()
+  for await (const p of cursor) {
+    mm.addVerticies(p)
   }
 
-  for (const [, nugget] of Object.entries(nuggetData)) {
-    console.log(nugget)
-    data.push({ id: nugget._id, name: nugget._id })
-  }
-
-  console.log(data)
-  writeFileSync(mapFile, JSON.stringify(data))
+  writeFileSync(mapFile, mm.toTree())
 }
 
 function buildSite (dir) {
@@ -200,5 +190,36 @@ function buildSite (dir) {
   } catch (err) {
     log.error(err.stdout.toString())
     log.error(err.stderr.toString())
+  }
+}
+
+class MineMap {
+  constructor () {
+    this.minemap = {}
+  }
+
+  addVerticies (vertices) {
+    let maplevel = this.minemap
+    vertices.forEach(vertex => {
+      if (!(vertex._id in maplevel)) {
+        maplevel[vertex._id] = { name: vertex._id, children: {} }
+      }
+      maplevel = maplevel[vertex._id].children
+    })
+  }
+
+  objToArr (maplevel) {
+    const arr = []
+    for (const [k, v] of Object.entries(maplevel)) {
+      v.id = k
+      v.children = this.objToArr(v.children)
+      arr.push(v)
+    }
+    return arr
+  }
+
+  toTree () {
+    const tree = this.objToArr(this.minemap)
+    return JSON.stringify(tree, null, 2)
   }
 }
