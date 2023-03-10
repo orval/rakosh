@@ -202,7 +202,10 @@ class MineMap {
     let maplevel = this.minemap
     vertices.forEach(vertex => {
       if (!(vertex._id in maplevel)) {
-        maplevel[vertex._id] = { name: vertex._id, children: {} }
+        maplevel[vertex._id] = {
+          name: ('label' in vertex) ? vertex.label : vertex._id,
+          children: {}
+        }
       }
       maplevel = maplevel[vertex._id].children
     })
