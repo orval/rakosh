@@ -1,6 +1,6 @@
 # rakosh
 
-rakosh is a place to store nuggets of information. A bit like a Content Management System, but based on small "nuggets" rather than pages.
+rakosh is a place to store nuggets of information. Like a knowledge base, yet built with small "nuggets" rather than pages.
 
 raskosh is offline-first -- for now -- this is a prototype. Data are stored in an [ArangoDB](https://github.com/arangodb/arangodb) database. In future there may be a server and a frontend. For now, there is a tool for depositing data into ArangoDB, and one for extracting it as a [Gatsby](https://www.gatsbyjs.com) site.
 

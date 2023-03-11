@@ -93,7 +93,8 @@ async function extractNuggets (db, dir) {
     nuggetData[nugget._key] = nugget
     writeFileSync(
       join(nuggetDir, `${nugget._key}.mdx`),
-      format('---\nslug: "%s"\n---\n%s', nugget._id, getNuggetMdx(nugget))
+      format('---\nslug: "%s"\nlabel: "%s"\n---\n%s',
+        nugget._id, getLabel(nugget), getNuggetMdx(nugget))
     )
   }
 
@@ -106,6 +107,17 @@ function getNuggetMdx (nugget) {
     Object.keys(nugget).filter(n => n !== 'body').map(n => `${n}="${nugget[n]}"`).join(' '),
     nugget.body
   )
+}
+
+function getLabel (vertex) {
+  if ('label' in vertex) return vertex.label
+  if (!('body' in vertex)) return vertex._key
+
+  const match = vertex.body.match(/^(#+)\s(.+)$/gm)
+  if (match) return match[0].replace(/^[#\s]*/, '')
+
+  const label = vertex.body.replace(/^\s*/, '')
+  return (label.length > 25) ? label.slice(0, 24).concat('…') : label
 }
 
 async function extractSeams (db, nuggetData, dir) {
@@ -125,7 +137,8 @@ async function extractSeams (db, nuggetData, dir) {
     seamData[seam._key] = seam
     writeFileSync(
       join(seamDir, `${seam._key}.mdx`),
-      format('---\nslug: "%s"\n---\n%s', seam._id, getSeamMdx(seam, nuggetData))
+      format('---\nslug: "%s"\nlabel: "%s"\n---\n%s',
+        seam._id, getLabel(seam), getSeamMdx(seam, nuggetData))
     )
   }
 
@@ -203,7 +216,7 @@ class MineMap {
     vertices.forEach(vertex => {
       if (!(vertex._id in maplevel)) {
         maplevel[vertex._id] = {
-          name: ('label' in vertex) ? vertex.label : vertex._id,
+          name: getLabel(vertex),
           children: {}
         }
       }
