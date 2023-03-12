@@ -147,7 +147,7 @@ async function deposit (graph, parentVertex, absolutePath) {
         let collection = NUGGET
 
         // a seam is a special flavour of nugget and goes in the SEAM collection
-        if ('seam' in nugget) {
+        if ('type' in nugget && nugget.type === 'seam') {
           log.info(`creating seam ${base}`)
           collection = SEAM
         } else {
