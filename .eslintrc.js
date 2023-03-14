@@ -14,5 +14,10 @@ module.exports = {
     ecmaVersion: 'latest'
   },
   rules: {
+  },
+  settings: {
+    react: {
+      version: 'detect'
+    }
   }
 }

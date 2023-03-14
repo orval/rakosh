@@ -1,7 +1,7 @@
 {
   "name": "rakosh",
-  "version": "0.0.9",
-  "description": "yet another content management system -- this time with nuggets",
+  "version": "0.0.10",
+  "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
   "bin": "./cli/main.js",
@@ -27,5 +27,8 @@
     "react-dom": "^18.2.0",
     "uuid": "^9.0.0",
     "yargs": "^17.6.2"
+  },
+  "scripts": {
+    "lint": "eslint ."
   }
 }
