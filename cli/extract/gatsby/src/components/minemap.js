@@ -24,8 +24,9 @@ const MineMap = () => {
 function Node ({ node, style, dragHandle }) {
   return (
     <div style={style} ref={dragHandle} onClick={() => {
-      if (node.data.id.startsWith('nugget/') || node.data.id.startsWith('seam/')) {
-        navigate('/' + node.data.id)
+      const id = node.data.id.split('|').pop()
+      if (id.startsWith('nugget/') || id.startsWith('seam/')) {
+        navigate('/' + id)
       }
     }}>
       {node.data.name}

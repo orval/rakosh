@@ -213,14 +213,16 @@ class MineMap {
 
   addVerticies (vertices) {
     let maplevel = this.minemap
+    let longId = ''
     vertices.forEach(vertex => {
-      if (!(vertex._id in maplevel)) {
-        maplevel[vertex._id] = {
+      longId = longId + '|' + vertex._id
+      if (!(longId in maplevel)) {
+        maplevel[longId] = {
           name: getLabel(vertex),
           children: {}
         }
       }
-      maplevel = maplevel[vertex._id].children
+      maplevel = maplevel[longId].children
     })
   }
 
