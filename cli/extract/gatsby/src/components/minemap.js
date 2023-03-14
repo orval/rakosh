@@ -22,13 +22,15 @@ const MineMap = () => {
 }
 
 function Node ({ node, style, dragHandle }) {
+  const handleClick = () => {
+    const id = node.data.id.split('|').pop()
+    if (id.startsWith('nugget/') || id.startsWith('seam/')) {
+      navigate('/' + id)
+    }
+  }
+
   return (
-    <div style={style} ref={dragHandle} onClick={() => {
-      const id = node.data.id.split('|').pop()
-      if (id.startsWith('nugget/') || id.startsWith('seam/')) {
-        navigate('/' + id)
-      }
-    }}>
+    <div style={style} ref={dragHandle} onClick={handleClick}>
       {node.data.name}
     </div>
   )
