@@ -213,6 +213,8 @@ class MineMap {
 
   addVerticies (vertices) {
     let maplevel = this.minemap
+
+    // a long concatenated ID is used so that the React components have unique keys
     let longId = ''
     vertices.forEach(vertex => {
       longId = longId + '|' + vertex._id
