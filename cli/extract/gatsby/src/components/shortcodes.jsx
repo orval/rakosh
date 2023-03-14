@@ -11,7 +11,10 @@ const Nugget = (props) => {
 }
 
 Nugget.propTypes = {
-  children: PropTypes.array.isRequired,
+  children: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.arrayOf(PropTypes.object)
+  ]).isRequired,
   source: PropTypes.string.isRequired
 }
 
@@ -25,7 +28,8 @@ const Seam = (props) => {
 }
 
 Seam.propTypes = {
-  children: PropTypes.array.isRequired
+  children: PropTypes.array.isRequired,
+  _key: PropTypes.string.isRequired
 }
 
 export const components = {
