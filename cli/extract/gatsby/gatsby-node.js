@@ -7,7 +7,7 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
 
   const result = await graphql(`
   {
-    nuggets: allMdx(filter: {frontmatter: {slug: {regex: "/^nugget/"}}}) {
+    nuggets: allMdx(filter: {frontmatter: {slug: {regex: "/(^nugget|^/$)/"}}}) {
       nodes {
         id
         body
