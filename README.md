@@ -36,7 +36,6 @@ Once the server is up, content laid out in a specific directory structure can be
 
 ## TODO
 
-* support for `passage: .`
 * github actions
 * write some more docs
 * define passages using symbolic links to directories in the filesystem deposit

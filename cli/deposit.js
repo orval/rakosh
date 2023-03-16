@@ -123,6 +123,10 @@ async function deposit (graph, parentVertex, path) {
         const vertex = await graph.vertexCollection(collection).save(nugget.document)
         await graph.edgeCollection(EDGES).save({ _from: parentVertex._id, _to: vertex._id })
       }
+    } else if (base === graph._db._name) {
+      // update the adit vertex with a document from this file
+      const adit = new Nugget(resolve(join(path, mdFile.name)))
+      await graph.vertexCollection(PASSAGE).update('adit', adit.document)
     }
   }
 

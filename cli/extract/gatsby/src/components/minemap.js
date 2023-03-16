@@ -30,6 +30,8 @@ function Node ({ node, style, dragHandle }) {
       navigate('/' + id)
     } else if (passageRe.test(id)) {
       navigate('/' + id.replace('passage/', 'nugget/'))
+    } else if (id === 'passage/adit') {
+      navigate('/nugget/adit')
     }
   }
 
