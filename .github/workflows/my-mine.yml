@@ -1,0 +1,15 @@
+name: rakosh my-mine example
+on: [push]
+jobs:
+  arango:
+    runs-on: ubuntu-latest
+    container: node:18-bullseye
+
+    services:
+      arango:
+        image: arangodb/arangodb:latest
+
+    steps:
+      - name: ps
+        run: |
+          docker ps --all
