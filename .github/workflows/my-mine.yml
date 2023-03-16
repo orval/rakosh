@@ -12,6 +12,7 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
-      - name: ps
-        run: |
-          /usr/bin/docker ps --all
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          cache: yarn
