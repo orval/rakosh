@@ -10,6 +10,8 @@ jobs:
         image: arangodb/arangodb:latest
 
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
       - name: ps
         run: |
-          docker ps --all
+          /usr/bin/docker ps --all
