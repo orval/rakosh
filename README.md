@@ -36,7 +36,6 @@ Once the server is up, content laid out in a specific directory structure can be
 
 ## TODO
 
-* refine/dedupe minemap
 * support for `passage: .`
 * github actions
 * write some more docs
