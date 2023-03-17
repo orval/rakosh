@@ -7,6 +7,8 @@ jobs:
 
     services:
       arango:
+        env:
+          ARANGO_NO_AUTH: 1
         image: arangodb/arangodb:latest
 
     steps:
