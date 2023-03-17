@@ -36,7 +36,7 @@ Once the server is up, content laid out in a specific directory structure can be
 
 ## TODO
 
-* github actions
+* handlebars for site generation mods
 * write some more docs
 * define passages using symbolic links to directories in the filesystem deposit
 * text search
@@ -46,4 +46,3 @@ Once the server is up, content laid out in a specific directory structure can be
 * dark mode
 * adjacent graph vertices view
 * keyboard navigation
-* handlebars for site generation mods

@@ -11,6 +11,7 @@
     "react-arborist": "^2.2.0"
   },
   "scripts": {
+    "dev": "gatsby develop",
     "deploy": "gatsby build --prefix-paths"
   }
 }
