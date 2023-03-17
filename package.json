@@ -19,13 +19,10 @@
   "dependencies": {
     "arangojs": "^8.1.0",
     "front-matter": "^4.0.2",
-    "gatsby": "^5.3.3",
     "loglevel": "^1.8.1",
     "markdownlint": "^0.27.0",
     "mustache": "^4.2.0",
     "ncp": "^2.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "uuid": "^9.0.0",
     "yargs": "^17.6.2"
   },
