@@ -6,7 +6,7 @@ module.exports = {
   {
     title: 'Extracted Gatsby Mine'
   },
-  pathPrefix: '/rakosh',
+  pathPrefix: '{{{path_prefix}}}',
   plugins: [
     'gatsby-plugin-mdx',
     {
