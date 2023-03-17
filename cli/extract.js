@@ -188,7 +188,7 @@ function buildSite (dir) {
   // gatsby build
   try {
     log.info(`running gatsby build in ${dir}`)
-    const stdout = execFileSync(gatsby, ['build'], { cwd: dir })
+    const stdout = execFileSync(gatsby, ['build', '--prefix-paths'], { cwd: dir })
     log.info(stdout.toString())
   } catch (err) {
     log.error(err.stdout.toString())
