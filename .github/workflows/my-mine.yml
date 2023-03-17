@@ -18,3 +18,5 @@ jobs:
           cache: yarn
       - run: yarn install --frozen-lockfile
       - run: yarn run lint
+      - name: deposit my-mine
+        run: node ./cli/main.js deposit examples/my-mine -v
