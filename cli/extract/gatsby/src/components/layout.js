@@ -8,6 +8,7 @@ const Layout = ({ children }) => {
     <>
       <div className={styles.container}>
         <header className={styles.topbar}>
+          {/* eslint-disable-next-line */}
           <h1>{{mine_name}}</h1>
         </header>
         <main className={styles.main}>
