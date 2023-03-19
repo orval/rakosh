@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -14,7 +14,8 @@
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-n": "^15.0.0",
     "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-react": "^7.31.11"
+    "eslint-plugin-react": "^7.32.2",
+    "react": "^18.2.0"
   },
   "dependencies": {
     "arangojs": "^8.1.0",
