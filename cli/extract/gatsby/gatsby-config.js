@@ -4,9 +4,9 @@
 module.exports = {
   siteMetadata:
   {
-    title: 'Extracted Gatsby Mine'
+    title: '{{{mine_name}}}'
   },
-  pathPrefix: '/rakosh',
+  pathPrefix: '{{{path_prefix}}}',
   plugins: [
     'gatsby-plugin-mdx',
     {

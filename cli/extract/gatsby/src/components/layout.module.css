@@ -12,7 +12,7 @@ div {
 
 .topbar {
   height: 5rem;
-  background-color: #F1489E;
+  background-color: {{{main_bg_color}}};
   color: white;
   display: grid;
   place-items: start;

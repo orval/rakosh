@@ -21,15 +21,13 @@ Nugget.propTypes = {
 const Seam = (props) => {
   return (
     <>
-      <p>SEAM: {props._key}</p>
       {props.children}
     </>
   )
 }
 
 Seam.propTypes = {
-  children: PropTypes.array.isRequired,
-  _key: PropTypes.string.isRequired
+  children: PropTypes.array.isRequired
 }
 
 export const components = {

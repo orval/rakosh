@@ -1,18 +1,21 @@
 'use strict'
-const { statSync, existsSync, writeFileSync } = require('node:fs')
+const { statSync, existsSync, writeFileSync, readFileSync } = require('node:fs')
 const { join } = require('node:path')
 const { execFileSync } = require('node:child_process')
 const { format } = require('node:util')
 const { Database } = require('arangojs')
 const { aql } = require('arangojs/aql')
-const { copySync } = require('fs-extra')
+const ncp = require('ncp').ncp
+const mustache = require('mustache')
+const util = require('util')
+const ncpp = util.promisify(ncp)
 const { MineMap } = require('./extract/lib/minemap')
 const { Nugget } = require('../lib/nugget')
 const log = require('loglevel')
 
 log.setLevel('WARN')
 
-exports.command = 'extract <format> <mine> <directory>'
+exports.command = 'extract <format> <mine> <sitecustom> <directory>'
 
 exports.describe = 'Extract the data from a mine into some output format'
 
@@ -26,6 +29,19 @@ exports.builder = (yargs) => {
     .positional('mine', {
       describe: 'The name of the mine to extract',
       string: true
+    })
+    .positional('sitecustom', {
+      describe: 'A JSON file for site customizations',
+      string: true,
+      normalize: true,
+      coerce: f => {
+        try {
+          if (!statSync(f).isFile()) throw new Error('not a file')
+          return JSON.parse(readFileSync(f, 'utf8'))
+        } catch (err) {
+          throw new Error(`${f} cannot be read [${err}]`)
+        }
+      }
     })
     .positional('directory', {
       describe: 'Target directory into which to extract the data',
@@ -59,7 +75,7 @@ exports.handler = async function (argv) {
     log.info(`extracting to ${argv.directory}`)
 
     if (argv.format === 'gatsby') {
-      copyTemplates(argv.directory)
+      await copyTemplates(argv.directory, argv.sitecustom)
       const nuggetData = await extractNuggets(db, argv.directory)
       const seamData = await extractSeams(db, nuggetData, argv.directory)
       await generateMineMap(db, nuggetData, seamData, argv.directory)
@@ -71,11 +87,26 @@ exports.handler = async function (argv) {
   }
 }
 
-function copyTemplates (dir) {
-  // copy template layout to target directory
+async function copyTemplates (dir, customizations) {
+  // copy and transform template layout to target directory
   log.info(`copy template files to target directory ${dir}`)
   const templateDir = join(__dirname, 'extract', 'gatsby')
-  copySync(templateDir, dir)
+
+  const options = {
+    transform: function (read, write) {
+      let template = ''
+      read.on('data', function (chunk) {
+        template += chunk
+      })
+      read.on('end', function () {
+        const output = mustache.render(template, customizations)
+        write.write(output)
+        write.end()
+      })
+    }
+  }
+
+  await ncpp(templateDir, dir, options)
 }
 
 async function extractNuggets (db, dir) {
