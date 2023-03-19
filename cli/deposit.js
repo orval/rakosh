@@ -8,6 +8,9 @@ const log = require('loglevel')
 
 log.setLevel('WARN')
 
+const RAKOSH_SCHEMA_VERSION = '0.1'
+const RAKOSH_FS_LAYOUT_VERSION = '0.1'
+
 const PRIMARY = 'primary'
 const PASSAGE = 'passage'
 const EDGES = 'edges'
@@ -88,7 +91,11 @@ async function createGraph (db, directory) {
     }
   ])
 
-  const adit = await graph.vertexCollection(PASSAGE).save({ _key: 'adit' })
+  const adit = await graph.vertexCollection(PASSAGE).save({
+    _key: 'adit',
+    schema_version: RAKOSH_SCHEMA_VERSION
+  })
+
   await deposit(graph, adit, directory)
   await createLinks(graph, directory)
   await createSeams(db, graph)
@@ -126,6 +133,14 @@ async function deposit (graph, parentVertex, path) {
     } else if (base === graph._db._name) {
       // update the adit vertex with a document from this file
       const adit = new Nugget(resolve(join(path, mdFile.name)))
+
+      // check for presence of layout version -- allow for later version changes
+      if (!adit.fs_layout) {
+        log.warn(`WARNING: no 'fs_layout' in ${base}.md, assuming version ${RAKOSH_FS_LAYOUT_VERSION}`)
+      } else if (adit.fs_layout !== RAKOSH_FS_LAYOUT_VERSION) {
+        log.error(`ERROR: unknown 'fs_layout' ${adit.fs_layout}, tool knows ${RAKOSH_FS_LAYOUT_VERSION}`)
+      }
+
       await graph.vertexCollection(PASSAGE).update('adit', adit.document)
     }
   }
