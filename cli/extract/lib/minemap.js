@@ -74,8 +74,18 @@ exports.MineMap = class MineMap {
     return dedupeLevel(this.minemap)
   }
 
-  toTree () {
-    const tree = this.#objToArr(this.#dedupe())
+  #seamsOnly (level) {
+    for (const vertex of Object.values(level)) {
+      if (vertex.type === 'seam') vertex.children = {}
+      else this.#seamsOnly(vertex.children)
+    }
+    return level
+  }
+
+  toTree (seamsOnly = false) {
+    let deduped = this.#dedupe()
+    if (seamsOnly) deduped = this.#seamsOnly(deduped)
+    const tree = this.#objToArr(deduped)
     return JSON.stringify(tree, null, 2)
   }
 }
