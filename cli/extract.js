@@ -1,5 +1,5 @@
 'use strict'
-const { statSync, existsSync, writeFileSync, readFileSync } = require('node:fs')
+const { statSync, writeFileSync, readFileSync } = require('node:fs')
 const { join } = require('node:path')
 const { execFileSync } = require('node:child_process')
 const { format } = require('node:util')
@@ -200,16 +200,12 @@ async function generateMineMap (db, nuggetData, seamData, dir) {
 }
 
 function buildSite (dir) {
-  const gatsby = join(__dirname, '..', 'node_modules', '.bin', 'gatsby')
-  if (!existsSync(gatsby)) {
-    log.error(`gatsby executable ${gatsby} does not exist`)
-    process.exit(1)
-  }
+  // assume npm is installed for now
+  const manager = 'npm'
 
-  // gatsby needs to be installed locally to the extract
   try {
     log.info(`running npm install in ${dir}`)
-    const stdout = execFileSync('npm', ['install'], { cwd: dir })
+    const stdout = execFileSync(manager, ['install'], { cwd: dir })
     log.info(stdout.toString())
   } catch (err) {
     log.error(err.stdout.toString())
@@ -219,7 +215,7 @@ function buildSite (dir) {
   // gatsby build
   try {
     log.info(`running gatsby build in ${dir}`)
-    const stdout = execFileSync(gatsby, ['build', '--prefix-paths'], { cwd: dir })
+    const stdout = execFileSync(manager, ['run', 'deploy'], { cwd: dir })
     log.info(stdout.toString())
   } catch (err) {
     log.error(err.stdout.toString())
