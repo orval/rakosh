@@ -1,5 +1,5 @@
 {
-  "name": "some-raskosh-site",
+  "name": "{{{mine_label}}}",
   "private": true,
   "engines": {
     "node": ">=18"

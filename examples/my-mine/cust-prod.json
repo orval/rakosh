@@ -1,7 +1,7 @@
 { 
   "mine_name": "My Rakosh Mine",
   "mine_label": "my-mine",
-  "path_prefix": "/",
+  "path_prefix": "/rakosh",
   "main_bg_color": "#F1489E"
 }
 

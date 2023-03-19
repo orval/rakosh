@@ -4,7 +4,7 @@
 module.exports = {
   siteMetadata:
   {
-    title: 'Extracted Gatsby Mine'
+    title: '{{{mine_name}}}'
   },
   pathPrefix: '{{{path_prefix}}}',
   plugins: [
