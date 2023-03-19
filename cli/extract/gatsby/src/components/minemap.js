@@ -17,6 +17,7 @@ const MineMap = () => {
       disableEdit={true}
       disableDrag={true}
       disableDrop={true}
+      indent={50}
     >
       {Node}
     </Tree>

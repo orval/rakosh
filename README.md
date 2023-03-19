@@ -41,7 +41,6 @@ Once the server is up, content laid out in a specific directory structure can be
 * text search
 * "tags" for search (plus author)
 * minemap search
-* minemap collapse/expand
 * dark mode
 * adjacent graph vertices view
 * keyboard navigation
