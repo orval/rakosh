@@ -30,6 +30,7 @@ exports.MineMap = class MineMap {
     for (const [k, v] of Object.entries(maplevel)) {
       v.id = k
       v.children = this.#objToArr(v.children)
+      if (v.children.length === 0) delete v.children
       arr.push(v)
     }
     return arr
