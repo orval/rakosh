@@ -38,9 +38,10 @@ Once the server is up, content laid out in a specific directory structure can be
 
 * write some more docs
 * define passages using symbolic links to directories in the filesystem deposit
-* text search
-* "tags" for search (plus author)
 * minemap search
-* dark mode
+* "tags" for search (plus author)
+* text search
 * adjacent graph vertices view
 * keyboard navigation
+* embedded images
+* dark mode
