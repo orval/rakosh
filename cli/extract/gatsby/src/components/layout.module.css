@@ -26,6 +26,7 @@ div {
 }
 
 .sidebar {
+  flex-grow: 1;
   height: 100%;
   background-color: #FFDBED;
   padding: 1rem;
@@ -33,6 +34,7 @@ div {
 
 .content {
   flex-grow: 1;
+  flex-basis: 80%;
   height: 100%;
   padding: 1rem;
 }

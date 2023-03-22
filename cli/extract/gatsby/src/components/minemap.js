@@ -4,25 +4,38 @@ import { navigate } from 'gatsby'
 import { Tree } from 'react-arborist'
 import { IoCaretDown, IoCaretForward } from 'react-icons/io5'
 import minemapJson from '../../content/minemap.json'
+import * as styles from './minemap.module.css'
 
 const passageRe = /^passage\/[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/
 
 const MineMap = () => {
+  const [searchTerm, setSearchTerm] = React.useState('')
+
   return (
-    <Tree
-      initialData={minemapJson.initialData}
-      width={500}
-      rowHeight={30}
-      selectionFollowsFocus={true}
-      disableMultiSelection={true}
-      disableEdit={true}
-      disableDrag={true}
-      disableDrop={true}
-      indent={14}
-      initialOpenState={minemapJson.initialOpenState}
-    >
-      {Node}
-    </Tree>
+    <div className={styles.minemap}>
+      <div className={styles.mapsearch}>
+        <input
+          className={styles.mapsearchbox}
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.currentTarget.value)} />
+      </div>
+      <Tree
+        className={styles.tree}
+        initialData={minemapJson.initialData}
+        rowHeight={30}
+        selectionFollowsFocus={true}
+        disableMultiSelection={true}
+        disableEdit={true}
+        disableDrag={true}
+        disableDrop={true}
+        indent={14}
+        initialOpenState={minemapJson.initialOpenState}
+        searchTerm={searchTerm}
+      >
+        {Node}
+      </Tree>
+    </div>
   )
 }
 
