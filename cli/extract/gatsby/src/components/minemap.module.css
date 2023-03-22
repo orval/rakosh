@@ -1,0 +1,19 @@
+.minemap {
+  display: flex;
+  flex-direction: column;
+}
+
+.mapsearch {
+  order: 0;
+  margin-bottom: 1em;
+}
+
+.mapsearchbox {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: larger;
+}
+
+.tree {
+  order: 1;
+}
