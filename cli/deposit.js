@@ -8,7 +8,7 @@ const log = require('loglevel')
 
 log.setLevel('WARN')
 
-const RAKOSH_SCHEMA_VERSION = '0.1'
+const RAKOSH_SCHEMA_VERSION = '0.2'
 const RAKOSH_FS_LAYOUT_VERSION = '0.1'
 
 const PRIMARY = 'primary'
@@ -148,7 +148,7 @@ async function deposit (graph, parentVertex, path) {
   for (const dir of dirs) {
     const doc = (dir.name in passageNuggets)
       ? passageNuggets[dir.name].document
-      : { label: dir.name }
+      : { label: dir.name, passage: dir.name }
 
     // create a package vertex and recurse down the directory tree
     log.info(`creating passage ${dir.name} ${doc.label}`)

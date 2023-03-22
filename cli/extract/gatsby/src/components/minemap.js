@@ -6,7 +6,7 @@ import { IoCaretDown, IoCaretForward } from 'react-icons/io5'
 import minemapJson from '../../content/minemap.json'
 import * as styles from './minemap.module.css'
 
-const passageRe = /^passage\/[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/
+const passageNuggetRe = /^passage\/[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/
 
 const MineMap = () => {
   const [searchTerm, setSearchTerm] = React.useState('')
@@ -41,24 +41,26 @@ const MineMap = () => {
 
 function Node ({ node, style, dragHandle }) {
   const handleClick = (event) => {
-    // just open/close the node if the arrow has been clicked
-    if (event.target.tagName !== 'div') {
-      node.toggle()
-      return
-    }
-
     const id = node.data.id.split('|').pop()
-    if (id.startsWith('nugget/') || id.startsWith('seam/')) {
+
+    // navigate to clicked content or toggle the node open/closed
+    if (event.target.dataset.type === 'nugget' || event.target.dataset.type === 'seam') {
       navigate('/' + id)
-    } else if (passageRe.test(id)) {
-      navigate('/' + id.replace('passage/', 'nugget/'))
-    } else if (id === 'passage/adit') {
-      navigate('/')
+    } else if (event.target.dataset.type === 'passage') {
+      if (passageNuggetRe.test(id)) {
+        navigate('/' + id.replace('passage/', 'nugget/'))
+      } else if (id === 'passage/adit') {
+        navigate('/')
+      } else {
+        node.toggle()
+      }
+    } else {
+      node.toggle()
     }
   }
 
   return (
-    <div style={style} ref={dragHandle} onClick={handleClick}>
+    <div data-type={node.data.type} style={style} ref={dragHandle} onClick={handleClick}>
       <MapArrow node={node} />
       {node.data.name}
     </div>
