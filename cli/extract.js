@@ -121,6 +121,7 @@ async function extractNuggets (db, dir) {
   async function writeNugs (cursor) {
     const nuggetData = {}
     for await (const nugget of cursor) {
+      if (!nugget.body) continue
       nuggetData[nugget._key] = nugget
       const slug = (nugget._key === 'adit') ? '/' : nugget._id.replace('passage', 'nugget')
       writeFileSync(
