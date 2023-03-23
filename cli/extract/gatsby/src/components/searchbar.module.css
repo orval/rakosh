@@ -1,0 +1,9 @@
+.searchform {
+  display: flex;
+  align-content: center;
+}
+
+.field {
+  height: 2rem;
+  font-size: larger;
+}

@@ -14,9 +14,22 @@ div {
   height: 5rem;
   background-color: {{{main_bg_color}}};
   color: white;
-  display: grid;
-  place-items: start;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.minename {
+  display: flex;
+  flex-grow: 1;
   padding-left: 2rem;
+}
+
+.searchbar {
+  display: flex;
+  flex-grow: 1;
+  flex-basis: 80%;
+  justify-content: center;
 }
 
 .main {
