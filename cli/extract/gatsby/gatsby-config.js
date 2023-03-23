@@ -22,6 +22,36 @@ module.exports = {
         name: 'seams',
         path: './content/seams/'
       }
+    },
+    {
+      resolve: 'gatsby-plugin-local-search',
+      options: {
+        name: 'prospect',
+        engine: 'flexsearch',
+        query: `{
+          allMdx {
+            nodes {
+              id
+              body
+              frontmatter {
+                slug
+                label
+              }
+              internal {
+                contentFilePath
+              }
+            }
+          }
+        }`,
+        ref: 'id',
+        normalizer: ({ data }) =>
+          data.allMdx.nodes.map((node) => ({
+            id: node.id,
+            slug: node.frontmatter.slug,
+            label: node.frontmatter.label,
+            body: node.body
+          }))
+      }
     }
   ]
 }

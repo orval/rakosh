@@ -5,14 +5,18 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@mdx-js/react": "^2.3",
+    "formik": "^2",
     "gatsby": "^5.7",
     "gatsby-plugin-mdx": "^5.7",
     "gatsby-source-filesystem": "^5",
-    "@mdx-js/react": "^2.3",
+    "gatsby-plugin-local-search": "^2",
     "react": "^18",
     "react-dom": "^18",
     "react-arborist": "^3",
-    "react-icons": "^4.8"
+    "react-icons": "^4.8",
+    "react-use-flexsearch": "^0.1",
+    "react-modal": "^3.16"
   },
   "scripts": {
     "dev": "gatsby develop",
