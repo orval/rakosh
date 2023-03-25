@@ -5,7 +5,7 @@ const Nugget = (props) => {
   return (
     <>
       {props.children}
-      <a href={props.source}>edit</a>
+      {/* <a href={props.source}>edit</a> */}
     </>
   )
 }

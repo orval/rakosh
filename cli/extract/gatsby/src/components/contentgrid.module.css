@@ -1,0 +1,20 @@
+@import url('../styles/colour.css');
+
+.grid {
+  height: 100%;
+  display: grid;
+  grid-template-columns: [inbound] 20% [main] 60% [outbound] 20% [last];
+  grid-template-rows: [inbound] 20% [main-a] 30% [main-b] 30% [outbound] 20% [last];
+  grid-template-areas:
+    "one   two  three" 
+    "four  main five " 
+    "six   main seven" 
+    "eight nine ten  ";
+}
+
+.main {
+  grid-area: main;
+  border-radius: 2rem;
+  border: 0.5rem solid var(--color-nugget);
+  padding: 2rem;
+}

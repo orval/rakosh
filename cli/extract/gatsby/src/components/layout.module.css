@@ -1,9 +1,5 @@
 @import '../styles/colour.css';
 
-div {
-  color: #4D484A;
-}
-
 .container {
   display: flex;
   height: 100%;
@@ -50,5 +46,8 @@ div {
   flex-grow: 1;
   flex-basis: 80%;
   height: 100%;
-  padding: 1rem;
+}
+
+.main {
+  grid-area: main;
 }

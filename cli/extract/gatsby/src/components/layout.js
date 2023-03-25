@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import * as styles from './layout.module.css'
 import MineMap from '../components/minemap'
 import SearchBar from '../components/searchbar'
+import ContentGrid from '../components/contentgrid'
 
 const Layout = ({ children }) => {
   return (
@@ -20,7 +21,9 @@ const Layout = ({ children }) => {
             <MineMap />
           </div>
           <div className={styles.content}>
-            {children}
+            <ContentGrid>
+              {children}
+            </ContentGrid>
           </div>
         </main>
       </div>

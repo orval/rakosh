@@ -36,10 +36,16 @@ Once the server is up, content laid out in a specific directory structure can be
 
 ## TODO
 
-* write some more docs
-* define passages using symbolic links to directories in the filesystem deposit
-* "tags" for search (plus author)
 * adjacent graph vertices view
+* define passages using symbolic links to directories in the filesystem deposit
+* write some more docs
+* make more of the CSS configurable
+* "tags" for search (plus author)
 * keyboard navigation
 * embedded images
 * dark mode
+* support `<link>` links in markdown
+
+## Writing Markdown
+
+Note that writing a link with angle brackets does not work. E.g. `some text then a <http://link.to.example.com>`
