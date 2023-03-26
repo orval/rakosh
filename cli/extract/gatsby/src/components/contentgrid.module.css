@@ -18,3 +18,10 @@
   border: 0.5rem solid var(--color-nugget);
   padding: 2rem;
 }
+
+.prev {
+  grid-area: two;
+  border-radius: 2rem;
+  border: 0.5rem solid var(--color-passage);
+  padding: 2rem;
+}
