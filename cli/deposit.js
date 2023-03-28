@@ -3,7 +3,7 @@ const { statSync, readdirSync } = require('node:fs')
 const { basename, join, resolve, extname } = require('node:path')
 const { Database } = require('arangojs')
 const { aql } = require('arangojs/aql')
-const { Nugget } = require('../lib/nugget')
+const { Nugget } = require('./lib/nugget')
 const log = require('loglevel')
 
 log.setLevel('WARN')

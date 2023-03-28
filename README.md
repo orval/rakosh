@@ -43,6 +43,7 @@ Once the server is up, content laid out in a specific directory structure can be
 * "tags" for search (plus author)
 * keyboard navigation
 * embedded images
+* breadcrumbs & metadata view
 * dark mode
 * support `<link>` links in markdown
 

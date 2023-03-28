@@ -1,4 +1,4 @@
-const { Nugget } = require('../../../lib/nugget')
+const { Nugget } = require('../../lib/nugget')
 
 exports.MineMap = class MineMap {
   constructor () {

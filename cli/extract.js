@@ -10,7 +10,7 @@ const mustache = require('mustache')
 const util = require('util')
 const ncpp = util.promisify(ncp)
 const { MineMap } = require('./extract/lib/minemap')
-const { Nugget } = require('../lib/nugget')
+const { Nugget } = require('./lib/nugget')
 const log = require('loglevel')
 
 log.setLevel('WARN')
