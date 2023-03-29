@@ -113,7 +113,7 @@ async function deposit (graph, parentVertex, path) {
 
     // only look at files named <UUID>.md
     if (uuidRe.test(base)) {
-      const nugget = new Nugget(resolve(join(path, mdFile.name)))
+      const nugget = Nugget.fromMdFile(resolve(join(path, mdFile.name)))
       let collection = NUGGET
 
       // a seam is a special flavour of nugget and goes in the SEAM collection
@@ -132,7 +132,7 @@ async function deposit (graph, parentVertex, path) {
       }
     } else if (base === graph._db._name) {
       // update the adit vertex with a document from this file
-      const adit = new Nugget(resolve(join(path, mdFile.name)))
+      const adit = Nugget.fromMdFile(resolve(join(path, mdFile.name)))
 
       // check for presence of layout version -- allow for later version changes
       if (!adit.fs_layout) {

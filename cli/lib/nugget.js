@@ -9,26 +9,37 @@ const lintConf = {
 }
 
 exports.Nugget = class Nugget {
-  constructor (mdFile) {
-    this._key = basename(mdFile, '.md')
-    const content = readFileSync(mdFile, { encoding: 'utf-8' })
+  constructor (attributes, body = undefined) {
+    // the attributes become entries of this
+    for (const [key, value] of Object.entries(attributes)) {
+      this[key] = value
+    }
 
+    // set label from the body if possible, fall back to 'label' then '_key'
+    if (body) {
+      this.body = body // also set body in 'this'
+
+      const match = body.match(/^(#+)\s(.+)$/gm)
+      if (match) {
+        this.label = match[0].replace(/^[#\s]*/, '')
+      } else {
+        const label = body.replace(/^\s*/, '')
+        this.label = (label.length > 25) ? label.slice(0, 24).concat('…') : label
+      }
+    } else if ('_key' in attributes && !('label' in attributes)) {
+      this.label = attributes._key
+    }
+  }
+
+  static fromMdFile (mdFile) {
+    const content = readFileSync(mdFile, { encoding: 'utf-8' })
     const errors = markdownlint.sync({ strings: { content }, config: lintConf })
     if (errors.content.length > 0) {
       throw new Error('Markdown issue in [' + mdFile + ']:' + errors.toString())
     }
-
     const markdown = fm(content)
-    this.body = markdown.body
-
-    for (const [key, value] of Object.entries(markdown.attributes)) {
-      this[key] = value
-    }
-
-    this.label = Nugget.getLabel(this)
-
-    // if (!('seam_id' in this)) { this.seam_id = 1 }
-
+    markdown.attributes._key = basename(mdFile, '.md')
+    return new Nugget(markdown.attributes, markdown.body)
     // kludge link to source file
     // this.source = path.replace(argv[2], 'https://gitlab.laputa.veracode.io/orval/vkb/-/blob/main')
   }
