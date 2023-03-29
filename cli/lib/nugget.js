@@ -1,4 +1,5 @@
 const { basename } = require('node:path')
+const { format } = require('node:util')
 const { readFileSync } = require('node:fs')
 const markdownlint = require('markdownlint')
 const fm = require('front-matter')
@@ -68,6 +69,25 @@ exports.Nugget = class Nugget {
   get document () {
     // for now all entries go into the ArangoDB Document
     return this
+  }
+
+  // generate an MDX component called <Nugget> including all keys in YAML frontmatter
+  getMdx (fmAdditions) {
+    const fm = ['---']
+    const fmVars = Object.assign(fmAdditions, this.document)
+    delete fmVars.body
+
+    for (const [key, value] of Object.entries(fmVars)) {
+      fm.push(format('%s: "%s"', key, value))
+    }
+    fm.push('---')
+
+    return format(
+      '%s\n<Nugget %s>\n%s\n</Nugget>\n',
+      fm.join('\n'),
+      Object.keys(fmVars).map(n => `${n}="${fmVars[n]}"`).join(' '),
+      this.body
+    )
   }
 
   // create a label from the nugget contents

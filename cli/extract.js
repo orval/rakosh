@@ -120,15 +120,14 @@ async function extractNuggets (db, dir) {
 
   async function writeNugs (cursor) {
     const nuggetData = {}
-    for await (const nugget of cursor) {
-      if (!nugget.body) continue
+    for await (const n of cursor) {
+      if (!n.body) continue
+
+      const nugget = new Nugget(n, n.body)
       nuggetData[nugget._key] = nugget
+
       const slug = (nugget._key === 'adit') ? '/' : nugget._id.replace('passage', 'nugget')
-      writeFileSync(
-        join(nuggetDir, `${nugget._key}.mdx`),
-        format('---\nslug: "%s"\nlabel: "%s"\n---\n%s',
-          slug, Nugget.getLabel(nugget), getNuggetMdx(nugget))
-      )
+      writeFileSync(join(nuggetDir, `${nugget._key}.mdx`), nugget.getMdx({ slug }))
     }
     return nuggetData
   }
