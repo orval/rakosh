@@ -9,11 +9,23 @@ const lintConf = {
 }
 
 exports.Nugget = class Nugget {
+  static PASSAGE = 'passage'
+  static SEAM = 'seam'
+  static NUGGET = 'nugget'
+  static Types = [Nugget.PASSAGE, Nugget.SEAM, Nugget.NUGGET]
+
   constructor (attributes, body = undefined) {
+    // NUGGET type by default
+    this.type = Nugget.NUGGET
+
     // the attributes become entries of this
     for (const [key, value] of Object.entries(attributes)) {
       this[key] = value
     }
+
+    // passage in front matter sets PASSAGE type
+    if ('passage' in attributes) this.type = Nugget.PASSAGE
+    else if ('seam' in attributes) this.type = Nugget.SEAM
 
     // set label from the body if possible, fall back to 'label' then '_key'
     if (body) {
@@ -28,6 +40,11 @@ exports.Nugget = class Nugget {
       }
     } else if ('_key' in attributes && !('label' in attributes)) {
       this.label = attributes._key
+    }
+
+    // check type is allowed
+    if (!Nugget.Types.includes(this.type)) {
+      throw new Error(`Unknown Nugget type ${this.type}`)
     }
   }
 
@@ -65,12 +82,5 @@ exports.Nugget = class Nugget {
 
     if ('label' in nugget) return nugget.label
     return nugget._key
-  }
-
-  // this class needs tidying up...
-  static getType (nugget) {
-    if ('type' in nugget) return nugget.type
-    if ('passage' in nugget) return 'passage'
-    return 'nugget'
   }
 }
