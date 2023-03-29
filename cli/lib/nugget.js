@@ -71,22 +71,29 @@ exports.Nugget = class Nugget {
     return this
   }
 
-  // generate an MDX component called <Nugget> including all keys in YAML frontmatter
-  getMdx (fmAdditions) {
-    const fm = ['---']
+  // generate an MDX component including all keys in YAML frontmatter
+  getMdxWithFrontMatter (fmAdditions) {
     const fmVars = Object.assign(fmAdditions, this.document)
     delete fmVars.body
 
+    const fm = ['---']
     for (const [key, value] of Object.entries(fmVars)) {
       fm.push(format('%s: "%s"', key, value))
     }
     fm.push('---')
 
+    return fm.join('\n') + '\n' + this.getMdx()
+  }
+
+  // generate an MDX component named after the type
+  getMdx () {
+    const component = this.type.charAt(0).toUpperCase() + this.type.slice(1)
     return format(
-      '%s\n<Nugget %s>\n%s\n</Nugget>\n',
-      fm.join('\n'),
-      Object.keys(fmVars).map(n => `${n}="${fmVars[n]}"`).join(' '),
-      this.body
+      '<%s %s>\n%s\n</%s>\n',
+      component,
+      Object.keys(this).filter(a => a !== 'body').map(a => `${a}="${this[a]}"`).join(' '),
+      this.body,
+      component
     )
   }
 

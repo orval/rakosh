@@ -127,7 +127,7 @@ async function extractNuggets (db, dir) {
       nuggetData[nugget._key] = nugget
 
       const slug = (nugget._key === 'adit') ? '/' : nugget._id.replace('passage', 'nugget')
-      writeFileSync(join(nuggetDir, `${nugget._key}.mdx`), nugget.getMdx({ slug }))
+      writeFileSync(join(nuggetDir, `${nugget._key}.mdx`), nugget.getMdxWithFrontMatter({ slug }))
     }
     return nuggetData
   }
