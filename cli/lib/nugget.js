@@ -3,6 +3,7 @@ const { format } = require('node:util')
 const { readFileSync } = require('node:fs')
 const markdownlint = require('markdownlint')
 const fm = require('front-matter')
+const yaml = require('js-yaml')
 
 const lintConf = {
   'line-length': false,
@@ -72,29 +73,24 @@ exports.Nugget = class Nugget {
   }
 
   // generate an MDX component including all keys in YAML frontmatter
-  getMdxWithFrontMatter (fmAdditions) {
-    const fmEntries = Object.assign(fmAdditions, this.document)
-    delete fmEntries.body
-
-    const fm = ['---']
-    for (const [key, value] of Object.entries(fmEntries)) {
-      fm.push(format('%s: "%s"', key, value))
-    }
-    fm.push('---')
-
-    return fm.join('\n') + '\n' + this.getMdx()
+  getMdxWithFrontMatter (additions = {}, append = '') {
+    const entries = Object.assign(additions, this.document)
+    delete entries.body
+    return format('---\n%s---\n%s', yaml.dump(entries), this.getMdx(additions, append))
   }
 
   // generate an MDX component named after the type
-  getMdx () {
-    const body = ('body' in this) ? this.body : '### ' + this.label
+  getMdx (additions = {}, append = '') {
     const component = this.type.charAt(0).toUpperCase() + this.type.slice(1)
+    const entries = Object.assign(additions, this.document)
+    delete entries.body
 
     return format(
-      '<%s %s>\n%s\n</%s>\n',
+      '<%s %s>\n%s\n%s\n</%s>\n',
       component,
-      Object.keys(this).filter(a => a !== 'body').map(a => `${a}="${this[a]}"`).join(' '),
-      body,
+      Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
+      ('body' in this) ? this.body : '### ' + this.label,
+      append,
       component
     )
   }

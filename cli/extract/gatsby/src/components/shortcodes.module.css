@@ -1,0 +1,53 @@
+@import url('../styles/colour.css');
+
+.main {
+  grid-area: 2 / 2 / 4 / 2;
+  border-radius: 2rem;
+  border: 0.5rem solid;
+  padding: 2rem;
+  margin: 0.5rem;
+}
+
+.up {
+  grid-area: 1 / 2;
+  border-radius: 2rem;
+  border: 0.3rem solid;
+  padding: 2rem;
+  margin: 0.5rem;
+}
+
+.down {
+  grid-area: 4 / 2;
+  border-radius: 2rem;
+  border: 0.3rem solid;
+  padding: 2rem;
+  margin: 0.5rem;
+}
+
+.left {
+  grid-area: 2 / 1 / 4 / 1;
+  border-radius: 2rem;
+  border: 0.3rem solid;
+  padding: 2rem;
+  margin: 0.5rem;
+}
+
+.right {
+  grid-area: 2 / 3 / 3 / 3;
+  border-radius: 2rem;
+  border: 0.3rem solid;
+  padding: 2rem;
+  margin: 0.5rem;
+}
+
+.nugget {
+  border-color: var(--color-nugget);
+}
+
+.passage {
+  border-color: var(--color-passage);
+}
+
+.seam {
+  border-color: var(--color-seam);
+}

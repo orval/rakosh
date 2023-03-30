@@ -3,12 +3,9 @@ import PropTypes from 'prop-types'
 import * as styles from './contentgrid.module.css'
 
 const ContentGrid = ({ children }) => {
-  console.log(children)
   return (
     <div className={styles.grid}>
-      <div className={styles.main}>
-        {children}
-      </div>
+      {children}
     </div>
   )
 }

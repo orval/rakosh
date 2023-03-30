@@ -77,7 +77,7 @@ exports.handler = async function (argv) {
     if (argv.format === 'gatsby') {
       await copyTemplates(argv.directory, argv.sitecustom)
       const nuggetData = await extractNuggets(db, argv.directory)
-      const seamData = await extractSeams(db, nuggetData, argv.directory)
+      const seamData = {} // await extractSeams(db, nuggetData, argv.directory)
       await generateMineMap(db, nuggetData, seamData, argv.directory)
       if (argv.build) buildSite(argv.directory)
     }
@@ -111,17 +111,66 @@ async function copyTemplates (dir, customizations) {
 
 async function extractNuggets (db, dir) {
   const nuggetDir = join(dir, 'content', 'nuggets')
+  const nuggetStash = {}
 
+  // pull each nugget type into a stash of Nugget objects
   log.info('extracting passages')
-  writeNugs(await db.query(aql`FOR p IN passage FILTER p.passage RETURN p`))
+  const pcursor = await db.query(aql`FOR p IN passage FILTER p.passage RETURN p`)
+  for await (const p of pcursor) {
+    nuggetStash[p._id] = new Nugget(p, p.body)
+  }
+  // writeNugs(await db.query(aql`FOR p IN passage FILTER p.passage RETURN p`))
 
   log.info('extracting nuggets')
-  return writeNugs(await db.query(aql`FOR n IN nugget RETURN n`))
+  const ncursor = await db.query(aql`FOR n IN nugget RETURN n`)
+  for await (const n of ncursor) {
+    nuggetStash[n._id] = new Nugget(n, n.body)
+  }
+
+  log.info('extracting seams')
+  const scursor = await db.query(aql`FOR s IN seam RETURN s`)
+  for await (const s of scursor) {
+    nuggetStash[s._id] = new Nugget(s, s.body)
+  }
+
+  // get all adjacent vertices for each nugget and write them to the slug
+  for (const [_id, nugget] of Object.entries(nuggetStash)) {
+    const cursor = await db.query(aql`
+      FOR v, e IN 1..1 ANY ${_id} GRAPH 'primary'
+      RETURN { v, e }
+    `)
+
+    const outbound = []
+    const inbound = []
+    for await (const c of cursor) {
+      if (c.e._from === _id) {
+        outbound.push(nuggetStash[c.e._to].getMdx({ direction: 'outbound' }))
+      } else if (c.e._to === _id) {
+        inbound.push(nuggetStash[c.e._from].getMdx({ direction: 'inbound' }))
+      }
+    }
+
+    // collect up Nugget MDX to append to Seam component
+    let append = ''
+
+    if (nugget.type === Nugget.SEAM) {
+      append = nugget.nuggets.map(n => nuggetStash['nugget/' + n].getMdx()).join('\n')
+    }
+
+    const slug = (nugget._key === 'adit') ? '/' : nugget._id.replace('passage', 'nugget')
+    let mdx = nugget.getMdxWithFrontMatter({ slug }, append)
+    mdx += outbound.join('\n')
+    mdx += inbound.join('\n')
+
+    writeFileSync(join(nuggetDir, `${nugget._key}.mdx`), mdx)
+  }
+
+  return {} // writeNugs(await db.query(aql`FOR n IN nugget RETURN n`))
 
   async function writeNugs (cursor) {
     const nuggetData = {}
     for await (const n of cursor) {
-      if (!n.body) continue
+      // if (!n.body) continue
 
       const nugget = new Nugget(n, n.body)
       nuggetData[nugget._key] = nugget
