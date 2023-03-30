@@ -44,9 +44,7 @@ const Seam = (props) => {
   )
 }
 
-Seam.propTypes = {
-  children: PropTypes.array.isRequired
-}
+Seam.propTypes = Nugget.propTypes
 
 const Passage = (props) => {
   return (
@@ -56,9 +54,7 @@ const Passage = (props) => {
   )
 }
 
-Passage.propTypes = {
-  children: PropTypes.array.isRequired
-}
+Passage.propTypes = Nugget.propTypes
 
 export const components = {
   Nugget,
