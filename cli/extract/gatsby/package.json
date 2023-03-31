@@ -17,6 +17,7 @@
     "react-dom": "^18",
     "react-icons": "^4.8",
     "react-modal": "^3.16",
+    "react-syntax-highlighter": "^15.5.0",
     "react-use-flexsearch": "^0.1"
   },
   "scripts": {

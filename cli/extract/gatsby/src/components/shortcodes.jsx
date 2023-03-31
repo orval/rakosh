@@ -1,7 +1,9 @@
-import * as React from 'react'
+import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { navigate } from 'gatsby'
 import * as styles from './shortcodes.module.css'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import yaml from 'js-yaml'
 
 function getNuggetStyle (props) {
   if (props.type === 'passage') return styles.passage
@@ -14,22 +16,44 @@ function withNuggetPropTypes (Component) {
     children: PropTypes.oneOfType([
       PropTypes.object,
       PropTypes.arrayOf(PropTypes.object)
-    ]).isRequired,
-    source: PropTypes.string // .isRequired
+    ]),
+    source: PropTypes.string
   }
   return Component
+}
+
+function getYaml (props) {
+  const entries = { ...props }
+  delete entries.children
+  return yaml.dump(entries)
 }
 
 const Nugget = withNuggetPropTypes((props) => {
   const bordered = (props.inseam) ? '' : styles.bordered
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${bordered} ${mainStyle} ${getNuggetStyle(props)}`
+  const [showMetadata, setShowMetadata] = useState(false)
+
   const handleClick = () => {
     navigate('/' + props._id)
   }
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'm') {
+        setShowMetadata(!showMetadata)
+      }
+    }
+    document.addEventListener('keypress', handleKeyPress)
+    return () => {
+      document.removeEventListener('keypress', handleKeyPress)
+    }
+  }, [showMetadata])
+
   return (
     <div className={className} onClick={handleClick}>
       {props.children}
+      {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
     </div>
   )
 })
@@ -37,12 +61,28 @@ const Nugget = withNuggetPropTypes((props) => {
 const Seam = withNuggetPropTypes((props) => {
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${styles.bordered} ${mainStyle} ${styles.seam}`
+  const [showMetadata, setShowMetadata] = useState(false)
+
   const handleClick = () => {
     navigate('/' + props._id)
   }
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'm') {
+        setShowMetadata(!showMetadata)
+      }
+    }
+    document.addEventListener('keypress', handleKeyPress)
+    return () => {
+      document.removeEventListener('keypress', handleKeyPress)
+    }
+  }, [showMetadata])
+
   return (
     <div className={className} onClick={handleClick}>
       {props.children}
+      {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
     </div>
   )
 })
@@ -50,13 +90,29 @@ const Seam = withNuggetPropTypes((props) => {
 const Passage = withNuggetPropTypes((props) => {
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${styles.bordered} ${mainStyle} ${styles.passage}`
+  const [showMetadata, setShowMetadata] = useState(false)
+
   const handleClick = () => {
     if (props._key === 'adit') navigate('/')
     else navigate('/' + props._id.replace('passage/', 'nugget/'))
   }
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'm') {
+        setShowMetadata(!showMetadata)
+      }
+    }
+    document.addEventListener('keypress', handleKeyPress)
+    return () => {
+      document.removeEventListener('keypress', handleKeyPress)
+    }
+  }, [showMetadata])
+
   return (
     <div className={className} onClick={handleClick}>
       {props.children}
+      {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
     </div>
   )
 })
