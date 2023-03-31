@@ -6,7 +6,7 @@ import { IoCaretDown, IoCaretForward } from 'react-icons/io5'
 import minemapJson from '../../content/minemap.json'
 import * as styles from './minemap.module.css'
 
-const rem = parseFloat(getComputedStyle(document.querySelector(':root')).getPropertyValue('font-size'))
+const rem = 14
 
 const MineMap = () => {
   const [searchTerm, setSearchTerm] = React.useState('')
