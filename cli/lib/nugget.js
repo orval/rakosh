@@ -63,8 +63,12 @@ exports.Nugget = class Nugget {
     // this.source = path.replace(argv[2], 'https://gitlab.laputa.veracode.io/orval/vkb/-/blob/main')
   }
 
+  // 'order' keys sort first, then it's alphabetical on label
   static compare (a, b) {
-    return a.seam_id - b.seam_id
+    if (a.order && b.order) return a.order - b.order
+    if (a.order && !b.order) return -1
+    if (!a.order && b.order) return 1
+    return a.label.localeCompare(b.label)
   }
 
   get document () {
