@@ -53,22 +53,6 @@
   order: 1;
 }
 
-.up {
-  order: 1;
-}
-
-.down {
-  order: 1;
-}
-
-.left {
-  order: 1;
-}
-
-.right {
-  order: 1;
-}
-
 .nugget {
   border-color: var(--color-nugget);
 }

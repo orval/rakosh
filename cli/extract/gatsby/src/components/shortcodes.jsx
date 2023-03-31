@@ -3,15 +3,6 @@ import PropTypes from 'prop-types'
 import { navigate } from 'gatsby'
 import * as styles from './shortcodes.module.css'
 
-function getBorderStyles (props) {
-  if (props.direction === 'inbound') {
-    return (props.type === 'passage') ? styles.left : styles.up
-  } else if (props.direction === 'outbound') {
-    return (props.type === 'passage') ? styles.right : styles.down
-  }
-  return styles.main
-}
-
 function getNuggetStyle (props) {
   if (props.type === 'passage') return styles.passage
   if (props.type === 'seam') return styles.seam
@@ -30,10 +21,9 @@ function withNuggetPropTypes (Component) {
 }
 
 const Nugget = withNuggetPropTypes((props) => {
-  const bordered = styles.bordered
-  const directionStyle = getBorderStyles(props)
-  const nuggetStyle = getNuggetStyle(props)
-  const className = `${bordered} ${directionStyle} ${nuggetStyle}`
+  const bordered = (props.inseam) ? '' : styles.bordered
+  const mainStyle = (props.direction) ? '' : styles.main
+  const className = `${bordered} ${mainStyle} ${getNuggetStyle(props)}`
   const handleClick = () => {
     navigate('/' + props._id)
   }
@@ -45,9 +35,8 @@ const Nugget = withNuggetPropTypes((props) => {
 })
 
 const Seam = withNuggetPropTypes((props) => {
-  const bordered = styles.bordered
-  const directionStyle = getBorderStyles(props)
-  const className = `${bordered} ${directionStyle} ${styles.seam}`
+  const mainStyle = (props.direction) ? '' : styles.main
+  const className = `${styles.bordered} ${mainStyle} ${styles.seam}`
   const handleClick = () => {
     navigate('/' + props._id)
   }
@@ -59,9 +48,8 @@ const Seam = withNuggetPropTypes((props) => {
 })
 
 const Passage = withNuggetPropTypes((props) => {
-  const bordered = styles.bordered
-  const directionStyle = getBorderStyles(props)
-  const className = `${bordered} ${directionStyle} ${styles.passage}`
+  const mainStyle = (props.direction) ? '' : styles.main
+  const className = `${styles.bordered} ${mainStyle} ${styles.passage}`
   const handleClick = () => {
     if (props._key === 'adit') navigate('/')
     else navigate('/' + props._id.replace('passage/', 'nugget/'))

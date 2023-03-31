@@ -162,7 +162,7 @@ async function extractNuggets (db, dir) {
     // collect up Nugget MDX to append to Seam component
     let append = ''
     if (nugget.type === Nugget.SEAM) {
-      append = nugget.nuggets.map(n => nuggetStash['nugget/' + n].getMdx()).join('\n')
+      append = nugget.nuggets.map(n => nuggetStash['nugget/' + n].getMdx({ inseam: true })).join('\n')
     }
 
     const slug = (nugget._key === 'adit') ? '/' : nugget._id.replace('passage', 'nugget')
