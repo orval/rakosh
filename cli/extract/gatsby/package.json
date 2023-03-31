@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "@mdx-js/react": "^2.3",
-    "formik": "^2",
+    "formik": "^2.2.9",
     "gatsby": "^5.7",
     "gatsby-plugin-local-search": "^2",
     "gatsby-plugin-mdx": "^5.7",

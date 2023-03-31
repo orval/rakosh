@@ -227,5 +227,6 @@ function buildSite (dir) {
   } catch (err) {
     log.error(err.stdout.toString())
     log.error(err.stderr.toString())
+    process.exit(1)
   }
 }
