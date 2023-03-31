@@ -6,15 +6,18 @@ import { IoCaretDown, IoCaretForward } from 'react-icons/io5'
 import minemapJson from '../../content/minemap.json'
 import * as styles from './minemap.module.css'
 
+const rem = parseFloat(getComputedStyle(document.querySelector(':root')).getPropertyValue('font-size'))
+
 const MineMap = () => {
   const [searchTerm, setSearchTerm] = React.useState('')
-  const [height, setHeight] = React.useState(1000)
-  const minemapRef = React.useRef(null)
+  const [height, setHeight] = React.useState(Math.max(200, Math.min(window.innerHeight) - (10 * rem)))
+  // const treeRef = React.useRef(null)
 
   React.useEffect(() => {
-    if (!minemapRef.current) return
+    // if (!treeRef.current) return
     const handleResize = () => {
-      setHeight(Math.min(minemapRef.current.offsetHeight, window.innerHeight))
+      // 9 rem accounts for topbar, sidebar padding, mapsearchbox height, and mapsearch margin-bottom
+      setHeight(Math.max(200, Math.min(window.innerHeight) - (10 * rem)))
     }
     handleResize()
     window.addEventListener('resize', handleResize)
@@ -22,7 +25,7 @@ const MineMap = () => {
   }, [])
 
   return (
-    <div className={styles.minemap} ref={minemapRef}>
+    <div className={styles.minemap}>
       <div className={styles.mapsearch}>
         <input
           className={styles.mapsearchbox}
@@ -31,6 +34,7 @@ const MineMap = () => {
           onChange={(e) => setSearchTerm(e.currentTarget.value)} />
       </div>
       <Tree
+        // ref={treeRef}
         className={styles.tree}
         initialData={minemapJson.initialData}
         rowHeight={30}
@@ -40,7 +44,7 @@ const MineMap = () => {
         disableDrag={true}
         disableDrop={true}
         height={height}
-        indent={14}
+        indent={rem}
         initialOpenState={minemapJson.initialOpenState}
         searchTerm={searchTerm}
       >
