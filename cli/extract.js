@@ -145,16 +145,19 @@ async function extractNuggets (db, dir) {
     for await (const c of cursor) {
       if (c.e._from === _id) {
         const nug = nuggetStash[c.e._to]
-        const mdx = nug.getMdx({ direction: 'outbound' })
-        if (nug.passage) passagesOutbound.push(mdx)
-        else nuggetsOutbound.push(mdx)
+        if (nug.passage) passagesOutbound.push(nug)
+        else nuggetsOutbound.push(nug)
       } else if (c.e._to === _id) {
         const nug = nuggetStash[c.e._from]
-        const mdx = nug.getMdx({ direction: 'inbound' })
-        if (nug.passage) passagesInbound.push(mdx)
-        else nuggetsInbound.push(mdx)
+        if (nug.passage) passagesInbound.push(nug)
+        else nuggetsInbound.push(nug)
       }
     }
+
+    nuggetsOutbound.sort(Nugget.compare)
+    passagesOutbound.sort(Nugget.compare)
+    nuggetsInbound.sort(Nugget.compare)
+    passagesInbound.sort(Nugget.compare)
 
     // collect up Nugget MDX to append to Seam component
     let append = ''
@@ -169,17 +172,17 @@ async function extractNuggets (db, dir) {
       '<NuggetArea>',
       nugget.getMdx({ slug }, append),
       '<NuggetsInbound>',
-      ...nuggetsInbound,
+      ...nuggetsInbound.map(v => v.getMdx({ direction: 'inbound' })),
       '</NuggetsInbound>',
       '<NuggetsOutbound>',
-      ...nuggetsOutbound,
+      ...nuggetsOutbound.map(v => v.getMdx({ direction: 'outbound' })),
       '</NuggetsOutbound>',
       '</NuggetArea>',
       '<PassagesInbound>',
-      ...passagesInbound,
+      ...passagesInbound.map(v => v.getMdx({ direction: 'inbound' })),
       '</PassagesInbound>',
       '<PassagesOutbound>',
-      ...passagesOutbound,
+      ...passagesOutbound.map(v => v.getMdx({ direction: 'outbound' })),
       '</PassagesOutbound>'
     ]
 
