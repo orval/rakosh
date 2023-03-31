@@ -40,6 +40,7 @@
   height: 100%;
   background-color: #FFDBED;
   padding: 1rem;
+  box-sizing: border-box;
 }
 
 .content {
