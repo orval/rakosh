@@ -1,5 +1,6 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
+import { navigate } from 'gatsby'
 import * as styles from './shortcodes.module.css'
 
 function getBorderStyles (props) {
@@ -23,7 +24,7 @@ function withNuggetPropTypes (Component) {
       PropTypes.object,
       PropTypes.arrayOf(PropTypes.object)
     ]).isRequired,
-    source: PropTypes.string.isRequired
+    source: PropTypes.string // .isRequired
   }
   return Component
 }
@@ -33,8 +34,11 @@ const Nugget = withNuggetPropTypes((props) => {
   const directionStyle = getBorderStyles(props)
   const nuggetStyle = getNuggetStyle(props)
   const className = `${bordered} ${directionStyle} ${nuggetStyle}`
+  const handleClick = () => {
+    navigate('/' + props._id)
+  }
   return (
-    <div className={className}>
+    <div className={className} onClick={handleClick}>
       {props.children}
     </div>
   )
@@ -44,8 +48,11 @@ const Seam = withNuggetPropTypes((props) => {
   const bordered = styles.bordered
   const directionStyle = getBorderStyles(props)
   const className = `${bordered} ${directionStyle} ${styles.seam}`
+  const handleClick = () => {
+    navigate('/' + props._id)
+  }
   return (
-    <div className={className}>
+    <div className={className} onClick={handleClick}>
       {props.children}
     </div>
   )
@@ -55,8 +62,12 @@ const Passage = withNuggetPropTypes((props) => {
   const bordered = styles.bordered
   const directionStyle = getBorderStyles(props)
   const className = `${bordered} ${directionStyle} ${styles.passage}`
+  const handleClick = () => {
+    if (props._key === 'adit') navigate('/')
+    else navigate('/' + props._id.replace('passage/', 'nugget/'))
+  }
   return (
-    <div className={className}>
+    <div className={className} onClick={handleClick}>
       {props.children}
     </div>
   )
