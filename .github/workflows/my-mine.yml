@@ -54,6 +54,7 @@ jobs:
         run: |
           mkdir ./staticsite
           ./cli/main.js extract gatsby my-mine examples/my-mine/cust-prod.json ./staticsite -v
+          if [ $? -ne 0 ]; then exit 1; fi
           
       - name: upload artifact
         uses: actions/upload-pages-artifact@v1
