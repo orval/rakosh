@@ -72,11 +72,11 @@ exports.Nugget = class Nugget {
     return this
   }
 
-  // generate an MDX component including all keys in YAML frontmatter
-  getMdxWithFrontMatter (additions = {}, append = '') {
+  // generate YAML front matter for MDX file
+  getFrontMatter (additions = {}) {
     const entries = Object.assign(additions, this.document)
     delete entries.body
-    return format('---\n%s---\n%s', yaml.dump(entries), this.getMdx(additions, append))
+    return format('---\n%s---\n', yaml.dump(entries))
   }
 
   // generate an MDX component named after the type

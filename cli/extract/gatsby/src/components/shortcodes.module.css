@@ -1,15 +1,55 @@
 @import url('../styles/colour.css');
 
+.nuggetarea {
+  display: flex;
+  order: 1;
+  flex-grow: 1;
+  flex-basis: 70%;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.inboundpassage {
+  display: flex;
+  order: 0;
+  flex-grow: 1;
+  flex-basis: 15%;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.outboundpassage {
+  display: flex;
+  order: 2;
+  flex-grow: 1;
+  flex-basis: 15%;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.inboundnugget {
+  display: flex;
+  order: 0;
+  flex-basis: 15%;
+  justify-content: center;
+}
+
+.outboundnugget {
+  display: flex;
+  order: 2;
+  flex-basis: 15%;
+  justify-content: center;
+}
+
 .main {
-  grid-area: 2 / 2 / 4 / 2;
   border-radius: 2rem;
   border: 0.5rem solid;
   padding: 2rem;
   margin: 0.5rem;
+  order: 1;
 }
 
 .up {
-  grid-area: 1 / 2;
   border-radius: 2rem;
   border: 0.3rem solid;
   padding: 2rem;
@@ -17,7 +57,6 @@
 }
 
 .down {
-  grid-area: 4 / 2;
   border-radius: 2rem;
   border: 0.3rem solid;
   padding: 2rem;
@@ -25,7 +64,6 @@
 }
 
 .left {
-  grid-area: 1 / 1 / 5 / 1;
   border-radius: 2rem;
   border: 0.3rem solid;
   padding: 2rem;
@@ -33,7 +71,6 @@
 }
 
 .right {
-  grid-area: 1 / 3 / 5 / 3;
   border-radius: 2rem;
   border: 0.3rem solid;
   padding: 2rem;

@@ -137,29 +137,53 @@ async function extractNuggets (db, dir) {
       RETURN { v, e }
     `)
 
-    const outbound = []
-    const inbound = []
+    const nuggetsOutbound = []
+    const passagesOutbound = []
+    const nuggetsInbound = []
+    const passagesInbound = []
+
     for await (const c of cursor) {
       if (c.e._from === _id) {
-        outbound.push(nuggetStash[c.e._to].getMdx({ direction: 'outbound' }))
+        const nug = nuggetStash[c.e._to]
+        const mdx = nug.getMdx({ direction: 'outbound' })
+        if (nug.passage) passagesOutbound.push(mdx)
+        else nuggetsOutbound.push(mdx)
       } else if (c.e._to === _id) {
-        inbound.push(nuggetStash[c.e._from].getMdx({ direction: 'inbound' }))
+        const nug = nuggetStash[c.e._from]
+        const mdx = nug.getMdx({ direction: 'inbound' })
+        if (nug.passage) passagesInbound.push(mdx)
+        else nuggetsInbound.push(mdx)
       }
     }
 
     // collect up Nugget MDX to append to Seam component
     let append = ''
-
     if (nugget.type === Nugget.SEAM) {
       append = nugget.nuggets.map(n => nuggetStash['nugget/' + n].getMdx()).join('\n')
     }
 
     const slug = (nugget._key === 'adit') ? '/' : nugget._id.replace('passage', 'nugget')
-    let mdx = nugget.getMdxWithFrontMatter({ slug }, append)
-    mdx += outbound.join('\n')
-    mdx += inbound.join('\n')
 
-    writeFileSync(join(nuggetDir, `${nugget._key}.mdx`), mdx)
+    const mdx = [
+      nugget.getFrontMatter({ slug }),
+      '<NuggetArea>',
+      nugget.getMdx({}, append),
+      '<NuggetsInbound>',
+      ...nuggetsInbound,
+      '</NuggetsInbound>',
+      '<NuggetsOutbound>',
+      ...nuggetsOutbound,
+      '</NuggetsOutbound>',
+      '</NuggetArea>',
+      '<PassagesInbound>',
+      ...passagesInbound,
+      '</PassagesInbound>',
+      '<PassagesOutbound>',
+      ...passagesOutbound,
+      '</PassagesOutbound>'
+    ]
+
+    writeFileSync(join(nuggetDir, `${nugget._key}.mdx`), mdx.join('\n'))
   }
 }
 

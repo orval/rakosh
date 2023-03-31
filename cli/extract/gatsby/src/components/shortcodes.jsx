@@ -43,7 +43,6 @@ const Seam = (props) => {
     </div>
   )
 }
-
 Seam.propTypes = Nugget.propTypes
 
 const Passage = (props) => {
@@ -53,11 +52,60 @@ const Passage = (props) => {
     </div>
   )
 }
-
 Passage.propTypes = Nugget.propTypes
+
+const PassagesInbound = (props) => {
+  return (
+    <div className={styles.inboundpassage}>
+      {props.children}
+    </div>
+  )
+}
+PassagesInbound.propTypes = Nugget.propTypes
+
+const PassagesOutbound = (props) => {
+  return (
+    <div className={styles.outboundpassage}>
+      {props.children}
+    </div>
+  )
+}
+PassagesOutbound.propTypes = Nugget.propTypes
+
+const NuggetsInbound = (props) => {
+  return (
+    <div className={styles.inboundnugget}>
+      {props.children}
+    </div>
+  )
+}
+NuggetsInbound.propTypes = Nugget.propTypes
+
+const NuggetsOutbound = (props) => {
+  return (
+    <div className={styles.outboundnugget}>
+      {props.children}
+    </div>
+  )
+}
+NuggetsOutbound.propTypes = Nugget.propTypes
+
+const NuggetArea = (props) => {
+  return (
+    <div className={styles.nuggetarea}>
+      {props.children}
+    </div>
+  )
+}
+NuggetArea.propTypes = Nugget.propTypes
 
 export const components = {
   Nugget,
   Seam,
-  Passage
+  Passage,
+  PassagesInbound,
+  PassagesOutbound,
+  NuggetsInbound,
+  NuggetsOutbound,
+  NuggetArea
 }
