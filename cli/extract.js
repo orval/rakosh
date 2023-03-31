@@ -167,7 +167,7 @@ async function extractNuggets (db, dir) {
     const mdx = [
       nugget.getFrontMatter({ slug }),
       '<NuggetArea>',
-      nugget.getMdx({}, append),
+      nugget.getMdx({ slug }, append),
       '<NuggetsInbound>',
       ...nuggetsInbound,
       '</NuggetsInbound>',

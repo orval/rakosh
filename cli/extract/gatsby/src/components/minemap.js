@@ -6,8 +6,6 @@ import { IoCaretDown, IoCaretForward } from 'react-icons/io5'
 import minemapJson from '../../content/minemap.json'
 import * as styles from './minemap.module.css'
 
-const passageNuggetRe = /^passage\/[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/
-
 const MineMap = () => {
   const [searchTerm, setSearchTerm] = React.useState('')
 
@@ -47,12 +45,10 @@ function Node ({ node, style, dragHandle }) {
     if (event.target.dataset.type === 'nugget' || event.target.dataset.type === 'seam') {
       navigate('/' + id)
     } else if (event.target.dataset.type === 'passage') {
-      if (passageNuggetRe.test(id)) {
-        navigate('/' + id.replace('passage/', 'nugget/'))
-      } else if (id === 'passage/adit') {
+      if (id === 'passage/adit') {
         navigate('/')
       } else {
-        node.toggle()
+        navigate('/' + id.replace('passage/', 'nugget/'))
       }
     } else {
       node.toggle()
