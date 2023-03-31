@@ -51,6 +51,7 @@
 .main {
   border-width: 0.5rem;
   order: 1;
+  flex-grow: 2;
 }
 
 .nugget {
