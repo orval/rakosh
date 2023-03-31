@@ -110,10 +110,12 @@ async function deposit (graph, parentVertex, path) {
   // process markdown files
   for (const mdFile of mdFiles) {
     const base = basename(mdFile.name, '.md')
+    const fsPath = join(path, mdFile.name)
 
     // only look at files named <UUID>.md
     if (uuidRe.test(base)) {
-      const nugget = Nugget.fromMdFile(resolve(join(path, mdFile.name)))
+      const nugget = Nugget.fromMdFile(resolve(fsPath))
+      nugget.fspath = fsPath
       let collection = NUGGET
 
       // a seam is a special flavour of nugget and goes in the SEAM collection
@@ -133,6 +135,7 @@ async function deposit (graph, parentVertex, path) {
     } else if (base === graph._db._name) {
       // update the adit vertex with a document from this file
       const adit = Nugget.fromMdFile(resolve(join(path, mdFile.name)))
+      adit.fspath = fsPath
 
       // check for presence of layout version -- allow for later version changes
       if (!adit.fs_layout) {
@@ -148,7 +151,7 @@ async function deposit (graph, parentVertex, path) {
   for (const dir of dirs) {
     const doc = (dir.name in passageNuggets)
       ? passageNuggets[dir.name].document
-      : { label: dir.name, passage: dir.name }
+      : { label: dir.name, passage: dir.name, fspath: join(path, dir.name) }
 
     // create a package vertex and recurse down the directory tree
     log.info(`creating passage ${dir.name} ${doc.label}`)
