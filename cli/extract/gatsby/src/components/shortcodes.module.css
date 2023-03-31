@@ -41,40 +41,32 @@
   justify-content: center;
 }
 
-.main {
+.bordered {
   border-radius: 2rem;
-  border: 0.5rem solid;
+  border: 0.3rem solid;
   padding: 2rem;
   margin: 0.5rem;
+}
+
+.main {
+  border-width: 0.5rem;
   order: 1;
 }
 
 .up {
-  border-radius: 2rem;
-  border: 0.3rem solid;
-  padding: 2rem;
-  margin: 0.5rem;
+  order: 1;
 }
 
 .down {
-  border-radius: 2rem;
-  border: 0.3rem solid;
-  padding: 2rem;
-  margin: 0.5rem;
+  order: 1;
 }
 
 .left {
-  border-radius: 2rem;
-  border: 0.3rem solid;
-  padding: 2rem;
-  margin: 0.5rem;
+  order: 1;
 }
 
 .right {
-  border-radius: 2rem;
-  border: 0.3rem solid;
-  padding: 2rem;
-  margin: 0.5rem;
+  order: 1;
 }
 
 .nugget {

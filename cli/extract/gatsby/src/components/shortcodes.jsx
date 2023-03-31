@@ -16,7 +16,7 @@ function getStyle (props) {
   let nugStyle = styles.nugget
   if (props.type === 'passage') nugStyle = styles.passage
   else if (props.type === 'seam') nugStyle = styles.seam
-  return `${getDirection(props)} ${nugStyle}`
+  return `${styles.bordered} ${getDirection(props)} ${nugStyle}`
 }
 
 const Nugget = (props) => {
