@@ -4,7 +4,6 @@ import Layout from '../components/layout'
 const NotFoundPage = () => (
   <Layout>
     <h1>404 not found</h1>
-    <p>This pan is blank</p>
   </Layout>
 )
 
