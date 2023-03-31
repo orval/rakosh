@@ -10,7 +10,7 @@ const rem = 14
 
 const MineMap = () => {
   const [searchTerm, setSearchTerm] = React.useState('')
-  const [height, setHeight] = React.useState(Math.max(200, Math.min(window.innerHeight) - (10 * rem)))
+  const [height, setHeight] = React.useState(600)
   // const treeRef = React.useRef(null)
 
   React.useEffect(() => {
