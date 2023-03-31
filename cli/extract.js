@@ -2,7 +2,6 @@
 const { statSync, writeFileSync, readFileSync } = require('node:fs')
 const { join } = require('node:path')
 const { execFileSync } = require('node:child_process')
-const { format } = require('node:util')
 const { Database } = require('arangojs')
 const { aql } = require('arangojs/aql')
 const ncp = require('ncp').ncp
@@ -10,7 +9,7 @@ const mustache = require('mustache')
 const util = require('util')
 const ncpp = util.promisify(ncp)
 const { MineMap } = require('./extract/lib/minemap')
-const { Nugget } = require('../lib/nugget')
+const { Nugget } = require('./lib/nugget')
 const log = require('loglevel')
 
 log.setLevel('WARN')
@@ -76,9 +75,8 @@ exports.handler = async function (argv) {
 
     if (argv.format === 'gatsby') {
       await copyTemplates(argv.directory, argv.sitecustom)
-      const nuggetData = await extractNuggets(db, argv.directory)
-      const seamData = await extractSeams(db, nuggetData, argv.directory)
-      await generateMineMap(db, nuggetData, seamData, argv.directory)
+      await extractNuggets(db, argv.directory)
+      await generateMineMap(db, argv.directory)
       if (argv.build) buildSite(argv.directory)
     }
   } catch (err) {
@@ -111,80 +109,88 @@ async function copyTemplates (dir, customizations) {
 
 async function extractNuggets (db, dir) {
   const nuggetDir = join(dir, 'content', 'nuggets')
+  const nuggetStash = {}
 
+  // pull each nugget type into a stash of Nugget objects
   log.info('extracting passages')
-  writeNugs(await db.query(aql`FOR p IN passage FILTER p.passage RETURN p`))
+  const pcursor = await db.query(aql`FOR p IN passage FILTER p.passage RETURN p`)
+  for await (const p of pcursor) {
+    nuggetStash[p._id] = new Nugget(p, p.body)
+  }
 
   log.info('extracting nuggets')
-  return writeNugs(await db.query(aql`FOR n IN nugget RETURN n`))
-
-  async function writeNugs (cursor) {
-    const nuggetData = {}
-    for await (const nugget of cursor) {
-      if (!nugget.body) continue
-      nuggetData[nugget._key] = nugget
-      const slug = (nugget._key === 'adit') ? '/' : nugget._id.replace('passage', 'nugget')
-      writeFileSync(
-        join(nuggetDir, `${nugget._key}.mdx`),
-        format('---\nslug: "%s"\nlabel: "%s"\n---\n%s',
-          slug, Nugget.getLabel(nugget), getNuggetMdx(nugget))
-      )
-    }
-    return nuggetData
+  const ncursor = await db.query(aql`FOR n IN nugget RETURN n`)
+  for await (const n of ncursor) {
+    nuggetStash[n._id] = new Nugget(n, n.body)
   }
-}
-
-function getNuggetMdx (nugget) {
-  return format(
-    '<Nugget %s>\n%s\n</Nugget>\n',
-    Object.keys(nugget).filter(n => n !== 'body').map(n => `${n}="${nugget[n]}"`).join(' '),
-    nugget.body
-  )
-}
-
-async function extractSeams (db, nuggetData, dir) {
-  const seamDir = join(dir, 'content', 'seams')
-
-  const cursor = await db.query(aql`
-    FOR v, e, p IN 1..100 OUTBOUND 'passage/adit' GRAPH 'primary'
-      FILTER IS_SAME_COLLECTION('seam', v)
-      RETURN { vertex: LAST(p.vertices) }
-  `)
 
   log.info('extracting seams')
-  const seamData = {}
-
-  for await (const v of cursor) {
-    const seam = v.vertex
-    seamData[seam._key] = seam
-    writeFileSync(
-      join(seamDir, `${seam._key}.mdx`),
-      format('---\nslug: "%s"\nlabel: "%s"\n---\n%s',
-        seam._id, Nugget.getLabel(seam), getSeamMdx(seam, nuggetData))
-    )
+  const scursor = await db.query(aql`FOR s IN seam RETURN s`)
+  for await (const s of scursor) {
+    nuggetStash[s._id] = new Nugget(s, s.body)
   }
 
-  return seamData
-}
+  // get all adjacent vertices for each nugget and write them to the slug
+  for (const [_id, nugget] of Object.entries(nuggetStash)) {
+    const cursor = await db.query(aql`
+      FOR v, e IN 1..1 ANY ${_id} GRAPH 'primary'
+      RETURN { v, e }
+    `)
 
-function getSeamMdx (seam, nuggetData) {
-  let nuggets = ''
+    const nuggetsOutbound = []
+    const passagesOutbound = []
+    const nuggetsInbound = []
+    const passagesInbound = []
 
-  if ('nuggets' in seam) {
-    // this is duplicating nugget MDX into the seam, which may not be
-    // ideal but doing a look-up within the template code is challenging
-    nuggets = seam.nuggets.map(n => getNuggetMdx(nuggetData[n])).join('\n')
+    for await (const c of cursor) {
+      if (c.e._from === _id) {
+        const nug = nuggetStash[c.e._to]
+        if (nug.passage) passagesOutbound.push(nug)
+        else nuggetsOutbound.push(nug)
+      } else if (c.e._to === _id) {
+        const nug = nuggetStash[c.e._from]
+        if (nug.passage) passagesInbound.push(nug)
+        else nuggetsInbound.push(nug)
+      }
+    }
+
+    nuggetsOutbound.sort(Nugget.compare)
+    passagesOutbound.sort(Nugget.compare)
+    nuggetsInbound.sort(Nugget.compare)
+    passagesInbound.sort(Nugget.compare)
+
+    // collect up Nugget MDX to append to Seam component
+    let append = ''
+    if (nugget.type === Nugget.SEAM) {
+      append = nugget.nuggets.map(n => nuggetStash['nugget/' + n].getMdx({ inseam: true })).join('\n')
+    }
+
+    const slug = (nugget._key === 'adit') ? '/' : nugget._id.replace('passage', 'nugget')
+
+    const mdx = [
+      nugget.getFrontMatter({ slug }),
+      '<NuggetArea>',
+      nugget.getMdx({ slug }, append),
+      '<NuggetsInbound>',
+      ...nuggetsInbound.map(v => v.getMdx({ direction: 'inbound' })),
+      '</NuggetsInbound>',
+      '<NuggetsOutbound>',
+      ...nuggetsOutbound.map(v => v.getMdx({ direction: 'outbound' })),
+      '</NuggetsOutbound>',
+      '</NuggetArea>',
+      '<PassagesInbound>',
+      ...passagesInbound.map(v => v.getMdx({ direction: 'inbound' })),
+      '</PassagesInbound>',
+      '<PassagesOutbound>',
+      ...passagesOutbound.map(v => v.getMdx({ direction: 'outbound' })),
+      '</PassagesOutbound>'
+    ]
+
+    writeFileSync(join(nuggetDir, `${nugget._key}.mdx`), mdx.join('\n'))
   }
-
-  return format(
-    '<Seam %s>\n%s\n%s\n</Seam>\n',
-    Object.keys(seam).filter(s => s !== 'body').map(s => `${s}="${seam[s]}"`).join(' '),
-    seam.body,
-    nuggets
-  )
 }
 
-async function generateMineMap (db, nuggetData, seamData, dir) {
+async function generateMineMap (db, dir) {
   const contentDir = join(dir, 'content')
   const mapFile = join(contentDir, 'minemap.json')
 

@@ -37,12 +37,14 @@ Once the server is up, content laid out in a specific directory structure can be
 ## TODO
 
 * adjacent graph vertices view
+* search box hints
 * define passages using symbolic links to directories in the filesystem deposit
 * write some more docs
 * make more of the CSS configurable
 * "tags" for search (plus author)
 * keyboard navigation
 * embedded images
+* breadcrumbs & metadata view
 * dark mode
 * support `<link>` links in markdown
 

@@ -1,0 +1,68 @@
+@import url('../styles/colour.css');
+
+.nuggetarea {
+  display: flex;
+  order: 1;
+  flex-grow: 1;
+  flex-basis: 70%;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.inboundpassage {
+  display: flex;
+  order: 0;
+  flex-grow: 1;
+  flex-basis: 15%;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.outboundpassage {
+  display: flex;
+  order: 2;
+  flex-grow: 1;
+  flex-basis: 15%;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.inboundnugget {
+  display: flex;
+  order: 0;
+  flex-basis: 15%;
+  justify-content: center;
+}
+
+.outboundnugget {
+  display: flex;
+  order: 2;
+  flex-basis: 15%;
+  justify-content: center;
+}
+
+.bordered {
+  border-radius: 2rem;
+  border: 0.3rem solid;
+  padding: 2rem;
+  margin: 0.2rem;
+}
+
+.main {
+  border-width: 0.5rem;
+  order: 1;
+  flex-grow: 2;
+  background-color: var(--color-main-bg);
+}
+
+.nugget {
+  border-color: var(--color-nugget);
+}
+
+.passage {
+  border-color: var(--color-passage);
+}
+
+.seam {
+  border-color: var(--color-seam);
+}

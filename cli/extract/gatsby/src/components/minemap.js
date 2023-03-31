@@ -6,10 +6,23 @@ import { IoCaretDown, IoCaretForward } from 'react-icons/io5'
 import minemapJson from '../../content/minemap.json'
 import * as styles from './minemap.module.css'
 
-const passageNuggetRe = /^passage\/[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/
+const rem = 14
 
 const MineMap = () => {
   const [searchTerm, setSearchTerm] = React.useState('')
+  const [height, setHeight] = React.useState(600)
+  // const treeRef = React.useRef(null)
+
+  React.useEffect(() => {
+    // if (!treeRef.current) return
+    const handleResize = () => {
+      // 9 rem accounts for topbar, sidebar padding, mapsearchbox height, and mapsearch margin-bottom
+      setHeight(Math.max(200, Math.min(window.innerHeight) - (10 * rem)))
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
     <div className={styles.minemap}>
@@ -21,6 +34,7 @@ const MineMap = () => {
           onChange={(e) => setSearchTerm(e.currentTarget.value)} />
       </div>
       <Tree
+        // ref={treeRef}
         className={styles.tree}
         initialData={minemapJson.initialData}
         rowHeight={30}
@@ -29,7 +43,8 @@ const MineMap = () => {
         disableEdit={true}
         disableDrag={true}
         disableDrop={true}
-        indent={14}
+        height={height}
+        indent={rem}
         initialOpenState={minemapJson.initialOpenState}
         searchTerm={searchTerm}
       >
@@ -47,12 +62,10 @@ function Node ({ node, style, dragHandle }) {
     if (event.target.dataset.type === 'nugget' || event.target.dataset.type === 'seam') {
       navigate('/' + id)
     } else if (event.target.dataset.type === 'passage') {
-      if (passageNuggetRe.test(id)) {
-        navigate('/' + id.replace('passage/', 'nugget/'))
-      } else if (id === 'passage/adit') {
+      if (id === 'passage/adit') {
         navigate('/')
       } else {
-        node.toggle()
+        navigate('/' + id.replace('passage/', 'nugget/'))
       }
     } else {
       node.toggle()

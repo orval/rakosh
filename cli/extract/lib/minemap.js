@@ -1,4 +1,4 @@
-const { Nugget } = require('../../../lib/nugget')
+const { Nugget } = require('../../lib/nugget')
 
 exports.MineMap = class MineMap {
   constructor () {
@@ -10,13 +10,15 @@ exports.MineMap = class MineMap {
 
     // a long concatenated ID is used so that the React components have unique keys
     let longId = ''
+
     vertices.forEach(vertex => {
-      longId = longId + '|' + vertex._id
+      const nug = new Nugget(vertex, vertex.body)
+      longId = longId + '|' + nug._id
       if (!(longId in maplevel)) {
         maplevel[longId] = {
-          vid: vertex._id,
-          name: Nugget.getLabel(vertex),
-          type: Nugget.getType(vertex),
+          vid: nug._id,
+          name: nug.label,
+          type: nug.type,
           children: {}
         }
       }

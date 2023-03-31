@@ -2,6 +2,15 @@
   "mine_name": "My Rakosh Mine",
   "mine_label": "my-mine",
   "path_prefix": "/rakosh",
-  "main_bg_color": "#F1489E"
+  "color_fg": "#2F1222",
+  "color_bg": "#FDF4F9",
+  "color_nugget": "#FF9FC8",
+  "color_seam": "#FFB4AE",
+  "color_passage": "#E4AFFB",
+  "color_main_bg": "#FFE2F1",
+  "color_top_bg": "#F1489E",
+  "color_top_fg": "#E9E6E7",
+  "color_side_bg": "#FFDBED",
+  "color_side_fg": "#4A1D34"
 }
 

@@ -8,10 +8,17 @@
 /* As hex codes */
 
 :root {
-  --color-nugget: #FF7469;
-  --color-seam: #FFB4AE;
-  --color-passage: #B74CE5;
+  --color-fg: {{{color_fg}}};
+  --color-bg: {{{color_bg}}};
+  --color-nugget: {{{color_nugget}}};
+  --color-seam: {{{color_seam}}};
+  --color-passage: {{{color_passage}}};
+  --color-main-bg: {{{color_main_bg}}};
 
+  --color-top-bg: {{{color_top_bg}}};
+  --color-top-fg: {{{color_top_fg}}};
+  --color-side-bg: {{{color_side_bg}}};
+  --color-side-fg: {{{color_side_fg}}};
 }
 
 .color-primary-0 { color: #FB86C2 }	/* Main Primary color */

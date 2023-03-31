@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.0.26",
+  "version": "0.0.28",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -28,6 +28,8 @@
     "yargs": "^17.6.2"
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint cli",
+    "devdep": "./cli/main.js deposit examples/my-mine -r -v",
+    "devext": "./cli/main.js extract gatsby my-mine examples/my-mine/cust-dev.json heap --no-build -v"
   }
 }
