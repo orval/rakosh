@@ -53,8 +53,11 @@ jobs:
       - name: extract and build gatsby site
         run: |
           mkdir ./staticsite
-          ./cli/main.js extract gatsby my-mine examples/my-mine/cust-prod.json ./staticsite -v
-          if [ $? -ne 0 ]; then cd ./staticsite; npm list --all; exit 1; fi
+          ./cli/main.js extract gatsby my-mine examples/my-mine/cust-prod.json ./staticsite -v --no-build
+          cd ./staticsite
+          yarn
+          yarn list
+          yarn run deploy
           
       - name: upload artifact
         uses: actions/upload-pages-artifact@v1
