@@ -70,3 +70,32 @@
 .seam {
   border-color: var(--color-seam);
 }
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.content {
+  order: 1;
+}
+
+.breadcrumbs {
+  font-size: small;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  order: 2;
+}
+
+.crumbs {
+  display: flex;
+  flex-direction: row;
+}
+
+.crumb {
+  display: flex;
+}

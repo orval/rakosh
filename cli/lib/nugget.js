@@ -83,33 +83,34 @@ exports.Nugget = class Nugget {
     return format('---\n%s---\n', yaml.dump(entries))
   }
 
+  #getBreadcrumbs () {
+    if (this.breadcrumbs.length === 0) return ''
+    const bcrumbs = ['<Breadcrumbs>']
+
+    for (const b of this.breadcrumbs) {
+      bcrumbs.push('<Crumbs>')
+      bcrumbs.push(b.map(c => format('<Crumb id="%s" label="%s" />', c._id, c.label)).join(''))
+      bcrumbs.push('</Crumbs>')
+    }
+    bcrumbs.push('</Breadcrumbs>')
+    return bcrumbs.join('\n')
+  }
+
   // generate an MDX component named after the type
   getMdx (additions = {}, append = '') {
     const component = this.type.charAt(0).toUpperCase() + this.type.slice(1)
     const entries = Object.assign(additions, this.document)
     delete entries.body
+    delete entries.breadcrumbs
 
     return format(
-      '<%s %s>\n%s\n%s\n</%s>\n',
+      '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s\n</%s>\n',
       component,
       Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
       ('body' in this) ? this.body : '### ' + this.label,
+      this.#getBreadcrumbs(),
       append,
       component
     )
-  }
-
-  // create a label from the nugget contents
-  static getLabel (nugget) {
-    if ('body' in nugget) {
-      const match = nugget.body.match(/^(#+)\s(.+)$/gm)
-      if (match) return match[0].replace(/^[#\s]*/, '')
-
-      const label = nugget.body.replace(/^\s*/, '')
-      return (label.length > 25) ? label.slice(0, 24).concat('…') : label
-    }
-
-    if ('label' in nugget) return nugget.label
-    return nugget._key
   }
 }

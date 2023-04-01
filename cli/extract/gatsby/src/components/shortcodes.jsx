@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import { navigate } from 'gatsby'
+import { navigate, Link } from 'gatsby'
+import { IoChevronForward } from 'react-icons/io5'
 import * as styles from './shortcodes.module.css'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import yaml from 'js-yaml'
 
-function getNuggetStyle (props) {
-  if (props.type === 'passage') return styles.passage
-  if (props.type === 'seam') return styles.seam
-  return styles.nugget
-}
+// this is a mess
 
 function withNuggetPropTypes (Component) {
   Component.propTypes = {
@@ -31,10 +28,12 @@ function getYaml (props) {
 const Nugget = withNuggetPropTypes((props) => {
   const bordered = (props.inseam) ? '' : styles.bordered
   const mainStyle = (props.direction) ? '' : styles.main
-  const className = `${bordered} ${mainStyle} ${getNuggetStyle(props)}`
+  const className = `${bordered} ${mainStyle} ${styles.nugget}`
   const [showMetadata, setShowMetadata] = useState(false)
+  const [showBreadbrumbs, setShowBreadcrumbs] = useState(false)
 
-  const handleClick = () => {
+  const handleClick = (event) => {
+    if (event.target.tagName === 'A') return
     navigate('/' + props._id)
   }
 
@@ -42,6 +41,8 @@ const Nugget = withNuggetPropTypes((props) => {
     const handleKeyPress = (event) => {
       if (event.key === 'm') {
         setShowMetadata(!showMetadata)
+      } else if (event.key === 'b') {
+        setShowBreadcrumbs(!showBreadbrumbs)
       }
     }
     document.addEventListener('keypress', handleKeyPress)
@@ -52,8 +53,10 @@ const Nugget = withNuggetPropTypes((props) => {
 
   return (
     <div className={className} onClick={handleClick}>
-      {props.children}
-      {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
+      <div className={styles.container}>
+        {props.children}
+        {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
+      </div>
     </div>
   )
 })
@@ -62,8 +65,10 @@ const Seam = withNuggetPropTypes((props) => {
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${styles.bordered} ${mainStyle} ${styles.seam}`
   const [showMetadata, setShowMetadata] = useState(false)
+  const [showBreadbrumbs, setShowBreadcrumbs] = useState(false)
 
-  const handleClick = () => {
+  const handleClick = (event) => {
+    if (event.target.tagName === 'A') return
     navigate('/' + props._id)
   }
 
@@ -71,18 +76,22 @@ const Seam = withNuggetPropTypes((props) => {
     const handleKeyPress = (event) => {
       if (event.key === 'm') {
         setShowMetadata(!showMetadata)
+      } else if (event.key === 'b') {
+        setShowBreadcrumbs(!showBreadbrumbs)
       }
     }
     document.addEventListener('keypress', handleKeyPress)
     return () => {
       document.removeEventListener('keypress', handleKeyPress)
     }
-  }, [showMetadata])
+  }, [showMetadata, showBreadbrumbs])
 
   return (
     <div className={className} onClick={handleClick}>
-      {props.children}
-      {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
+      <div className={styles.container}>
+        {props.children}
+        {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
+      </div>
     </div>
   )
 })
@@ -91,8 +100,10 @@ const Passage = withNuggetPropTypes((props) => {
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${styles.bordered} ${mainStyle} ${styles.passage}`
   const [showMetadata, setShowMetadata] = useState(false)
+  const [showBreadbrumbs, setShowBreadcrumbs] = useState(false)
 
-  const handleClick = () => {
+  const handleClick = (event) => {
+    if (event.target.tagName === 'A') return
     if (props._key === 'adit') navigate('/')
     else navigate('/' + props._id.replace('passage/', 'nugget/'))
   }
@@ -101,6 +112,8 @@ const Passage = withNuggetPropTypes((props) => {
     const handleKeyPress = (event) => {
       if (event.key === 'm') {
         setShowMetadata(!showMetadata)
+      } else if (event.key === 'b') {
+        setShowBreadcrumbs(!showBreadbrumbs)
       }
     }
     document.addEventListener('keypress', handleKeyPress)
@@ -111,8 +124,10 @@ const Passage = withNuggetPropTypes((props) => {
 
   return (
     <div className={className} onClick={handleClick}>
-      {props.children}
-      {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
+      <div className={styles.container}>
+        {props.children}
+        {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
+      </div>
     </div>
   )
 })
@@ -158,7 +173,41 @@ const NuggetsOutbound = (props) => {
 }
 NuggetsOutbound.propTypes = Nugget.propTypes
 
+const Breadcrumbs = (props) => {
+  return (<div className={styles.breadcrumbs}>{props.children}</div>)
+}
+Breadcrumbs.propTypes = {
+  children: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.arrayOf(PropTypes.object)
+  ]).isRequired
+}
+
+const Crumbs = (props) => {
+  return (<div className={styles.crumbs}>{props.children}</div>)
+}
+Crumbs.propTypes = {
+  children: PropTypes.any.isRequired
+}
+
+const Crumb = (props) => {
+  const link = '/' + props.id.replace('passage/', 'nugget/')
+  return (<div className={styles.crumb}><IoChevronForward /><Link to={link}>{props.label}</Link></div>)
+}
+Crumb.propTypes = {
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired
+}
+
+const NuggetBody = (props) => {
+  return (<div className={styles.content}>{props.children}</div>)
+}
+NuggetBody.propTypes = {
+  children: PropTypes.any.isRequired
+}
+
 export const components = {
+  NuggetBody,
   Nugget,
   Seam,
   Passage,
@@ -166,5 +215,8 @@ export const components = {
   PassagesOutbound,
   NuggetsInbound,
   NuggetsOutbound,
-  NuggetArea
+  NuggetArea,
+  Breadcrumbs,
+  Crumbs,
+  Crumb
 }

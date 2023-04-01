@@ -130,6 +130,20 @@ async function extractNuggets (db, dir) {
     nuggetStash[s._id] = new Nugget(s, s.body)
   }
 
+  // breadcrumbs!
+  for (const [_id, nugget] of Object.entries(nuggetStash)) {
+    const cursor = await db.query(aql`
+      FOR v, e, p IN 1..100 INBOUND ${_id} GRAPH 'primary'
+      FILTER v._id == 'passage/adit'
+      RETURN REVERSE(FOR vertex IN p.vertices[*] RETURN { _id: vertex._id, label: vertex.label })
+    `)
+    const breadcrumbs = []
+    for await (const c of cursor) {
+      breadcrumbs.push(c.filter(b => b._id !== 'passage/adit' && b._id !== _id))
+    }
+    nugget.breadcrumbs = breadcrumbs
+  }
+
   // get all adjacent vertices for each nugget and write them to the slug
   for (const [_id, nugget] of Object.entries(nuggetStash)) {
     const cursor = await db.query(aql`
