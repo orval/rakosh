@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useContext } from 'react'
+import ContentGridContext from '../contentgridcontext'
 import PropTypes from 'prop-types'
 import { navigate, Link } from 'gatsby'
 import { IoChevronForward } from 'react-icons/io5'
@@ -6,7 +7,7 @@ import * as styles from './shortcodes.module.css'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import yaml from 'js-yaml'
 
-// this is a mess
+// there is ample opportunity for refactoring here
 
 function withNuggetPropTypes (Component) {
   Component.propTypes = {
@@ -29,33 +30,20 @@ const Nugget = withNuggetPropTypes((props) => {
   const bordered = (props.inseam) ? '' : styles.bordered
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${bordered} ${mainStyle} ${styles.nugget}`
-  const [showMetadata, setShowMetadata] = useState(false)
-  const [showBreadbrumbs, setShowBreadcrumbs] = useState(false)
+  const { globalValue } = useContext(ContentGridContext)
 
   const handleClick = (event) => {
     if (event.target.tagName === 'A') return
     navigate('/' + props._id)
   }
 
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      if (event.key === 'm') {
-        setShowMetadata(!showMetadata)
-      } else if (event.key === 'b') {
-        setShowBreadcrumbs(!showBreadbrumbs)
-      }
-    }
-    document.addEventListener('keypress', handleKeyPress)
-    return () => {
-      document.removeEventListener('keypress', handleKeyPress)
-    }
-  }, [showMetadata])
-
   return (
     <div className={className} onClick={handleClick}>
       <div className={styles.container}>
         {props.children}
-        {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
+        {globalValue.showMetadata && !props.direction
+          ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>)
+          : null }
       </div>
     </div>
   )
@@ -64,33 +52,20 @@ const Nugget = withNuggetPropTypes((props) => {
 const Seam = withNuggetPropTypes((props) => {
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${styles.bordered} ${mainStyle} ${styles.seam}`
-  const [showMetadata, setShowMetadata] = useState(false)
-  const [showBreadbrumbs, setShowBreadcrumbs] = useState(false)
+  const { globalValue } = useContext(ContentGridContext)
 
   const handleClick = (event) => {
     if (event.target.tagName === 'A') return
     navigate('/' + props._id)
   }
 
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      if (event.key === 'm') {
-        setShowMetadata(!showMetadata)
-      } else if (event.key === 'b') {
-        setShowBreadcrumbs(!showBreadbrumbs)
-      }
-    }
-    document.addEventListener('keypress', handleKeyPress)
-    return () => {
-      document.removeEventListener('keypress', handleKeyPress)
-    }
-  }, [showMetadata, showBreadbrumbs])
-
   return (
     <div className={className} onClick={handleClick}>
       <div className={styles.container}>
         {props.children}
-        {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
+        {globalValue.showMetadata && !props.direction
+          ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>)
+          : null }
       </div>
     </div>
   )
@@ -99,8 +74,7 @@ const Seam = withNuggetPropTypes((props) => {
 const Passage = withNuggetPropTypes((props) => {
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${styles.bordered} ${mainStyle} ${styles.passage}`
-  const [showMetadata, setShowMetadata] = useState(false)
-  const [showBreadbrumbs, setShowBreadcrumbs] = useState(false)
+  const { globalValue } = useContext(ContentGridContext)
 
   const handleClick = (event) => {
     if (event.target.tagName === 'A') return
@@ -108,25 +82,13 @@ const Passage = withNuggetPropTypes((props) => {
     else navigate('/' + props._id.replace('passage/', 'nugget/'))
   }
 
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      if (event.key === 'm') {
-        setShowMetadata(!showMetadata)
-      } else if (event.key === 'b') {
-        setShowBreadcrumbs(!showBreadbrumbs)
-      }
-    }
-    document.addEventListener('keypress', handleKeyPress)
-    return () => {
-      document.removeEventListener('keypress', handleKeyPress)
-    }
-  }, [showMetadata])
-
   return (
     <div className={className} onClick={handleClick}>
       <div className={styles.container}>
         {props.children}
-        {showMetadata && !props.direction ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>) : null }
+        {globalValue.showMetadata && !props.direction
+          ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>)
+          : null }
       </div>
     </div>
   )
@@ -174,7 +136,12 @@ const NuggetsOutbound = (props) => {
 NuggetsOutbound.propTypes = Nugget.propTypes
 
 const Breadcrumbs = (props) => {
-  return (<div className={styles.breadcrumbs}>{props.children}</div>)
+  const { globalValue } = useContext(ContentGridContext)
+  return (
+    <div className={styles.breadcrumbs}>
+      {globalValue.showBreadcrumbs && props.children}
+    </div>
+  )
 }
 Breadcrumbs.propTypes = {
   children: PropTypes.oneOfType([
