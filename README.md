@@ -34,20 +34,6 @@ Once the server is up, content laid out in a specific directory structure can be
 | primary | Graph | internal - defines the relationship between all other objects |
 | edges | Edges | internal - name of the collection use for all edges |
 
-## TODO
-
-* adjacent graph vertices view
-* search box hints
-* define passages using symbolic links to directories in the filesystem deposit
-* write some more docs
-* make more of the CSS configurable
-* "tags" for search (plus author)
-* keyboard navigation
-* embedded images
-* breadcrumbs & metadata view
-* dark mode
-* support `<link>` links in markdown
-
 ## Writing Markdown
 
 Note that writing a link with angle brackets does not work. E.g. `some text then a <http://link.to.example.com>`
