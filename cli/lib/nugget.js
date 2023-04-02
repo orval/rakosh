@@ -103,14 +103,19 @@ exports.Nugget = class Nugget {
     delete entries.body
     delete entries.breadcrumbs
 
-    return format(
-      '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s\n</%s>\n',
+    // it is decreed that breadcrumbs are not required in outbound vertices
+    const breadcrumbs = (entries.direction === 'outbound') ? '' : this.#getBreadcrumbs()
+
+    const mostOfTheMdx = format(
+      '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
       component,
       Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
       ('body' in this) ? this.body : '### ' + this.label,
-      this.#getBreadcrumbs(),
-      append,
-      component
+      breadcrumbs,
+      append
     )
+
+    // mostly pointless tidying up of the MDX
+    return format('%s\n</%s>\n', mostOfTheMdx.trimEnd(), component)
   }
 }
