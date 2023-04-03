@@ -1,14 +1,22 @@
 /**
  * @type {import('gatsby').GatsbyConfig}
  */
-module.exports = {
+
+import remarkGfm from 'remark-gfm'
+
+const config = {
   siteMetadata:
   {
     title: '{{{mine_name}}}'
   },
   pathPrefix: '{{{path_prefix}}}',
   plugins: [
-    'gatsby-plugin-mdx',
+    {
+      resolve: 'gatsby-plugin-mdx',
+      mdxOptions: {
+        remarkPlugins: [remarkGfm]
+      }
+    },
     {
       resolve: 'gatsby-source-filesystem',
       options: {
@@ -55,3 +63,5 @@ module.exports = {
     }
   ]
 }
+
+export default config

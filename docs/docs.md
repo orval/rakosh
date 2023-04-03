@@ -35,7 +35,7 @@ Once the server is up, content laid out in a specific directory structure can be
 ### Terminology
 
 | Term | ArangoDB Objects | Description |
-|-|-|-|
+|---|---|---|
 | mine | Database | the content store |
 | nugget | Document, Vertex | a small piece of useful information |
 | lode | Vertex | a top-level content category |
@@ -44,19 +44,6 @@ Once the server is up, content laid out in a specific directory structure can be
 | vein | Vertices, Edges | a route through the mine that defines a nugget's location |
 | primary | Graph | internal - defines the relationship between all other objects |
 | edges | Edges | internal - name of the collection use for all edges |
-
-### TODO
-
-* nugget content scroll bar
-* keyboard navigation plus gatsby build warnings
-* embedded images
-* CLI command to simplify creation of new FS vertices
-* search box usage hints
-* define passages using symbolic links to directories in the filesystem deposit
-* write some more docs
-* "tags" for search (plus author)
-* dark mode
-* support `<link>` links in markdown
 
 ### Writing Markdown
 
