@@ -3,7 +3,7 @@ name: rakosh docs
 on:
   push:
     branches:
-      - docs
+      - main
 
 permissions:
   contents: read
