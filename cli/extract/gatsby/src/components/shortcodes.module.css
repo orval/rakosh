@@ -50,6 +50,7 @@
   border: 0.3rem solid;
   padding: 2rem;
   margin: 0.2rem;
+  max-height: 100%;
 }
 
 .main {
@@ -77,6 +78,7 @@
   height: 100%;
   width: 100%;
   justify-content: space-between;
+  overflow: scroll;
 }
 
 .content {
