@@ -3,7 +3,7 @@ name: rakosh my-mine example
 on:
   push:
     branches:
-      - main
+      - example
 
 permissions:
   contents: read

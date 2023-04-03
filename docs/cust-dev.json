@@ -1,6 +1,6 @@
 { 
-  "mine_name": "My Rakosh Mine",
-  "mine_label": "my-mine",
+  "mine_name": "Rakosh",
+  "mine_label": "rakosh-docs",
   "path_prefix": "/",
   "color_fg": "#2F1222",
   "color_bg": "#FDF4F9",
