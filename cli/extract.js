@@ -209,7 +209,14 @@ async function generateMineMap (db, dir) {
   const mapFile = join(contentDir, 'minemap.json')
 
   const cursor = await db.query(aql`
-    FOR v, e, p IN 1..100 OUTBOUND 'passage/adit' GRAPH 'primary' RETURN p.vertices
+    FOR v, e, p IN 1..100 OUTBOUND 'passage/adit' GRAPH 'primary'
+      LET vertices = (
+          FOR vertex IN p.vertices
+              LET order_value = vertex.order == null ? 10000 : vertex.order
+              RETURN MERGE(vertex, { order: order_value })
+      )
+      SORT vertices[*].order ASC, vertices[*].label ASC
+      RETURN vertices
   `)
 
   const mm = new MineMap()
