@@ -25,29 +25,31 @@ exports.Nugget = class Nugget {
       this[key] = value
     }
 
+    if (body) this.body = body
+
     // passage in front matter sets PASSAGE type
     if ('passage' in attributes) this.type = Nugget.PASSAGE
     else if ('seam' in attributes) this.type = Nugget.SEAM
 
-    // set label from the body if possible, fall back to 'label' then '_key'
-    if (body) {
-      this.body = body // also set body in 'this'
-
-      const match = body.match(/^(#+)\s(.+)$/gm)
-      if (match) {
-        this.label = match[0].replace(/^[#\s]*/, '')
-      } else {
-        const label = body.replace(/^\s*/, '')
-        this.label = (label.length > 25) ? label.slice(0, 24).concat('…') : label
-      }
-    } else if ('_key' in attributes && !('label' in attributes)) {
-      this.label = attributes._key
-    }
+    this.label = this.getLabel()
 
     // check type is allowed
     if (!Nugget.Types.includes(this.type)) {
       throw new Error(`Unknown Nugget type ${this.type}`)
     }
+  }
+
+  // if there's no label attribute get it from the body, falling back to '_key'
+  getLabel () {
+    if (this.label) return this.label
+    if (!this.body) return this._key
+
+    const match = this.body.match(/^(#+)\s(.+)$/gm)
+    if (match) return match[0].replace(/^[#\s]*/, '')
+
+    // trim any preceeding white space and limit to 25 characters long
+    const label = this.body.replace(/^\s*/, '')
+    return (label.length > 25) ? label.slice(0, 24).concat('…') : label
   }
 
   static fromMdFile (mdFile) {

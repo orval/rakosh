@@ -1,5 +1,4 @@
 ---
-label: my-mine
 passage: .
 fs_layout: '0.1'
 ---
