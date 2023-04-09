@@ -106,7 +106,9 @@ exports.Nugget = class Nugget {
     delete entries.breadcrumbs
 
     // it is decreed that breadcrumbs are not required in outbound vertices
-    const breadcrumbs = (entries.direction === 'outbound') ? '' : this.#getBreadcrumbs()
+    const breadcrumbs = (entries.direction === 'outbound' || entries.inseam)
+      ? ''
+      : this.#getBreadcrumbs()
 
     const mostOfTheMdx = format(
       '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
