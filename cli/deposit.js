@@ -20,6 +20,7 @@ const NUGGET = 'nugget'
 const uuidRe = /^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/
 
 const passageLookup = {}
+const keyIdLookup = {}
 
 exports.command = 'deposit <directory> [options]'
 
@@ -130,6 +131,7 @@ async function deposit (graph, parentVertex, path) {
       } else {
         log.info(`creating nugget ${base}`)
         const vertex = await graph.vertexCollection(collection).save(nugget.document)
+        keyIdLookup[vertex._key] = vertex._id
         await graph.edgeCollection(EDGES).save({ _from: parentVertex._id, _to: vertex._id })
       }
     } else if (base === graph._db._name) {
@@ -159,6 +161,7 @@ async function deposit (graph, parentVertex, path) {
     const dirPath = join(path, dir.name)
 
     passageLookup[resolve(dirPath)] = passageVertex._id
+    keyIdLookup[passageVertex._key] = passageVertex._id
     await graph.edgeCollection(EDGES).save({ _from: parentVertex._id, _to: passageVertex._id })
 
     await deposit(graph, passageVertex, dirPath)
@@ -182,10 +185,10 @@ async function createLinks (graph, directory) {
       try {
         await graph.edgeCollection(EDGES).save({
           _from: passageLookup[directory],
-          _to: `nugget/${base}`
+          _to: keyIdLookup[base]
         })
       } catch (err) {
-        log.error(`ERROR: code ${err.code} linking ${passageLookup[directory]} to ${dirent.name}`)
+        log.error(`ERROR: code ${err.code} linking ${passageLookup[directory]} to ${base}`)
       }
     }
   }
