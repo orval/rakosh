@@ -41,7 +41,7 @@ const Nugget = withNuggetPropTypes((props) => {
     <div className={className} onClick={handleClick}>
       <div className={styles.container}>
         {props.children}
-        {globalValue.showMetadata && !props.direction
+        {globalValue.showMetadata && !props.direction && !props.inseam
           ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>)
           : null }
       </div>
