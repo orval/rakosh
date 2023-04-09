@@ -181,7 +181,7 @@ async function createLinks (graph, directory) {
         continue
       }
 
-      log.info(`creating link from ${passageLookup[directory]} to ${base}`)
+      log.info(`creating link from ${passageLookup[directory]} to ${keyIdLookup[base]}`)
       try {
         await graph.edgeCollection(EDGES).save({
           _from: passageLookup[directory],
