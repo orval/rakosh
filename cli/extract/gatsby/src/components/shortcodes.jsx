@@ -154,7 +154,7 @@ const Crumbs = (props) => {
   return (<div className={styles.crumbs}>{props.children}</div>)
 }
 Crumbs.propTypes = {
-  children: PropTypes.any.isRequired
+  children: PropTypes.any
 }
 
 const Crumb = (props) => {
@@ -173,6 +173,13 @@ NuggetBody.propTypes = {
   children: PropTypes.any.isRequired
 }
 
+const Table = (props) => {
+  return (<table className={styles.table}>{props.children}</table>)
+}
+Table.propTypes = {
+  children: PropTypes.any.isRequired
+}
+
 export const components = {
   NuggetBody,
   Nugget,
@@ -185,5 +192,6 @@ export const components = {
   NuggetArea,
   Breadcrumbs,
   Crumbs,
-  Crumb
+  Crumb,
+  table: Table
 }
