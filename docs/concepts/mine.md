@@ -1,3 +1,7 @@
+---
+_key: b9dbb59f-cebb-481b-aa2e-3632c614067a
+---
+
 ### Mine
 
 Since a gold nugget might be found in a gold mine, the terminology used in the design of rakosh is related to mines.

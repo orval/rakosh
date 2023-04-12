@@ -8,7 +8,7 @@ const log = require('loglevel')
 
 log.setLevel('WARN')
 
-const RAKOSH_SCHEMA_VERSION = '1.0'
+const RAKOSH_SCHEMA_VERSION = '0.2'
 const RAKOSH_FS_LAYOUT_VERSION = '1.0'
 
 const PRIMARY = 'primary'
@@ -16,8 +16,6 @@ const PASSAGE = 'passage'
 const EDGES = 'edges'
 const SEAM = 'seam'
 const NUGGET = 'nugget'
-
-const uuidRe = /^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/
 
 const passageLookup = {}
 const keyIdLookup = {}
@@ -114,10 +112,29 @@ async function deposit (graph, parentVertex, path) {
     const base = basename(mdFile.name, '.md')
     const fsPath = join(path, mdFile.name)
 
-    // only look at files named <UUID>.md
-    if (uuidRe.test(base)) {
-      const nugget = Nugget.fromMdFile(resolve(fsPath))
-      nugget.fspath = fsPath
+    // check all markdown files
+    if (mdFile.name.endsWith('.md')) {
+      let nugget
+      try {
+        nugget = Nugget.fromMdFile(resolve(fsPath))
+        nugget.fspath = fsPath
+      } catch (error) {
+        log.warn(`WARNING: ${mdFile.name} does not appear to be a rakosh nugget file [${error}]`)
+        continue
+      }
+
+      if (nugget._key === 'adit') {
+        // check for presence of layout version -- allow for later version changes
+        if (!nugget.fs_layout) {
+          log.warn(`WARNING: no 'fs_layout' in ${base}.md, assuming version ${RAKOSH_FS_LAYOUT_VERSION}`)
+        } else if (nugget.fs_layout !== RAKOSH_FS_LAYOUT_VERSION) {
+          log.error(`ERROR: unknown 'fs_layout' ${nugget.fs_layout}, tool knows ${RAKOSH_FS_LAYOUT_VERSION}`)
+        }
+        // update the adit vertex with a document from this file
+        await graph.vertexCollection(PASSAGE).update('adit', nugget.document)
+        continue
+      }
+
       let collection = NUGGET
 
       // a seam is a special flavour of nugget and goes in the SEAM collection
@@ -135,19 +152,6 @@ async function deposit (graph, parentVertex, path) {
         keyIdLookup[vertex._key] = vertex._id
         await graph.edgeCollection(EDGES).save({ _from: parentVertex._id, _to: vertex._id })
       }
-    } else if (base === graph._db._name) {
-      // update the adit vertex with a document from this file
-      const adit = Nugget.fromMdFile(resolve(join(path, mdFile.name)))
-      adit.fspath = fsPath
-
-      // check for presence of layout version -- allow for later version changes
-      if (!adit.fs_layout) {
-        log.warn(`WARNING: no 'fs_layout' in ${base}.md, assuming version ${RAKOSH_FS_LAYOUT_VERSION}`)
-      } else if (adit.fs_layout !== RAKOSH_FS_LAYOUT_VERSION) {
-        log.error(`ERROR: unknown 'fs_layout' ${adit.fs_layout}, tool knows ${RAKOSH_FS_LAYOUT_VERSION}`)
-      }
-
-      await graph.vertexCollection(PASSAGE).update('adit', adit.document)
     }
   }
 

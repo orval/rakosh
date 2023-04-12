@@ -1,4 +1,3 @@
-const { basename } = require('node:path')
 const { format } = require('node:util')
 const { readFileSync } = require('node:fs')
 const markdownlint = require('markdownlint')
@@ -15,6 +14,7 @@ exports.Nugget = class Nugget {
   static SEAM = 'seam'
   static NUGGET = 'nugget'
   static Types = [Nugget.PASSAGE, Nugget.SEAM, Nugget.NUGGET]
+  static UUID_RE = /^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/
 
   constructor (attributes, body = undefined) {
     // NUGGET type by default
@@ -23,6 +23,14 @@ exports.Nugget = class Nugget {
     // the attributes become entries of this
     for (const [key, value] of Object.entries(attributes)) {
       this[key] = value
+    }
+
+    if (!this._key) throw new Error('no _key attribute in Nugget')
+
+    if (this._key === 'adit') {
+      this.passage = '.'
+    } else if (!Nugget.UUID_RE.test(this._key)) {
+      throw new Error(`_key [${this._key}] is not a UUID`)
     }
 
     if (body) this.body = body
@@ -56,13 +64,10 @@ exports.Nugget = class Nugget {
     const content = readFileSync(mdFile, { encoding: 'utf-8' })
     const errors = markdownlint.sync({ strings: { content }, config: lintConf })
     if (errors.content.length > 0) {
-      throw new Error('Markdown issue in [' + mdFile + ']:' + errors.toString())
+      throw new Error(`Markdown issue in [${mdFile}]:` + errors.toString())
     }
     const markdown = fm(content)
-    markdown.attributes._key = basename(mdFile, '.md')
     return new Nugget(markdown.attributes, markdown.body)
-    // kludge link to source file
-    // this.source = path.replace(argv[2], 'https://gitlab.laputa.veracode.io/orval/vkb/-/blob/main')
   }
 
   // 'order' keys sort first, then it's alphabetical on label
