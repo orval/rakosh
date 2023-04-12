@@ -58,7 +58,8 @@ exports.handler = async function (argv) {
     const dbName = basename(argv.directory)
     log.info(`mine is ${dbName}`)
 
-    const systemDb = new Database()
+    const conf = (process.env.ARANGO_URL) ? { url: process.env.ARANGO_URL } : {}
+    const systemDb = new Database(conf)
     const databaseNames = await systemDb.listDatabases()
 
     if (databaseNames.includes(dbName)) {

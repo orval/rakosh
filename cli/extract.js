@@ -66,7 +66,10 @@ exports.handler = async function (argv) {
   try {
     if (argv.verbose) log.setLevel('INFO')
 
-    const db = new Database({ databaseName: argv.mine })
+    const conf = { databaseName: argv.mine }
+    if (process.env.ARANGO_URL) conf.url = process.env.ARANGO_URL
+
+    const db = new Database(conf)
     if (!await db.exists()) {
       throw new Error(`mine ${argv.mine} does not exist`)
     }
