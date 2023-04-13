@@ -1,7 +1,6 @@
 ---
 _key: daad43d3-f048-4533-8446-96d6bc04c84e
 order: 1
-type: seam
 nuggets:
 - eebf595c-9062-4a50-a6a0-b06351c547ea
 - effe9c21-9849-4c64-9ec6-4ae1c4438cd9

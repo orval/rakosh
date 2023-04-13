@@ -9,8 +9,6 @@ order: 5
 * buttons for breadcrumb & metadata, plus persistence
 * code highlighting -- `gatsby-transformer-remark`?
 * embedded images
-* look at linking from all nugget types to all others
-  * maybe remove 'seam' and make passage and nugget seam-able
 * replace nugget links in MD with `<Link>` in MDX
 * CLI command to simplify creation of new FS vertices
 * search box usage hints

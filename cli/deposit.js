@@ -8,8 +8,8 @@ const log = require('loglevel')
 
 log.setLevel('WARN')
 
-const RAKOSH_SCHEMA_VERSION = '0.2'
-const RAKOSH_FS_LAYOUT_VERSION = '1.0'
+const RAKOSH_SCHEMA_VERSION = '1.0'
+const RAKOSH_FS_LAYOUT_VERSION = '1.1'
 
 const PRIMARY = 'primary'
 const PASSAGE = 'passage'
