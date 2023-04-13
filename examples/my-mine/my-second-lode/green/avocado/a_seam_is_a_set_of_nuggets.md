@@ -1,0 +1,1 @@
+../../../my-first-lode/some-category/subcategory1/a_seam_is_a_set_of_nuggets.md

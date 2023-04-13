@@ -18,7 +18,6 @@ const SEAM = 'seam'
 const NUGGET = 'nugget'
 
 const passageLookup = {}
-const keyIdLookup = {}
 
 exports.command = 'deposit <directory> [options]'
 
@@ -149,7 +148,6 @@ async function deposit (graph, parentVertex, path) {
       } else {
         log.info(`creating nugget ${base}`)
         const vertex = await graph.vertexCollection(collection).save(nugget.document)
-        keyIdLookup[vertex._key] = vertex._id
         await graph.edgeCollection(EDGES).save({ _from: parentVertex._id, _to: vertex._id })
       }
     }
@@ -166,7 +164,6 @@ async function deposit (graph, parentVertex, path) {
     const dirPath = join(path, dir.name)
 
     passageLookup[resolve(dirPath)] = passageVertex._id
-    keyIdLookup[passageVertex._key] = passageVertex._id
     await graph.edgeCollection(EDGES).save({ _from: parentVertex._id, _to: passageVertex._id })
 
     await deposit(graph, passageVertex, dirPath)
@@ -186,14 +183,17 @@ async function createLinks (graph, directory) {
         continue
       }
 
-      log.info(`creating link from ${passageLookup[directory]} to ${keyIdLookup[base]}`)
+      const nug = Nugget.fromMdFile(resolve(join(directory, dirent.name)))
+      const id = nug.type + '/' + nug._key
+
+      log.info(`creating link from ${passageLookup[directory]} to ${id}`)
       try {
         await graph.edgeCollection(EDGES).save({
           _from: passageLookup[directory],
-          _to: keyIdLookup[base]
+          _to: id
         })
       } catch (err) {
-        log.error(`ERROR: code ${err.code} linking ${passageLookup[directory]} to ${base}`)
+        log.error(`ERROR: code ${err.code} linking ${passageLookup[directory]} to ${id}`)
       }
     }
   }
