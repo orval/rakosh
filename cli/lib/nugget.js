@@ -26,12 +26,7 @@ exports.Nugget = class Nugget {
     }
 
     if (!this._key) throw new Error('no _key attribute in Nugget')
-
-    if (this._key === 'adit') {
-      this.passage = '.'
-    } else if (!Nugget.UUID_RE.test(this._key)) {
-      throw new Error(`_key [${this._key}] is not a UUID`)
-    }
+    if (this._key === 'adit') this.passage = '.'
 
     if (body) this.body = body
 
