@@ -158,11 +158,11 @@ Crumbs.propTypes = {
 }
 
 const Crumb = (props) => {
-  const link = '/' + props.id
+  const link = '/' + props._key
   return (<div className={styles.crumb}><IoChevronForward /><Link to={link}>{props.label}</Link></div>)
 }
 Crumb.propTypes = {
-  id: PropTypes.string.isRequired,
+  _key: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired
 }
 

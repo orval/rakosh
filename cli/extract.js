@@ -129,14 +129,22 @@ async function extractNuggets (db, dir) {
 
   // breadcrumbs!
   for (const [_id, nugget] of Object.entries(nuggetStash)) {
+    // query the paths from the given vertex back to the adit
     const cursor = await db.query(aql`
       FOR v, e, p IN 1..100 INBOUND ${_id} GRAPH 'primary'
       FILTER v._id == 'passage/adit'
-      RETURN REVERSE(FOR vertex IN p.vertices[*] RETURN { _id: vertex._id, label: vertex.label })
+      RETURN REVERSE(
+        FOR vertex IN p.vertices[*]
+        RETURN { _id: vertex._id, label: vertex.label, _key: vertex._key }
+      )
     `)
     const breadcrumbs = []
     for await (const c of cursor) {
-      breadcrumbs.push(c.filter(b => b._id !== 'passage/adit' && b._id !== _id))
+      // filter out the adit and self then push non-zero length paths into list
+      const crumb = c.filter(b => b._id !== 'passage/adit' && b._id !== _id)
+        .map(({ _id, ...rest }) => rest)
+
+      if (crumb.length > 0) breadcrumbs.push(crumb)
     }
     nugget.breadcrumbs = breadcrumbs
   }

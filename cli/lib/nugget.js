@@ -89,7 +89,7 @@ exports.Nugget = class Nugget {
 
     for (const b of this.breadcrumbs) {
       bcrumbs.push('<Crumbs>')
-      bcrumbs.push(b.map(c => format('<Crumb id="%s" label="%s" />', c._id, c.label)).join(''))
+      bcrumbs.push(b.map(c => format('<Crumb _key="%s" label="%s" />', c._key, c.label)).join(''))
       bcrumbs.push('</Crumbs>')
     }
     bcrumbs.push('</Breadcrumbs>')
