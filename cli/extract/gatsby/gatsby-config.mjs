@@ -27,13 +27,6 @@ const config = {
       }
     },
     {
-      resolve: 'gatsby-source-filesystem',
-      options: {
-        name: 'seams',
-        path: './content/seams/'
-      }
-    },
-    {
       resolve: 'gatsby-plugin-local-search',
       options: {
         name: 'prospect',

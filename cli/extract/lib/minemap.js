@@ -19,6 +19,7 @@ exports.MineMap = class MineMap {
           vid: nug._id,
           name: nug.label,
           type: nug.type,
+          seam: ('nuggets' in nug),
           children: {}
         }
       }
@@ -43,9 +44,9 @@ exports.MineMap = class MineMap {
     function seamNuggets (level, id) {
       const vertex = level[id]
       const nugs = []
-      if (vertex.type === 'nugget') nugs.push(vertex.vid)
+      if (vertex.type === 'nugget' && !vertex.seam) nugs.push(vertex.vid)
       for (const [longId, val] of Object.entries(vertex.children)) {
-        if (val.type === 'nugget') nugs.push(val.vid)
+        if (val.type === 'nugget' && !vertex.seam) nugs.push(val.vid)
         nugs.push(...seamNuggets(vertex.children, longId))
       }
       return nugs
@@ -55,7 +56,7 @@ exports.MineMap = class MineMap {
     function dedupeLevel (level) {
       const seams = []
       for (const [id, val] of Object.entries(level)) {
-        if (val.type === 'seam') seams.push(id)
+        if (val.seam) seams.push(id)
       }
       const vidsToRemove = []
       for (const id of seams) {
@@ -80,7 +81,7 @@ exports.MineMap = class MineMap {
   // do not show the nuggets that make up a seam
   #seamsOnly (level) {
     for (const vertex of Object.values(level)) {
-      if (vertex.type === 'seam') vertex.children = {}
+      if (vertex.seam) vertex.children = {}
       else this.#seamsOnly(vertex.children)
     }
     return level
@@ -91,7 +92,7 @@ exports.MineMap = class MineMap {
 
     function getOpenStatesLevel (level, isOpen) {
       for (const [id, vertex] of Object.entries(level)) {
-        if (vertex.type === 'seam') isOpen = false
+        if (vertex.seam) isOpen = false
         openStates[id] = isOpen
         getOpenStatesLevel(vertex.children, isOpen)
       }

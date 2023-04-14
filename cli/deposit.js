@@ -14,7 +14,6 @@ const RAKOSH_FS_LAYOUT_VERSION = '1.1'
 const PRIMARY = 'primary'
 const PASSAGE = 'passage'
 const EDGES = 'edges'
-const SEAM = 'seam'
 const NUGGET = 'nugget'
 
 const passageLookup = {}
@@ -85,8 +84,8 @@ async function createGraph (db, directory) {
   await graph.create([
     {
       collection: EDGES,
-      from: [PASSAGE, SEAM, NUGGET],
-      to: [PASSAGE, SEAM, NUGGET]
+      from: [PASSAGE, NUGGET],
+      to: [PASSAGE, NUGGET]
     }
   ])
 
@@ -134,20 +133,12 @@ async function deposit (graph, parentVertex, path) {
         continue
       }
 
-      let collection = NUGGET
-
-      // a seam is a special flavour of nugget and goes in the SEAM collection
-      if ('type' in nugget && nugget.type === 'seam') {
-        log.info(`creating seam ${base}`)
-        collection = SEAM
-      }
-
       if ('passage' in nugget) {
         log.info(`saving passage ${base}`)
         passageNuggets[nugget.passage] = nugget
       } else {
         log.info(`creating nugget ${base}`)
-        const vertex = await graph.vertexCollection(collection).save(nugget.document)
+        const vertex = await graph.vertexCollection(NUGGET).save(nugget.document)
         await graph.edgeCollection(EDGES).save({ _from: parentVertex._id, _to: vertex._id })
       }
     }
@@ -201,22 +192,18 @@ async function createLinks (graph, directory) {
 
 async function createSeams (db, graph) {
   try {
-    const collection = db.collection(SEAM)
+    // an array of nuggets means this nugget has a seam
     const cursor = await db.query(aql`
-      FOR doc IN ${collection}
-      RETURN doc
+      FOR n IN nugget
+        FILTER n.nuggets
+        RETURN n
     `)
 
-    for await (const seam of cursor) {
-      if (!('nuggets' in seam)) {
-        log.warn(`WARNING: seam ${seam._id} has no nuggets`)
-        continue
-      }
+    for await (const nugget of cursor) {
+      let from = nugget._id
 
-      let from = seam._id
-
-      for (const nugget of seam.nuggets) {
-        const nuggetId = `nugget/${nugget}`
+      for (const nug of nugget.nuggets) {
+        const nuggetId = `nugget/${nug}`
 
         log.info(`creating link from ${from} to ${nuggetId}`)
         try {

@@ -13,18 +13,7 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
         body
         frontmatter {
           slug
-        }
-        internal {
-          contentFilePath
-        }
-      }
-    }
-    seams: allMdx(filter: {frontmatter: {slug: {regex: "/^seam/"}}}) {
-      nodes {
-        id
-        body
-        frontmatter {
-          slug
+          nuggets
         }
         internal {
           contentFilePath
@@ -41,20 +30,18 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
   const nuggets = result.data.nuggets.nodes
 
   nuggets.forEach(node => {
-    createPage({
-      path: node.frontmatter.slug,
-      component: `${nuggetTemplate}?__contentFilePath=${node.internal.contentFilePath}`,
-      context: { id: node.id }
-    })
-  })
-
-  const seams = result.data.seams.nodes
-
-  seams.forEach(node => {
-    createPage({
-      path: node.frontmatter.slug,
-      component: `${seamTemplate}?__contentFilePath=${node.internal.contentFilePath}`,
-      context: { id: node.id }
-    })
+    if (node.frontmatter.nuggets) {
+      createPage({
+        path: node.frontmatter.slug,
+        component: `${seamTemplate}?__contentFilePath=${node.internal.contentFilePath}`,
+        context: { id: node.id }
+      })
+    } else {
+      createPage({
+        path: node.frontmatter.slug,
+        component: `${nuggetTemplate}?__contentFilePath=${node.internal.contentFilePath}`,
+        context: { id: node.id }
+      })
+    }
   })
 }

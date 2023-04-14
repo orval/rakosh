@@ -127,12 +127,6 @@ async function extractNuggets (db, dir) {
     nuggetStash[n._id] = new Nugget(n, n.body)
   }
 
-  log.info('extracting seams')
-  const scursor = await db.query(aql`FOR s IN seam RETURN s`)
-  for await (const s of scursor) {
-    nuggetStash[s._id] = new Nugget(s, s.body)
-  }
-
   // breadcrumbs!
   for (const [_id, nugget] of Object.entries(nuggetStash)) {
     const cursor = await db.query(aql`
@@ -178,7 +172,7 @@ async function extractNuggets (db, dir) {
 
     // collect up Nugget MDX to append to Seam component
     let append = ''
-    if (nugget.type === Nugget.SEAM) {
+    if ('nuggets' in nugget) {
       append = nugget.nuggets.map(n => nuggetStash['nugget/' + n].getMdx({ inseam: true })).join('\n')
     }
 

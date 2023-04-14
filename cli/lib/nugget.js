@@ -11,9 +11,8 @@ const lintConf = {
 
 exports.Nugget = class Nugget {
   static PASSAGE = 'passage'
-  static SEAM = 'seam'
   static NUGGET = 'nugget'
-  static Types = [Nugget.PASSAGE, Nugget.SEAM, Nugget.NUGGET]
+  static Types = [Nugget.PASSAGE, Nugget.NUGGET]
   static UUID_RE = /^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/
 
   constructor (attributes, body = undefined) {
@@ -32,7 +31,6 @@ exports.Nugget = class Nugget {
 
     // passage in front matter sets PASSAGE type
     if ('passage' in attributes) this.type = Nugget.PASSAGE
-    else if ('seam' in attributes) this.type = Nugget.SEAM
 
     this.label = this.getLabel()
 
@@ -100,7 +98,7 @@ exports.Nugget = class Nugget {
 
   // generate an MDX component named after the type
   getMdx (additions = {}, append = '') {
-    const component = this.type.charAt(0).toUpperCase() + this.type.slice(1)
+    const component = ('nuggets' in this) ? 'Seam' : this.type.charAt(0).toUpperCase() + this.type.slice(1)
     const entries = Object.assign(additions, this.document)
     delete entries.body
     delete entries.breadcrumbs
