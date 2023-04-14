@@ -23,7 +23,7 @@ const config = {
       resolve: 'gatsby-source-filesystem',
       options: {
         name: 'nuggets',
-        path: './content/nuggets/'
+        path: './content/'
       }
     },
     {

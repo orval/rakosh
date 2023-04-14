@@ -111,7 +111,7 @@ async function copyTemplates (dir, customizations) {
 }
 
 async function extractNuggets (db, dir) {
-  const nuggetDir = join(dir, 'content', 'nuggets')
+  const contentDir = join(dir, 'content')
   const nuggetStash = {}
 
   // pull each nugget type into a stash of Nugget objects
@@ -176,7 +176,7 @@ async function extractNuggets (db, dir) {
       append = nugget.nuggets.map(n => nuggetStash['nugget/' + n].getMdx({ inseam: true })).join('\n')
     }
 
-    const slug = (nugget._key === 'adit') ? '/' : nugget._id.replace('passage', 'nugget')
+    const slug = (nugget._key === 'adit') ? '/' : nugget._key
 
     const mdx = [
       nugget.getFrontMatter({ slug }),
@@ -197,7 +197,7 @@ async function extractNuggets (db, dir) {
       '</PassagesOutbound>'
     ]
 
-    writeFileSync(join(nuggetDir, `${nugget._key}.mdx`), mdx.join('\n'))
+    writeFileSync(join(contentDir, `${nugget._key}.mdx`), mdx.join('\n'))
   }
 }
 

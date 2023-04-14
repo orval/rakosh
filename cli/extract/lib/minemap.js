@@ -13,10 +13,10 @@ exports.MineMap = class MineMap {
 
     vertices.forEach(vertex => {
       const nug = new Nugget(vertex, vertex.body)
-      longId = longId + '|' + nug._id
+      longId = longId + '|' + nug._key
       if (!(longId in maplevel)) {
         maplevel[longId] = {
-          vid: nug._id,
+          vid: nug._key,
           name: nug.label,
           type: nug.type,
           seam: ('nuggets' in nug),

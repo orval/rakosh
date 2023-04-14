@@ -59,13 +59,11 @@ function Node ({ node, style, dragHandle }) {
     const id = node.data.id.split('|').pop()
 
     // navigate to clicked content or toggle the node open/closed
-    if (event.target.dataset.type === 'nugget') {
-      navigate('/' + id)
-    } else if (event.target.dataset.type === 'passage') {
+    if (event.target.dataset.type) {
       if (id === 'passage/adit') {
         navigate('/')
       } else {
-        navigate('/' + id.replace('passage/', 'nugget/'))
+        navigate('/' + id)
       }
     } else {
       node.toggle()
