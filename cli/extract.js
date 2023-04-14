@@ -111,7 +111,7 @@ async function copyTemplates (dir, customizations) {
 }
 
 async function extractNuggets (db, dir) {
-  const nuggetDir = join(dir, 'content', 'nuggets')
+  const contentDir = join(dir, 'content')
   const nuggetStash = {}
 
   // pull each nugget type into a stash of Nugget objects
@@ -127,22 +127,24 @@ async function extractNuggets (db, dir) {
     nuggetStash[n._id] = new Nugget(n, n.body)
   }
 
-  log.info('extracting seams')
-  const scursor = await db.query(aql`FOR s IN seam RETURN s`)
-  for await (const s of scursor) {
-    nuggetStash[s._id] = new Nugget(s, s.body)
-  }
-
   // breadcrumbs!
   for (const [_id, nugget] of Object.entries(nuggetStash)) {
+    // query the paths from the given vertex back to the adit
     const cursor = await db.query(aql`
       FOR v, e, p IN 1..100 INBOUND ${_id} GRAPH 'primary'
       FILTER v._id == 'passage/adit'
-      RETURN REVERSE(FOR vertex IN p.vertices[*] RETURN { _id: vertex._id, label: vertex.label })
+      RETURN REVERSE(
+        FOR vertex IN p.vertices[*]
+        RETURN { _id: vertex._id, label: vertex.label, _key: vertex._key }
+      )
     `)
     const breadcrumbs = []
     for await (const c of cursor) {
-      breadcrumbs.push(c.filter(b => b._id !== 'passage/adit' && b._id !== _id))
+      // filter out the adit and self then push non-zero length paths into list
+      const crumb = c.filter(b => b._id !== 'passage/adit' && b._id !== _id)
+        .map(({ _id, ...rest }) => rest)
+
+      if (crumb.length > 0) breadcrumbs.push(crumb)
     }
     nugget.breadcrumbs = breadcrumbs
   }
@@ -178,11 +180,11 @@ async function extractNuggets (db, dir) {
 
     // collect up Nugget MDX to append to Seam component
     let append = ''
-    if (nugget.type === Nugget.SEAM) {
+    if ('nuggets' in nugget) {
       append = nugget.nuggets.map(n => nuggetStash['nugget/' + n].getMdx({ inseam: true })).join('\n')
     }
 
-    const slug = (nugget._key === 'adit') ? '/' : nugget._id.replace('passage', 'nugget')
+    const slug = (nugget._key === 'adit') ? '/' : nugget._key
 
     const mdx = [
       nugget.getFrontMatter({ slug }),
@@ -203,7 +205,7 @@ async function extractNuggets (db, dir) {
       '</PassagesOutbound>'
     ]
 
-    writeFileSync(join(nuggetDir, `${nugget._key}.mdx`), mdx.join('\n'))
+    writeFileSync(join(contentDir, `${nugget._key}.mdx`), mdx.join('\n'))
   }
 }
 

@@ -34,7 +34,7 @@ const Nugget = withNuggetPropTypes((props) => {
 
   const handleClick = (event) => {
     if (event.target.tagName === 'A') return
-    navigate('/' + props._id)
+    navigate('/' + props._key)
   }
 
   return (
@@ -56,7 +56,7 @@ const Seam = withNuggetPropTypes((props) => {
 
   const handleClick = (event) => {
     if (event.target.tagName === 'A') return
-    navigate('/' + props._id)
+    navigate('/' + props._key)
   }
 
   return (
@@ -79,7 +79,7 @@ const Passage = withNuggetPropTypes((props) => {
   const handleClick = (event) => {
     if (event.target.tagName === 'A') return
     if (props._key === 'adit') navigate('/')
-    else navigate('/' + props._id.replace('passage/', 'nugget/'))
+    else navigate('/' + props._key)
   }
 
   return (
@@ -158,11 +158,11 @@ Crumbs.propTypes = {
 }
 
 const Crumb = (props) => {
-  const link = '/' + props.id.replace('passage/', 'nugget/')
+  const link = '/' + props._key
   return (<div className={styles.crumb}><IoChevronForward /><Link to={link}>{props.label}</Link></div>)
 }
 Crumb.propTypes = {
-  id: PropTypes.string.isRequired,
+  _key: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired
 }
 

@@ -10,7 +10,7 @@ In the ArangoDB graph database system used to store rakosh mines, one [Database]
 
 To model a rakosh mine there are four [Collections](https://www.arangodb.com/docs/3.10/data-modeling-collections.html):
 
-* [Nugget](/nugget/1f36fe64-eef9-4226-b837-0f9c35814405)
+* [Nugget](/1f36fe64-eef9-4226-b837-0f9c35814405)
 * Seam
 * Passage
 * Edges
