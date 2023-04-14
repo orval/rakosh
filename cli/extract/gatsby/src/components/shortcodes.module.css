@@ -63,6 +63,7 @@
   order: 1;
   flex-grow: 2;
   background-color: var(--color-main-bg);
+  min-height: 5rem;
 }
 
 .nugget {
