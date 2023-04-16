@@ -105,6 +105,8 @@ async function deposit (graph, parentVertex, path) {
   const dirs = dirContents.filter(e => e.isDirectory())
   const passageNuggets = {}
 
+  log.info(`deposit [${path}] directories [${dirs.map(d => d.name)}]`)
+
   // process markdown files
   for (const mdFile of mdFiles) {
     const base = basename(mdFile.name, '.md')
