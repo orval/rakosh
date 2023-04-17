@@ -60,7 +60,7 @@ function Node ({ node, style, dragHandle }) {
 
     // navigate to clicked content or toggle the node open/closed
     if (event.target.dataset.type) {
-      if (id === 'passage/adit') {
+      if (id === 'adit') {
         navigate('/')
       } else {
         navigate('/' + id)

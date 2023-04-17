@@ -157,7 +157,12 @@ async function deposit (graph, parentVertex, path) {
     passageLookup[resolve(dirPath)] = passageVertex._id
     await graph.edgeCollection(EDGES).save({ _from: parentVertex._id, _to: passageVertex._id })
 
+    delete passageNuggets[dir.name]
     await deposit(graph, passageVertex, dirPath)
+  }
+
+  if (Object.keys(passageNuggets).length > 0) {
+    log.warn(`WARNING: saved nugget passage(s) not added to collection [${JSON.stringify(passageNuggets)}]`)
   }
 }
 
