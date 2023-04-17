@@ -10,11 +10,12 @@ const util = require('util')
 const ncpp = util.promisify(ncp)
 const { MineMap } = require('./extract/lib/minemap')
 const { Nugget } = require('./lib/nugget')
+const { confluencePages } = require('./extract/confluence/pages')
 const log = require('loglevel')
 
 log.setLevel('WARN')
 
-exports.command = 'extract <format> <mine> <sitecustom> <directory>'
+exports.command = 'extract <format> <mine> [<sitecustom>] [<directory>]'
 
 exports.describe = 'Extract the data from a mine into some output format'
 
@@ -23,7 +24,7 @@ exports.builder = (yargs) => {
     .positional('format', {
       describe: 'The output format of the extraction',
       string: true,
-      choices: ['gatsby']
+      choices: ['gatsby', 'confluence']
     })
     .positional('mine', {
       describe: 'The name of the mine to extract',
@@ -60,6 +61,25 @@ exports.builder = (yargs) => {
       default: true,
       description: 'Run the build (use --no-build to not)'
     })
+    .option('spacekey', {
+      type: 'string',
+      description: 'Confluence space key',
+      alias: 'k'
+    })
+    .option('pageid', {
+      type: 'integer',
+      description: 'ID of confluence page where mine will be extracted to',
+      alias: 'p'
+    })
+    .check((argv) => {
+      if (argv.format === 'gatsby' && (!argv.sitecustom || !argv.directory)) {
+        return 'Both <sitecustom> and <directory> are requred for gatsby'
+      } else if (argv.format === 'confluence') {
+        if (!argv.spacekey) return 'confluence requires --spacekey'
+        if (!argv.pageid) return 'confluence requires --pageid'
+      }
+      return true
+    })
 }
 
 exports.handler = async function (argv) {
@@ -74,13 +94,14 @@ exports.handler = async function (argv) {
       throw new Error(`mine ${argv.mine} does not exist`)
     }
 
-    log.info(`extracting to ${argv.directory}`)
-
     if (argv.format === 'gatsby') {
+      log.info(`extracting to ${argv.directory}`)
       await copyTemplates(argv.directory, argv.sitecustom)
       await extractNuggets(db, argv.directory)
       await generateMineMap(db, argv.directory)
       if (argv.build) buildSite(argv.directory)
+    } else if (argv.format === 'confluence') {
+      confluencePages(db, argv)
     }
   } catch (err) {
     log.error(`ERROR: ${err}`)

@@ -74,6 +74,13 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@shogobg/markdown2confluence@^0.1.8":
+  version "0.1.8"
+  resolved "https://registry.yarnpkg.com/@shogobg/markdown2confluence/-/markdown2confluence-0.1.8.tgz#79fd6632ce9ba7d7158d580b5b651af80af5e9f1"
+  integrity sha512-1eSFnTjOo72nF8kXi/rpFovA7jcQzA95zFl56m/eSOHgerp+DUmGxkll+NAsDCi8q1xi9GImrJeddE4GK6jSyA==
+  dependencies:
+    marked "^4.0.18"
+
 "@tokenizer/token@^0.3.0":
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/@tokenizer/token/-/token-0.3.0.tgz#fe98a93fe789247e998c75e74e9c7c63217aa276"
@@ -1077,6 +1084,11 @@ markdownlint@^0.27.0:
   integrity sha512-HtfVr/hzJJmE0C198F99JLaeada+646B5SaG2pVoEakLFI6iRGsvMqrnnrflq8hm1zQgwskEgqSnhDW11JBp0w==
   dependencies:
     markdown-it "13.0.1"
+
+marked@^4.0.18:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-4.3.0.tgz#796362821b019f734054582038b116481b456cf3"
+  integrity sha512-PRsaiG84bK+AMvxziE/lCFss8juXjNaWzVbN5tXAm4XjeaS9NAHhop+PjQxz2A9h8Q4M/xGmzP8vqNwy6JeK0A==
 
 mdurl@^1.0.1:
   version "1.0.1"

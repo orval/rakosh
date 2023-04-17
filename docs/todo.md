@@ -9,6 +9,7 @@ order: 5
 * buttons for breadcrumb & metadata, plus persistence
 * code highlighting -- `gatsby-transformer-remark`?
 * embedded images
+* change `extract gatsby` to `gatsby`
 * replace nugget links in MD with `<Link>` in MDX
 * CLI command to simplify creation of new FS vertices
 * search box usage hints
