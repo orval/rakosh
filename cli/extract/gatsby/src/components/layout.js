@@ -30,7 +30,7 @@ const Layout = ({ children }) => {
     <LayoutContext.Provider value={ { globalValue, setGlobalValue } }>
       <div
         role="button"
-        tabIndex="0"
+        tabIndex="-1"
         aria-label="press b for breadcrumbs and m for metadata"
         onKeyDown={handleKeyDown}
         className={styles.container}
