@@ -27,8 +27,10 @@ const MineMap = () => {
   return (
     <div className={styles.minemap}>
       <div className={styles.mapsearch}>
+        <label htmlFor="mapsearchinput" className={styles.label}>Search map:</label>
         <input
           className={styles.mapsearchbox}
+          id="mapsearchinput"
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.currentTarget.value)} />

@@ -7,3 +7,8 @@
   height: 2rem;
   font-size: larger;
 }
+
+.label {
+  margin-right: 0.5rem;
+  font-size: smaller;
+}

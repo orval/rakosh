@@ -6,6 +6,15 @@
 .mapsearch {
   order: 0;
   margin-bottom: 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.label {
+  white-space: nowrap;
+  margin-right: 0.5rem;
+  font-size: smaller;
 }
 
 .mapsearchbox {
