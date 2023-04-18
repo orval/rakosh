@@ -4,4 +4,6 @@ body,
 #gatsby-focus-wrapper {
   height: 100%;
   margin: 0;
+  font-family: 'Figtree', sans-serif;
+  font-size: 16px;
 }
