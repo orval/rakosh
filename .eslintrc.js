@@ -6,7 +6,8 @@ module.exports = {
   },
   extends: [
     'standard',
-    'plugin:react/recommended'
+    'plugin:react/recommended',
+    'plugin:jsx-a11y/recommended'
   ],
   plugins: [
     'jsx-a11y',
@@ -24,7 +25,6 @@ module.exports = {
     }
   },
   rules: {
-    'jsx-a11y/click-events-have-key-events': 'warn'
   },
   settings: {
     react: {
