@@ -43,7 +43,8 @@ const SearchBar = () => {
         }}
       >
         <Form>
-          <Field name='query' type='text' className={styles.field} />
+          <label htmlFor='queryinput' className={styles.label}>Search:</label>
+          <Field id='queryinput' name='query' type='text' className={styles.field} />
         </Form>
       </Formik>
       <Modal

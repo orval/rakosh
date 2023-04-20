@@ -6,12 +6,23 @@ module.exports = {
   },
   extends: [
     'standard',
-    'plugin:react/recommended'
+    'plugin:react/recommended',
+    'plugin:jsx-a11y/recommended'
+  ],
+  plugins: [
+    'jsx-a11y',
+    'react'
   ],
   overrides: [
+    {
+      files: ['*.jsx', '*.js']
+    }
   ],
   parserOptions: {
-    ecmaVersion: 'latest'
+    ecmaVersion: 'latest',
+    ecmaFeatures: {
+      jsx: true
+    }
   },
   rules: {
   },
