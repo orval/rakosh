@@ -9,14 +9,22 @@ module.exports = {
     'plugin:react/recommended'
   ],
   plugins: [
-    'jsx-a11y'
+    'jsx-a11y',
+    'react'
   ],
   overrides: [
+    {
+      files: ['*.jsx', '*.js']
+    }
   ],
   parserOptions: {
-    ecmaVersion: 'latest'
+    ecmaVersion: 'latest',
+    ecmaFeatures: {
+      jsx: true
+    }
   },
   rules: {
+    'jsx-a11y/click-events-have-key-events': 'warn'
   },
   settings: {
     react: {
