@@ -6,8 +6,10 @@ module.exports = {
   },
   extends: [
     'standard',
-    'plugin:react/recommended',
-    'plugin:jsx-a11y'
+    'plugin:react/recommended'
+  ],
+  plugins: [
+    'jsx-a11y'
   ],
   overrides: [
   ],
