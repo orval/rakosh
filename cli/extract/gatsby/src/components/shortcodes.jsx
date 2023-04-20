@@ -37,8 +37,20 @@ const Nugget = withNuggetPropTypes((props) => {
     navigate('/' + props._key)
   }
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      navigate('/' + props._key)
+    }
+  }
+
   return (
-    <div className={className} onClick={handleClick}>
+    <div
+      role="button"
+      className={className}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+    >
       <div className={styles.container}>
         {props.children}
         {globalValue.showMetadata && !props.direction && !props.inseam
@@ -59,8 +71,20 @@ const Seam = withNuggetPropTypes((props) => {
     navigate('/' + props._key)
   }
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      navigate('/' + props._key)
+    }
+  }
+
   return (
-    <div className={className} onClick={handleClick}>
+    <div
+      role="button"
+      className={className}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+    >
       <div className={styles.container}>
         {props.children}
         {globalValue.showMetadata && !props.direction
@@ -82,8 +106,20 @@ const Passage = withNuggetPropTypes((props) => {
     else navigate('/' + props._key)
   }
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      navigate('/' + props._key)
+    }
+  }
+
   return (
-    <div className={className} onClick={handleClick}>
+    <div
+      role="button"
+      className={className}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+    >
       <div className={styles.container}>
         {props.children}
         {globalValue.showMetadata && !props.direction
