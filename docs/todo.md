@@ -5,7 +5,6 @@ order: 5
 
 ### TODO
 
-* keyboard navigation plus fix gatsby build warnings
 * buttons for breadcrumb & metadata, plus persistence
 * code highlighting -- `gatsby-transformer-remark`?
 * embedded images
