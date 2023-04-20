@@ -65,7 +65,7 @@ const MineMap = () => {
 
 function Node ({ node, style, dragHandle }) {
   return (
-    <div data-type={node.data.type} style={style} ref={dragHandle}>
+    <div data-type={node.data.type} style={style} ref={dragHandle} className={styles.node}>
       <MapArrow node={node} />
       {node.data.name}
     </div>
@@ -105,12 +105,17 @@ const Row = ({ node, attrs, innerRef, children }) => {
     }
   }
 
+  // override these from styles.row
+  delete attrs.style.width
+  delete attrs.style.left
+
   return (
     // attrs already contains role="treeitem" and the appropriate ARIA attributes
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       {...attrs}
       ref={innerRef}
+      className={styles.row}
       onFocus={(e) => e.stopPropagation()}
       onClick={handleClick}
       onKeyDown={handleKeyDown}

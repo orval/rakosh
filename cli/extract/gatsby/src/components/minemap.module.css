@@ -26,3 +26,20 @@
 .tree {
   order: 1;
 }
+
+.row {
+  display: flex;
+  align-items: center;
+  width: 96%;
+}
+
+.row:focus {
+  outline: none;
+  border-radius: 0.3rem;
+  border: 2px solid;
+  border-color: var(--color_side_fg);
+}
+
+.node {
+  display: flex;
+}
