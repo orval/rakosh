@@ -13,6 +13,7 @@ const Layout = ({ children }) => {
   })
 
   const handleKeyDown = (event) => {
+    if (event.target.tagName === 'INPUT') return
     if (event.key === 'b') {
       setGlobalValue({
         ...globalValue,
