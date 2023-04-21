@@ -4,7 +4,7 @@ import * as styles from './layout.module.css'
 import MineMap from '../components/minemap'
 import SearchBar from '../components/searchbar'
 import ContentGrid from '../components/contentgrid'
-import LayoutContext from './layoutcontext'
+import LayoutContext from '../components/layoutcontext'
 
 const Layout = ({ children }) => {
   const [globalValue, setGlobalValue] = useState({
