@@ -11,6 +11,7 @@ const config = {
   },
   pathPrefix: '{{{path_prefix}}}',
   plugins: [
+    'gatsby-plugin-layout',
     {
       resolve: 'gatsby-plugin-mdx',
       options: {
