@@ -79,16 +79,14 @@ Node.propTypes = {
 }
 
 const Row = ({ node, attrs, innerRef, children }) => {
-  const handleClick = (event) => {
-    const id = node.data.id.split('|').pop()
+  const nav = (key) => {
+    navigate('/' + ((key === 'adit') ? '' : key))
+  }
 
+  const handleClick = (event) => {
     // navigate to clicked content or toggle the node open/closed
     if (event.target.dataset.type) {
-      if (id === 'adit') {
-        navigate('/')
-      } else {
-        navigate('/' + id)
-      }
+      nav(node.data.id.split('|').pop())
     } else {
       node.toggle()
     }
@@ -96,12 +94,7 @@ const Row = ({ node, attrs, innerRef, children }) => {
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      const id = node.data.id.split('|').pop()
-      if (id === 'adit') {
-        navigate('/')
-      } else {
-        navigate('/' + id)
-      }
+      nav(node.data.id.split('|').pop())
     }
   }
 
@@ -115,6 +108,7 @@ const Row = ({ node, attrs, innerRef, children }) => {
     <div
       {...attrs}
       ref={innerRef}
+      data-type={node.data.type}
       className={styles.row}
       onFocus={(e) => e.stopPropagation()}
       onClick={handleClick}

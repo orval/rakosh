@@ -4,7 +4,7 @@ import * as styles from './layout.module.css'
 import MineMap from '../components/minemap'
 import SearchBar from '../components/searchbar'
 import ContentGrid from '../components/contentgrid'
-import LayoutContext from './layoutcontext'
+import LayoutContext from '../components/layoutcontext'
 
 const Layout = ({ children }) => {
   const [globalValue, setGlobalValue] = useState({
@@ -13,6 +13,7 @@ const Layout = ({ children }) => {
   })
 
   const handleKeyDown = (event) => {
+    if (event.target.tagName === 'INPUT') return
     if (event.key === 'b') {
       setGlobalValue({
         ...globalValue,
