@@ -14,17 +14,12 @@ const log = require('loglevel')
 
 log.setLevel('WARN')
 
-exports.command = 'extract <format> <mine> <sitecustom> <directory>'
+exports.command = 'gatsby <mine> <sitecustom> <directory>'
 
-exports.describe = 'Extract the data from a mine into some output format'
+exports.describe = 'Extract the data from a mine into a Gatsby.js site layout'
 
 exports.builder = (yargs) => {
   return yargs
-    .positional('format', {
-      describe: 'The output format of the extraction',
-      string: true,
-      choices: ['gatsby']
-    })
     .positional('mine', {
       describe: 'The name of the mine to extract',
       string: true
@@ -76,12 +71,10 @@ exports.handler = async function (argv) {
 
     log.info(`extracting to ${argv.directory}`)
 
-    if (argv.format === 'gatsby') {
-      await copyTemplates(argv.directory, argv.sitecustom)
-      await extractNuggets(db, argv.directory)
-      await generateMineMap(db, argv.directory)
-      if (argv.build) buildSite(argv.directory)
-    }
+    await copyTemplates(argv.directory, argv.sitecustom)
+    await extractNuggets(db, argv.directory)
+    await generateMineMap(db, argv.directory)
+    if (argv.build) buildSite(argv.directory)
   } catch (err) {
     log.error(`ERROR: ${err}`)
     process.exit(1)

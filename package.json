@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -31,8 +31,8 @@
   "scripts": {
     "lint": "eslint cli",
     "devdep": "./cli/main.js deposit examples/my-mine -r -v",
-    "devext": "./cli/main.js extract gatsby my-mine examples/my-mine/cust-dev.json heap --no-build -v",
+    "devext": "./cli/main.js gatsby my-mine examples/my-mine/cust-dev.json heap --no-build -v",
     "docdep": "./cli/main.js deposit docs -r -v",
-    "docext": "./cli/main.js extract gatsby docs docs/cust-dev.json heap --no-build -v"
+    "docext": "./cli/main.js gatsby docs docs/cust-dev.json heap --no-build -v"
   }
 }

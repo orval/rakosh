@@ -5,3 +5,5 @@ order: 3
 ---
 
 ## Command Line Interface
+
+The Command Line Interface program is called `rakosh`.
