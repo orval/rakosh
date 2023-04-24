@@ -52,7 +52,7 @@ jobs:
       - name: extract and build gatsby site
         run: |
           mkdir ./staticsite
-          ./cli/main.js extract gatsby docs docs/cust-prod.json ./staticsite -v --no-build
+          ./cli/main.js gatsby docs docs/cust-prod.json ./staticsite -v --no-build
           cd ./staticsite
           yarn
           yarn list
