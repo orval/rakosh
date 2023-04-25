@@ -53,7 +53,7 @@ jobs:
       - name: extract and build gatsby site
         run: |
           mkdir ./staticsite
-          ./cli/main.js extract gatsby my-mine examples/my-mine/cust-prod.json ./staticsite -v --no-build
+          ./cli/main.js gatsby my-mine examples/my-mine/cust-prod.json ./staticsite -v --no-build
           cd ./staticsite
           yarn
           yarn list

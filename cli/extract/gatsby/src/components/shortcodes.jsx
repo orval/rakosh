@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import ContentGridContext from '../contentgridcontext'
+import LayoutContext from './layoutcontext'
 import PropTypes from 'prop-types'
 import { navigate, Link } from 'gatsby'
 import { IoChevronForward } from 'react-icons/io5'
@@ -26,19 +26,37 @@ function getYaml (props) {
   return yaml.dump(entries)
 }
 
+function nav (key, tagName = '') {
+  if (tagName === 'A') return
+  if (key === 'adit') navigate('/')
+  else navigate('/' + key)
+}
+
 const Nugget = withNuggetPropTypes((props) => {
   const bordered = (props.inseam) ? '' : styles.bordered
+  const tabIndex = (props.inseam) ? -1 : 0
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${bordered} ${mainStyle} ${styles.nugget}`
-  const { globalValue } = useContext(ContentGridContext)
+  const { globalValue } = useContext(LayoutContext)
 
   const handleClick = (event) => {
-    if (event.target.tagName === 'A') return
-    navigate('/' + props._key)
+    nav(props._key, event.target.tagName)
+  }
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      nav(props._key)
+    }
   }
 
   return (
-    <div className={className} onClick={handleClick}>
+    <div
+      role="button"
+      className={className}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={tabIndex}
+    >
       <div className={styles.container}>
         {props.children}
         {globalValue.showMetadata && !props.direction && !props.inseam
@@ -52,15 +70,26 @@ const Nugget = withNuggetPropTypes((props) => {
 const Seam = withNuggetPropTypes((props) => {
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${styles.bordered} ${mainStyle} ${styles.seam}`
-  const { globalValue } = useContext(ContentGridContext)
+  const { globalValue } = useContext(LayoutContext)
 
   const handleClick = (event) => {
-    if (event.target.tagName === 'A') return
-    navigate('/' + props._key)
+    nav(props._key, event.target.tagName)
+  }
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      nav(props._key)
+    }
   }
 
   return (
-    <div className={className} onClick={handleClick}>
+    <div
+      role="button"
+      className={className}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+    >
       <div className={styles.container}>
         {props.children}
         {globalValue.showMetadata && !props.direction
@@ -74,16 +103,26 @@ const Seam = withNuggetPropTypes((props) => {
 const Passage = withNuggetPropTypes((props) => {
   const mainStyle = (props.direction) ? '' : styles.main
   const className = `${styles.bordered} ${mainStyle} ${styles.passage}`
-  const { globalValue } = useContext(ContentGridContext)
+  const { globalValue } = useContext(LayoutContext)
 
   const handleClick = (event) => {
-    if (event.target.tagName === 'A') return
-    if (props._key === 'adit') navigate('/')
-    else navigate('/' + props._key)
+    nav(props._key, event.target.tagName)
+  }
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      nav(props._key)
+    }
   }
 
   return (
-    <div className={className} onClick={handleClick}>
+    <div
+      role="button"
+      className={className}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+    >
       <div className={styles.container}>
         {props.children}
         {globalValue.showMetadata && !props.direction
@@ -136,7 +175,7 @@ const NuggetsOutbound = (props) => {
 NuggetsOutbound.propTypes = Nugget.propTypes
 
 const Breadcrumbs = (props) => {
-  const { globalValue } = useContext(ContentGridContext)
+  const { globalValue } = useContext(LayoutContext)
   return (
     <div className={styles.breadcrumbs}>
       {globalValue.showBreadcrumbs && props.children}
@@ -167,7 +206,7 @@ Crumb.propTypes = {
 }
 
 const NuggetBody = (props) => {
-  return (<div className={styles.content}>{props.children}</div>)
+  return (<div className={styles.content} tabIndex={-1}>{props.children}</div>)
 }
 NuggetBody.propTypes = {
   children: PropTypes.any.isRequired

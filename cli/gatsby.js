@@ -10,22 +10,16 @@ const util = require('util')
 const ncpp = util.promisify(ncp)
 const { MineMap } = require('./extract/lib/minemap')
 const { Nugget } = require('./lib/nugget')
-const { confluencePages } = require('./extract/confluence/pages')
 const log = require('loglevel')
 
 log.setLevel('WARN')
 
-exports.command = 'extract <format> <mine> [<sitecustom>] [<directory>]'
+exports.command = 'gatsby <mine> <sitecustom> <directory>'
 
-exports.describe = 'Extract the data from a mine into some output format'
+exports.describe = 'Extract the data from a mine into a Gatsby.js site layout'
 
 exports.builder = (yargs) => {
   return yargs
-    .positional('format', {
-      describe: 'The output format of the extraction',
-      string: true,
-      choices: ['gatsby', 'confluence']
-    })
     .positional('mine', {
       describe: 'The name of the mine to extract',
       string: true
@@ -94,15 +88,12 @@ exports.handler = async function (argv) {
       throw new Error(`mine ${argv.mine} does not exist`)
     }
 
-    if (argv.format === 'gatsby') {
-      log.info(`extracting to ${argv.directory}`)
-      await copyTemplates(argv.directory, argv.sitecustom)
-      await extractNuggets(db, argv.directory)
-      await generateMineMap(db, argv.directory)
-      if (argv.build) buildSite(argv.directory)
-    } else if (argv.format === 'confluence') {
-      confluencePages(db, argv)
-    }
+    log.info(`extracting to ${argv.directory}`)
+
+    await copyTemplates(argv.directory, argv.sitecustom)
+    await extractNuggets(db, argv.directory)
+    await generateMineMap(db, argv.directory)
+    if (argv.build) buildSite(argv.directory)
   } catch (err) {
     log.error(`ERROR: ${err}`)
     process.exit(1)
@@ -246,11 +237,34 @@ async function generateMineMap (db, dir) {
   `)
 
   const mm = new MineMap()
-  for await (const p of cursor) {
-    mm.addVerticies(p)
+  for await (const path of cursor) {
+    mm.addVerticies(processPassageSeams(path))
   }
 
   writeFileSync(mapFile, mm.toTree())
+
+  // when a Passage has a seam it is added to the head Nugget of the seam so that
+  // the later deduplication works correctly
+  function processPassageSeams (path) {
+    let previous = {}
+    for (const v of path) {
+      // see if the previous vertex in the path was a passage and had a seam and
+      // that the current vertex's _id is the head of that seam
+      if (previous.type === Nugget.PASSAGE &&
+        previous.nuggets &&
+        previous.nuggets.length > 0 &&
+        v._key === previous.nuggets[0]) {
+        if (v.nuggets) {
+          log.warn(`WARNING: Nugget ${v._id} cannot be in a seam and have its own seam`)
+          continue
+        }
+        previous.nuggets.pop()
+        v.nuggets = previous.nuggets
+      }
+      previous = v
+    }
+    return path
+  }
 }
 
 function buildSite (dir) {

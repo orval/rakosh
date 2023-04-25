@@ -11,6 +11,7 @@ const config = {
   },
   pathPrefix: '{{{path_prefix}}}',
   plugins: [
+    'gatsby-plugin-layout',
     {
       resolve: 'gatsby-plugin-mdx',
       options: {
@@ -54,6 +55,19 @@ const config = {
             label: node.frontmatter.label,
             body: node.body
           }))
+      }
+    },
+    {
+      resolve: 'gatsby-omni-font-loader',
+      options: {
+        enableListener: true,
+        preconnect: ['https://fonts.googleapis.com', 'https://fonts.gstatic.com'],
+        web: [
+          {
+            name: 'Figtree',
+            file: 'https://fonts.googleapis.com/css2?family=Figtree&family=Inter&display=swap'
+          }
+        ]
       }
     }
   ]

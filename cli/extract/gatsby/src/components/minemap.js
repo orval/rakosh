@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { navigate } from 'gatsby'
 import { Tree } from 'react-arborist'
@@ -6,18 +6,24 @@ import { IoCaretDown, IoCaretForward } from 'react-icons/io5'
 import minemapJson from '../../content/minemap.json'
 import * as styles from './minemap.module.css'
 
-const rem = 14
+let rem = 16
 
 const MineMap = () => {
-  const [searchTerm, setSearchTerm] = React.useState('')
-  const [height, setHeight] = React.useState(600)
-  // const treeRef = React.useRef(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [height, setHeight] = useState(600)
+  const [width, setWidth] = useState(300)
+  const mineMapRef = useRef(null)
 
-  React.useEffect(() => {
-    // if (!treeRef.current) return
+  useEffect(() => {
+    // get real rem once
+    rem = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('font-size'))
+
     const handleResize = () => {
       // 9 rem accounts for topbar, sidebar padding, mapsearchbox height, and mapsearch margin-bottom
       setHeight(Math.max(200, Math.min(window.innerHeight) - (10 * rem)))
+
+      // get the width to pass to Tree from bounding size
+      setWidth(mineMapRef.current.getBoundingClientRect().width)
     }
     handleResize()
     window.addEventListener('resize', handleResize)
@@ -25,16 +31,18 @@ const MineMap = () => {
   }, [])
 
   return (
-    <div className={styles.minemap}>
+    <div className={styles.minemap} ref={mineMapRef}>
       <div className={styles.mapsearch}>
+        <label htmlFor="mapsearchinput" className={styles.label}>Search map:</label>
         <input
           className={styles.mapsearchbox}
+          id="mapsearchinput"
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.currentTarget.value)} />
       </div>
       <Tree
-        // ref={treeRef}
+        renderRow={Row}
         className={styles.tree}
         initialData={minemapJson.initialData}
         rowHeight={30}
@@ -44,6 +52,7 @@ const MineMap = () => {
         disableDrag={true}
         disableDrop={true}
         height={height}
+        width={width}
         indent={rem}
         initialOpenState={minemapJson.initialOpenState}
         searchTerm={searchTerm}
@@ -55,23 +64,8 @@ const MineMap = () => {
 }
 
 function Node ({ node, style, dragHandle }) {
-  const handleClick = (event) => {
-    const id = node.data.id.split('|').pop()
-
-    // navigate to clicked content or toggle the node open/closed
-    if (event.target.dataset.type) {
-      if (id === 'adit') {
-        navigate('/')
-      } else {
-        navigate('/' + id)
-      }
-    } else {
-      node.toggle()
-    }
-  }
-
   return (
-    <div data-type={node.data.type} style={style} ref={dragHandle} onClick={handleClick}>
+    <div data-type={node.data.type} style={style} ref={dragHandle} className={styles.node}>
       <MapArrow node={node} />
       {node.data.name}
     </div>
@@ -84,9 +78,57 @@ Node.propTypes = {
   dragHandle: PropTypes.func
 }
 
+const Row = ({ node, attrs, innerRef, children }) => {
+  const nav = (key) => {
+    navigate('/' + ((key === 'adit') ? '' : key))
+  }
+
+  const handleClick = (event) => {
+    // navigate to clicked content or toggle the node open/closed
+    if (event.target.dataset.type) {
+      nav(node.data.id.split('|').pop())
+    } else {
+      node.toggle()
+    }
+  }
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      nav(node.data.id.split('|').pop())
+    }
+  }
+
+  // override these from styles.row
+  delete attrs.style.width
+  delete attrs.style.left
+
+  return (
+    // attrs already contains role="treeitem" and the appropriate ARIA attributes
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+    <div
+      {...attrs}
+      ref={innerRef}
+      data-type={node.data.type}
+      className={styles.row}
+      onFocus={(e) => e.stopPropagation()}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+    >
+      {children}
+    </div>
+  )
+}
+
+Row.propTypes = {
+  node: PropTypes.object.isRequired,
+  attrs: PropTypes.object.isRequired,
+  innerRef: PropTypes.func.isRequired,
+  children: PropTypes.any.isRequired
+}
+
 function MapArrow ({ node }) {
   return (
-    <span>
+    <span role='button'>
       {node.isInternal ? (node.isOpen ? (<IoCaretDown />) : (<IoCaretForward />)) : null}
     </span>
   )

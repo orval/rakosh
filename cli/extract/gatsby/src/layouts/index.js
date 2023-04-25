@@ -1,14 +1,41 @@
-import * as React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import * as styles from './layout.module.css'
 import MineMap from '../components/minemap'
 import SearchBar from '../components/searchbar'
 import ContentGrid from '../components/contentgrid'
+import LayoutContext from '../components/layoutcontext'
 
 const Layout = ({ children }) => {
+  const [globalValue, setGlobalValue] = useState({
+    showMetadata: false,
+    showBreadcrumbs: false
+  })
+
+  const handleKeyDown = (event) => {
+    if (event.target.tagName === 'INPUT') return
+    if (event.key === 'b') {
+      setGlobalValue({
+        ...globalValue,
+        showBreadcrumbs: !globalValue.showBreadcrumbs
+      })
+    } else if (event.key === 'm') {
+      setGlobalValue({
+        ...globalValue,
+        showMetadata: !globalValue.showMetadata
+      })
+    }
+  }
+
   return (
-    <>
-      <div className={styles.container}>
+    <LayoutContext.Provider value={ { globalValue, setGlobalValue } }>
+      <div
+        role="button"
+        tabIndex="-1"
+        aria-label="press b for breadcrumbs and m for metadata"
+        onKeyDown={handleKeyDown}
+        className={styles.container}
+      >
         <header className={styles.topbar}>
           {/* eslint-disable-next-line */}
           <h1 className={styles.minename}>{{mine_name}}</h1>
@@ -27,7 +54,7 @@ const Layout = ({ children }) => {
           </div>
         </main>
       </div>
-    </>
+    </LayoutContext.Provider>
   )
 }
 

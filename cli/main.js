@@ -5,7 +5,7 @@ const { hideBin } = require('yargs/helpers')
 
 yargs(hideBin(process.argv))
   .command(require('./deposit'))
-  .command(require('./extract'))
+  .command(require('./gatsby'))
   .command(require('./uuid'))
   .demandCommand(1)
   .option('verbose', {
