@@ -139,6 +139,12 @@ async function deposit (graph, parentVertex, path) {
       } else {
         log.info(`creating nugget ${base}`)
         const vertex = await graph.vertexCollection(NUGGET).save(nugget.document)
+
+        // seam head edge will be created in createSeams
+        if (parentVertex.nuggets && vertex._key === parentVertex.nuggets[0]) {
+          continue
+        }
+
         await graph.edgeCollection(EDGES).save({ _from: parentVertex._id, _to: vertex._id })
       }
     }
@@ -158,7 +164,8 @@ async function deposit (graph, parentVertex, path) {
     await graph.edgeCollection(EDGES).save({ _from: parentVertex._id, _to: passageVertex._id })
 
     delete passageNuggets[dir.name]
-    await deposit(graph, passageVertex, dirPath)
+    doc._id = passageVertex._id
+    await deposit(graph, doc, dirPath)
   }
 
   if (Object.keys(passageNuggets).length > 0) {
@@ -197,13 +204,22 @@ async function createLinks (graph, directory) {
 
 async function createSeams (db, graph) {
   try {
-    // an array of nuggets means this nugget has a seam
-    const cursor = await db.query(aql`
+    // an array of nuggets means this nugget or passage has a seam
+    await createSeamLinks(await db.query(aql`
       FOR n IN nugget
         FILTER n.nuggets
         RETURN n
-    `)
+    `))
+    await createSeamLinks(await db.query(aql`
+      FOR p IN passage
+        FILTER p.nuggets
+        RETURN p
+    `))
+  } catch (err) {
+    log.error(`ERROR: exception during seam creation: ${err}`)
+  }
 
+  async function createSeamLinks (cursor) {
     for await (const nugget of cursor) {
       let from = nugget._id
 
@@ -223,7 +239,5 @@ async function createSeams (db, graph) {
         from = nuggetId
       }
     }
-  } catch (err) {
-    log.error(`ERROR: exception during seam creation: ${err}`)
   }
 }

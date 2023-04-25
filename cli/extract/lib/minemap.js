@@ -44,9 +44,9 @@ exports.MineMap = class MineMap {
     function seamNuggets (level, id) {
       const vertex = level[id]
       const nugs = []
-      if (vertex.type === 'nugget' && !vertex.seam) nugs.push(vertex.vid)
+      if (!vertex.seam) nugs.push(vertex.vid)
       for (const [longId, val] of Object.entries(vertex.children)) {
-        if (val.type === 'nugget' && !vertex.seam) nugs.push(val.vid)
+        if (!vertex.seam) nugs.push(val.vid)
         nugs.push(...seamNuggets(vertex.children, longId))
       }
       return nugs

@@ -218,11 +218,34 @@ async function generateMineMap (db, dir) {
   `)
 
   const mm = new MineMap()
-  for await (const p of cursor) {
-    mm.addVerticies(p)
+  for await (const path of cursor) {
+    mm.addVerticies(processPassageSeams(path))
   }
 
   writeFileSync(mapFile, mm.toTree())
+
+  // when a Passage has a seam it is added to the head Nugget of the seam so that
+  // the later deduplication works correctly
+  function processPassageSeams (path) {
+    let previous = {}
+    for (const v of path) {
+      // see if the previous vertex in the path was a passage and had a seam and
+      // that the current vertex's _id is the head of that seam
+      if (previous.type === Nugget.PASSAGE &&
+        previous.nuggets &&
+        previous.nuggets.length > 0 &&
+        v._key === previous.nuggets[0]) {
+        if (v.nuggets) {
+          log.warn(`WARNING: Nugget ${v._id} cannot be in a seam and have its own seam`)
+          continue
+        }
+        previous.nuggets.pop()
+        v.nuggets = previous.nuggets
+      }
+      previous = v
+    }
+    return path
+  }
 }
 
 function buildSite (dir) {
