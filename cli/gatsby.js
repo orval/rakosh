@@ -55,25 +55,6 @@ exports.builder = (yargs) => {
       default: true,
       description: 'Run the build (use --no-build to not)'
     })
-    .option('spacekey', {
-      type: 'string',
-      description: 'Confluence space key',
-      alias: 'k'
-    })
-    .option('pageid', {
-      type: 'integer',
-      description: 'ID of confluence page where mine will be extracted to',
-      alias: 'p'
-    })
-    .check((argv) => {
-      if (argv.format === 'gatsby' && (!argv.sitecustom || !argv.directory)) {
-        return 'Both <sitecustom> and <directory> are requred for gatsby'
-      } else if (argv.format === 'confluence') {
-        if (!argv.spacekey) return 'confluence requires --spacekey'
-        if (!argv.pageid) return 'confluence requires --pageid'
-      }
-      return true
-    })
 }
 
 exports.handler = async function (argv) {
