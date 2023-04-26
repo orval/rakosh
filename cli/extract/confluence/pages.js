@@ -7,15 +7,8 @@ const md2c = require('@shogobg/markdown2confluence')
 const domain = 'orval.atlassian.net'
 
 exports.confluencePages = async function (db, argv) {
-  if (!process.env.RAKOSH_CC_AUTH) {
-    log.error('RAKOSH_CC_AUTH not set in the environment')
-    log.error('RAKOSH_CC_AUTH requires Confluence Cloud credentials in format <your_email@domain.com>:<your_user_api_token>')
-    return
-  }
-
   const headers = {
-    Authorization: `Basic ${Buffer.from(process.env.RAKOSH_CC_AUTH).toString('base64')}`,
-    // Authorization: `Basic `,
+    Authorization: `Basic ${Buffer.from(argv.ccauth).toString('base64')}`,
     Accept: 'application/json',
     'Content-Type': 'application/json'
   }

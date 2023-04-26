@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.4.0",
+  "version": "0.3.1",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -35,6 +35,7 @@
     "devdep": "./cli/main.js deposit examples/my-mine -r -v",
     "devext": "./cli/main.js gatsby my-mine examples/my-mine/cust-dev.json heap --no-build -v",
     "docdep": "./cli/main.js deposit docs -r -v",
-    "docext": "./cli/main.js gatsby docs docs/cust-dev.json heap --no-build -v"
+    "docext": "./cli/main.js gatsby docs docs/cust-dev.json heap --no-build -v",
+    "doccon": "./cli/main.js confluence docs rakosh 164094"
   }
 }
