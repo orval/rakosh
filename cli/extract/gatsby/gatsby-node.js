@@ -45,3 +45,18 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
     }
   })
 }
+
+// generating source maps blows the heap so they are disabled
+exports.onCreateWebpackConfig = ({
+  stage,
+  rules,
+  loaders,
+  plugins,
+  actions
+}) => {
+  if (stage === 'build-html') {
+    actions.setWebpackConfig({
+      devtool: false
+    })
+  }
+}
