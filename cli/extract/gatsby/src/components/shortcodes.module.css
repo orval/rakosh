@@ -29,6 +29,7 @@
   flex-direction: column;
   font-size: smaller;
   overflow: auto;
+  height: fit-content;
 }
 
 .inboundnugget {
