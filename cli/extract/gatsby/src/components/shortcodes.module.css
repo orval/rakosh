@@ -28,6 +28,8 @@
   justify-content: center;
   flex-direction: column;
   font-size: smaller;
+  overflow: auto;
+  height: fit-content;
 }
 
 .inboundnugget {
@@ -51,11 +53,10 @@
 .bordered {
   border-radius: 2rem;
   border: 0.3rem solid;
-  padding: 2rem;
+  padding: 0.5rem 1rem 0.5rem 1rem;
   margin: 0.2rem;
   max-height: 100%;
   max-width: 100%;
-  overflow: auto;
 }
 
 .main {
@@ -64,6 +65,8 @@
   flex-grow: 2;
   background-color: var(--color-main-bg);
   min-height: 5rem;
+  padding: 2rem;
+  overflow: auto;
 }
 
 .nugget {
@@ -77,6 +80,12 @@
 .seam {
   border-color: var(--color-seam);
   overflow: auto;
+}
+
+.small {
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: xx-small;
 }
 
 .container {

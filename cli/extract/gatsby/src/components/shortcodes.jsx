@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, Children } from 'react'
 import LayoutContext from './layoutcontext'
 import PropTypes from 'prop-types'
 import { navigate, Link } from 'gatsby'
@@ -102,7 +102,8 @@ const Seam = withNuggetPropTypes((props) => {
 
 const Passage = withNuggetPropTypes((props) => {
   const mainStyle = (props.direction) ? '' : styles.main
-  const className = `${styles.bordered} ${mainStyle} ${styles.passage}`
+  const small = (props.numPassages > 10) ? styles.small : ''
+  const className = `${styles.bordered} ${mainStyle} ${styles.passage} ${small}`
   const { globalValue } = useContext(LayoutContext)
 
   const handleClick = (event) => {
@@ -148,9 +149,14 @@ const PassagesInbound = (props) => {
 PassagesInbound.propTypes = Nugget.propTypes
 
 const PassagesOutbound = (props) => {
+  const numPassages = Children.toArray(props.children).length
   return (
     <div className={styles.outboundpassage}>
-      {props.children}
+      {numPassages > 10
+        ? React.Children.map(props.children, (child) =>
+          React.cloneElement(child, { numPassages })
+        )
+        : props.children}
     </div>
   )
 }
