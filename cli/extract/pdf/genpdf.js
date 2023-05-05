@@ -3,7 +3,7 @@ const log = require('loglevel')
 const { aql } = require('arangojs/aql')
 const { mkdtempSync, writeFileSync } = require('node:fs')
 const { tmpdir } = require('node:os')
-const { join } = require('node:path')
+const { join, dirname } = require('node:path')
 const { Nugget } = require('../../lib/nugget')
 const markdownpdf = require('markdown-pdf')
 
@@ -31,7 +31,25 @@ exports.generatePdf = async function (db, argv) {
     mdFiles[nugget._key] = writeMdFile(tmpDir, nugget._key, nugget.body)
   }
 
-  markdownpdf().concat.from.paths(Object.values(mdFiles)).to(argv.output, () => {
+  const paths = await getPaths(db, mdFiles)
+
+  const md = paths.map(p => {
+    const parts = p.split('|')
+    const last = parts.pop()
+    return parts.map(p => allNuggets[p].label)
+      .concat(`[${allNuggets[last].label}](./${last})`).join(' - ')
+  })
+
+  const orderedFiles = [writeMdFile(tmpDir, 'toc', md.join('\n') + '\n\n')]
+  paths.forEach(p => orderedFiles.push(mdFiles[p.split('|').pop()]))
+  console.log(orderedFiles)
+
+  markdownpdf({
+    cssPath: join(dirname(__filename), 'pdf.css'),
+    remarkable: {
+      preset: 'full'
+    }
+  }).concat.from.paths(orderedFiles).to(argv.output, () => {
     log.info(`created ${argv.output}`)
   })
 }
@@ -43,15 +61,35 @@ async function getAllNuggets (db) {
       RETURN v
   `)
 
-  const seamNugs = {}
+  const nugs = {}
   for await (const c of cursor) {
-    seamNugs[c._key] = new Nugget(c)
+    nugs[c._key] = new Nugget(c)
   }
-  return seamNugs
+  return nugs
 }
 
 function writeMdFile (dir, name, md) {
   const path = join(dir, `${name}.md`)
   writeFileSync(path, md)
   return path
+}
+
+async function getPaths (db, mdFiles) {
+  const cursor = await db.query(aql`
+    FOR v, e, p IN 0..10000 OUTBOUND 'passage/adit' GRAPH 'primary'
+      PRUNE v.nuggets
+      LET vertices = (
+          FOR vertex IN p.vertices
+              LET order_value = vertex.order == null ? 10000 : vertex.order
+              RETURN MERGE(vertex, { order: order_value })
+      )
+      SORT vertices[*].order ASC, vertices[*].label ASC
+      RETURN CONCAT_SEPARATOR("|", vertices[*]._key)
+  `)
+
+  const paths = []
+  for await (const c of cursor) {
+    if (c.split('|').pop() in mdFiles) paths.push(c)
+  }
+  return paths
 }
