@@ -43,7 +43,11 @@ exports.generatePdf = async function (db, argv) {
 
   // create a TOC
   const allMd = orderedChunks.join('\n')
-  const tocMd = toc(allMd, { firsth1: false, maxdepth: 2 }).content
+  const tocMd = toc(allMd, {
+    firsth1: argv.toch1,
+    maxdepth: argv.tocdepth,
+    bullets: '*'
+  }).content
 
   // write markdown to file for use by mdpdf
   const mdFile = join(tmpDir, 'all.md')
