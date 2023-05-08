@@ -1,28 +1,19 @@
 'use strict'
 const log = require('loglevel')
 const { aql } = require('arangojs/aql')
-const { mkdtempSync, writeFileSync } = require('node:fs')
+const { mkdtempSync, writeFileSync, createWriteStream, createReadStream, readFileSync } = require('node:fs')
 const { tmpdir } = require('node:os')
 const { join, dirname } = require('node:path')
 const { Nugget } = require('../../lib/nugget')
-const markdownpdf = require('markdown-pdf')
-
-const HEADING_RE = /^(#+\s+\w+)$/m
-
-// const through = require('through2')
-
-// function preProcessHtml () {
-//   return through(function (data, enc, cb) {
-//     this.push(data)
-//     cb()
-//   })
-// }
+const mdpdf = require('mdpdf')
+const toc = require('markdown-toc')
 
 exports.generatePdf = async function (db, argv) {
   log.info('generating pdf')
 
   const allNuggets = await getAllNuggets(db)
   const tmpDir = mkdtempSync(join(tmpdir(), 'rakosh-genpdf-'))
+  log.info(`writing temporary files to ${tmpDir}`)
 
   const mdFiles = {}
   const nugList = []
@@ -44,63 +35,62 @@ exports.generatePdf = async function (db, argv) {
     mdFiles[nugget._key] = writeMdFile(tmpDir, nugget._key, nugget.body)
   }
 
-  // create a kind of TOC
+  // create a TOC only using paths for ordering at the moment
   const paths = await getPaths(db, mdFiles)
 
-  const md = paths.map(p => {
-    const parts = p.split('|')
-    const last = parts.pop()
-    return parts.map(p => allNuggets[p].label)
-      .concat(`[${allNuggets[last].label}](#${last})`).join(' - ')
-  })
-
-  const orderedFiles = [writeMdFile(tmpDir, 'toc', md.join('\n') + '\n\n')]
+  // put the files into the order defined by `paths`
+  const orderedFiles = []
   paths.forEach(p => orderedFiles.push(mdFiles[p.split('|').pop()]))
 
-  markdownpdf({
-    cssPath: join(dirname(__filename), 'pdf.css'),
-    // preProcessHtml,
-    remarkable: {
-      preset: 'full',
-      plugins: [plugin],
-      syntax: ['abbreviations']
-    }
-  }).concat.from.paths(orderedFiles).to(argv.output, () => {
-    log.info(`created ${argv.output}`)
-  })
+  // create the PDF
+  await concatFiles(tmpDir, orderedFiles)
+    .then((inputFile) => {
+      const content = readFileSync(inputFile, { encoding: 'utf-8' })
+      const tmp = join(tmpDir, 'tmp.md')
+      writeFileSync(tmp, toc(content, { firsth1: false, maxdepth: 2 }).content + '\n' + content)
+      const options = {
+        source: tmp,
+        destination: argv.output,
+        styles: join(dirname(__filename), 'pdf.css'),
+        pdf: {
+          format: 'A4',
+          orientation: 'portrait',
+          border: { top: '2cm', left: '1cm', right: '1cm', bottom: '1.5cm' }
+        }
+      }
+      mdpdf.convert(options).then((pdfPath) => {
+        log.info(`${pdfPath} written`)
+      }).catch((err) => {
+        log.error(err)
+      })
+    })
 
-  // <a id="user-content-tocplugin" class="anchor" aria-hidden="true" href="#tocplugin">
   function getMd (allNuggets, acc, nug) {
     const parts = [acc]
-    parts.push(allNuggets[nug].body.replace(HEADING_RE, `$1__${nug}__`))
+    parts.push(allNuggets[nug].body)
     return parts.join('\n')
   }
 }
 
-function plugin (options) {
-  const PLACEHOLDER_RE = /__([-0-9a-zA-Z]{36})__$/
+function concatFiles (tmpDir, fileList) {
+  const output = join(tmpDir, 'all.md')
 
-  options.renderer.rules.heading_open = function (tokens, idx, options) {
-    const tag = `h${tokens[idx].hLevel}`
-    // console.log('HHH', tokens[idx], tokens[idx + 1])
+  return new Promise((resolve, reject) => {
+    const outputStream = createWriteStream(output)
 
-    const match = tokens[idx + 1].content.match(PLACEHOLDER_RE)
+    fileList.forEach(filepath => {
+      const inputStream = createReadStream(filepath)
+      inputStream.pipe(outputStream)
+    })
 
-    if (match) {
-      tokens[idx + 1].content = 'FOO'
-      return `<${tag} id="${match[1]}">`
-    }
+    outputStream.on('finish', () => {
+      resolve(output)
+    })
 
-    return `<${tag}>`
-  }
-  // options.renderer.rules.inline = function (tokens, idx, options) {
-  //   console.log('VVV', tokens[idx], tokens[idx - 1])
-  //   if (tokens[idx].content.match(PLACEHOLDER_RE) &&
-  //     tokens[idx - 1] && tokens[idx - 1].type === 'heading_open') {
-  //     console.log('V', tokens[idx].content)
-  //   }
-  //   return tokens[idx].content
-  // }
+    outputStream.on('error', err => {
+      reject(err)
+    })
+  })
 }
 
 async function getAllNuggets (db) {
