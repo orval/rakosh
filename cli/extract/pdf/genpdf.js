@@ -7,6 +7,17 @@ const { join, dirname } = require('node:path')
 const { Nugget } = require('../../lib/nugget')
 const markdownpdf = require('markdown-pdf')
 
+const HEADING_RE = /^(#+\s+\w+)$/m
+
+// const through = require('through2')
+
+// function preProcessHtml () {
+//   return through(function (data, enc, cb) {
+//     this.push(data)
+//     cb()
+//   })
+// }
+
 exports.generatePdf = async function (db, argv) {
   log.info('generating pdf')
 
@@ -18,7 +29,8 @@ exports.generatePdf = async function (db, argv) {
 
   // create a markdown file for each seam
   for (const seam of Object.values(allNuggets).filter(s => s.nuggets)) {
-    const md = seam.nuggets.reduce((md, nug) => `${md}\n${allNuggets[nug].body}`, seam.body)
+    const seamBody = getMd(allNuggets, '', seam._key)
+    const md = seam.nuggets.reduce((acc, nug) => getMd(allNuggets, acc, nug), seamBody)
     mdFiles[seam._key] = writeMdFile(tmpDir, seam._key, md)
     nugList.push(seam._key, ...seam.nuggets)
   }
@@ -28,30 +40,67 @@ exports.generatePdf = async function (db, argv) {
 
   // create a markdown file for each nugget not already written
   for (const nugget of Object.values(allNuggets).filter(n => !(n._key in writtenNugs))) {
+    if (!nugget.body) continue
     mdFiles[nugget._key] = writeMdFile(tmpDir, nugget._key, nugget.body)
   }
 
+  // create a kind of TOC
   const paths = await getPaths(db, mdFiles)
 
   const md = paths.map(p => {
     const parts = p.split('|')
     const last = parts.pop()
     return parts.map(p => allNuggets[p].label)
-      .concat(`[${allNuggets[last].label}](./${last})`).join(' - ')
+      .concat(`[${allNuggets[last].label}](#${last})`).join(' - ')
   })
 
   const orderedFiles = [writeMdFile(tmpDir, 'toc', md.join('\n') + '\n\n')]
   paths.forEach(p => orderedFiles.push(mdFiles[p.split('|').pop()]))
-  console.log(orderedFiles)
 
   markdownpdf({
     cssPath: join(dirname(__filename), 'pdf.css'),
+    // preProcessHtml,
     remarkable: {
-      preset: 'full'
+      preset: 'full',
+      plugins: [plugin],
+      syntax: ['abbreviations']
     }
   }).concat.from.paths(orderedFiles).to(argv.output, () => {
     log.info(`created ${argv.output}`)
   })
+
+  // <a id="user-content-tocplugin" class="anchor" aria-hidden="true" href="#tocplugin">
+  function getMd (allNuggets, acc, nug) {
+    const parts = [acc]
+    parts.push(allNuggets[nug].body.replace(HEADING_RE, `$1__${nug}__`))
+    return parts.join('\n')
+  }
+}
+
+function plugin (options) {
+  const PLACEHOLDER_RE = /__([-0-9a-zA-Z]{36})__$/
+
+  options.renderer.rules.heading_open = function (tokens, idx, options) {
+    const tag = `h${tokens[idx].hLevel}`
+    // console.log('HHH', tokens[idx], tokens[idx + 1])
+
+    const match = tokens[idx + 1].content.match(PLACEHOLDER_RE)
+
+    if (match) {
+      tokens[idx + 1].content = 'FOO'
+      return `<${tag} id="${match[1]}">`
+    }
+
+    return `<${tag}>`
+  }
+  // options.renderer.rules.inline = function (tokens, idx, options) {
+  //   console.log('VVV', tokens[idx], tokens[idx - 1])
+  //   if (tokens[idx].content.match(PLACEHOLDER_RE) &&
+  //     tokens[idx - 1] && tokens[idx - 1].type === 'heading_open') {
+  //     console.log('V', tokens[idx].content)
+  //   }
+  //   return tokens[idx].content
+  // }
 }
 
 async function getAllNuggets (db) {

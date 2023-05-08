@@ -33,6 +33,7 @@
     "lint": "eslint cli",
     "devdep": "./cli/main.js deposit examples/my-mine -r -v",
     "devext": "./cli/main.js gatsby my-mine examples/my-mine/cust-dev.json heap --no-build -v -m 3",
+    "devpdf": "./cli/main.js pdf my-mine -v",
     "docdep": "./cli/main.js deposit docs -r -v",
     "docext": "./cli/main.js gatsby docs docs/cust-dev.json heap --no-build -v",
     "docpdf": "./cli/main.js pdf docs -v"
