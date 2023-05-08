@@ -43,11 +43,11 @@ exports.generatePdf = async function (db, argv) {
 
   // create a TOC
   const allMd = orderedChunks.join('\n')
-  const tocMd = toc(allMd, {
+  const tocMd = fixToc(toc(allMd, {
     firsth1: argv.toch1,
     maxdepth: argv.tocdepth,
     bullets: '*'
-  }).content
+  }).content)
 
   // write markdown to file for use by mdpdf
   const mdFile = join(tmpDir, 'all.md')
@@ -76,6 +76,12 @@ exports.generatePdf = async function (db, argv) {
     const parts = [acc]
     parts.push(allNuggets[nug].body)
     return parts.join('\n')
+  }
+
+  // although MD007 requires two spaces in nested lists, some
+  // parsers require four
+  function fixToc (md) {
+    return md.replace(/ {2}/g, '    ')
   }
 }
 
