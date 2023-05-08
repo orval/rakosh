@@ -37,6 +37,6 @@
     "devpdf": "./cli/main.js pdf my-mine -v",
     "docdep": "./cli/main.js deposit docs -r -v",
     "docext": "./cli/main.js gatsby docs docs/cust-dev.json heap --no-build -v",
-    "docpdf": "./cli/main.js pdf docs -v"
+    "docpdf": "./cli/main.js pdf docs -v --no-toch1 --tocdepth 2"
   }
 }
