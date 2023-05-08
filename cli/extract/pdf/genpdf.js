@@ -11,7 +11,7 @@ const toc = require('markdown-toc')
 exports.generatePdf = async function (db, argv) {
   log.info('generating pdf')
 
-  const allNuggets = await getAllNuggets(db, argv.include)
+  const allNuggets = await getAllNuggets(db, argv.include, argv.exclude)
   const tmpDir = mkdtempSync(join(tmpdir(), 'rakosh-genpdf-'))
   log.info(`writing temporary files to ${tmpDir}`)
 
@@ -73,6 +73,8 @@ exports.generatePdf = async function (db, argv) {
   })
 
   function getMd (allNuggets, acc, nug) {
+    // nuggets could be filtered out so return the accumulator
+    if (!(nug in allNuggets)) return acc
     const parts = [acc]
     parts.push(allNuggets[nug].body)
     return parts.join('\n')
@@ -85,10 +87,13 @@ exports.generatePdf = async function (db, argv) {
   }
 }
 
-async function getAllNuggets (db, includes) {
+async function getAllNuggets (db, includes = [], excludes = []) {
   const filters = []
   includes.forEach(inc => filters.push(
     aql`FILTER v.${inc.key} == ${inc.value}`
+  ))
+  excludes.forEach(exc => filters.push(
+    aql`FILTER v.${exc.key} != ${exc.value}`
   ))
 
   const cursor = await db.query(aql`
