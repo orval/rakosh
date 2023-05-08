@@ -1,6 +1,7 @@
 'use strict'
 const { Database } = require('arangojs')
 const { generatePdf } = require('./extract/pdf/genpdf')
+const { include } = require('./lib/option_include')
 const log = require('loglevel')
 
 log.setLevel('WARN')
@@ -34,6 +35,7 @@ exports.builder = (yargs) => {
         throw new Error(`tocdepth value [${m}] is not valid`)
       }
     })
+    .option('include', include)
 }
 
 exports.handler = async function (argv) {

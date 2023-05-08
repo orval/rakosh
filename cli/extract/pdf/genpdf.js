@@ -1,6 +1,6 @@
 'use strict'
 const log = require('loglevel')
-const { aql } = require('arangojs/aql')
+const { aql, join: aqlJoin } = require('arangojs/aql')
 const { mkdtempSync, writeFileSync } = require('node:fs')
 const { tmpdir } = require('node:os')
 const { join, dirname } = require('node:path')
@@ -11,7 +11,7 @@ const toc = require('markdown-toc')
 exports.generatePdf = async function (db, argv) {
   log.info('generating pdf')
 
-  const allNuggets = await getAllNuggets(db)
+  const allNuggets = await getAllNuggets(db, argv.include)
   const tmpDir = mkdtempSync(join(tmpdir(), 'rakosh-genpdf-'))
   log.info(`writing temporary files to ${tmpDir}`)
 
@@ -85,10 +85,16 @@ exports.generatePdf = async function (db, argv) {
   }
 }
 
-async function getAllNuggets (db) {
+async function getAllNuggets (db, includes) {
+  const filters = []
+  includes.forEach(inc => filters.push(
+    aql`FILTER v.${inc.key} == ${inc.value}`
+  ))
+
   const cursor = await db.query(aql`
     FOR v, e, p IN 0..10000 OUTBOUND "passage/adit" GRAPH "primary"
       OPTIONS { uniqueVertices: "global", order: "weighted" }
+      ${aqlJoin(filters)}
       RETURN v
   `)
 
