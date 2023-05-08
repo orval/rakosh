@@ -1,7 +1,7 @@
 'use strict'
 const log = require('loglevel')
 const { aql } = require('arangojs/aql')
-const { mkdtempSync, writeFileSync, createWriteStream, createReadStream, readFileSync } = require('node:fs')
+const { mkdtempSync, writeFileSync } = require('node:fs')
 const { tmpdir } = require('node:os')
 const { join, dirname } = require('node:path')
 const { Nugget } = require('../../lib/nugget')
@@ -15,14 +15,13 @@ exports.generatePdf = async function (db, argv) {
   const tmpDir = mkdtempSync(join(tmpdir(), 'rakosh-genpdf-'))
   log.info(`writing temporary files to ${tmpDir}`)
 
-  const mdFiles = {}
+  const mdChunks = {}
   const nugList = []
 
   // create a markdown file for each seam
   for (const seam of Object.values(allNuggets).filter(s => s.nuggets)) {
     const seamBody = getMd(allNuggets, '', seam._key)
-    const md = seam.nuggets.reduce((acc, nug) => getMd(allNuggets, acc, nug), seamBody)
-    mdFiles[seam._key] = writeMdFile(tmpDir, seam._key, md)
+    mdChunks[seam._key] = seam.nuggets.reduce((acc, nug) => getMd(allNuggets, acc, nug), seamBody)
     nugList.push(seam._key, ...seam.nuggets)
   }
 
@@ -32,65 +31,48 @@ exports.generatePdf = async function (db, argv) {
   // create a markdown file for each nugget not already written
   for (const nugget of Object.values(allNuggets).filter(n => !(n._key in writtenNugs))) {
     if (!nugget.body) continue
-    mdFiles[nugget._key] = writeMdFile(tmpDir, nugget._key, nugget.body)
+    mdChunks[nugget._key] = nugget.body
   }
 
   // create a TOC only using paths for ordering at the moment
-  const paths = await getPaths(db, mdFiles)
+  const paths = await getPaths(db, mdChunks)
 
   // put the files into the order defined by `paths`
-  const orderedFiles = []
-  paths.forEach(p => orderedFiles.push(mdFiles[p.split('|').pop()]))
+  const orderedChunks = []
+  paths.forEach(p => orderedChunks.push(mdChunks[p.split('|').pop()]))
+
+  // create a TOC
+  const allMd = orderedChunks.join('\n')
+  const tocMd = toc(allMd, { firsth1: false, maxdepth: 2 }).content
+
+  // write markdown to file for use by mdpdf
+  const mdFile = join(tmpDir, 'all.md')
+  writeFileSync(mdFile, tocMd + '\n\n' + allMd)
 
   // create the PDF
-  await concatFiles(tmpDir, orderedFiles)
-    .then((inputFile) => {
-      const content = readFileSync(inputFile, { encoding: 'utf-8' })
-      const tmp = join(tmpDir, 'tmp.md')
-      writeFileSync(tmp, toc(content, { firsth1: false, maxdepth: 2 }).content + '\n' + content)
-      const options = {
-        source: tmp,
-        destination: argv.output,
-        styles: join(dirname(__filename), 'pdf.css'),
-        pdf: {
-          format: 'A4',
-          orientation: 'portrait',
-          border: { top: '2cm', left: '1cm', right: '1cm', bottom: '1.5cm' }
-        }
-      }
-      mdpdf.convert(options).then((pdfPath) => {
-        log.info(`${pdfPath} written`)
-      }).catch((err) => {
-        log.error(err)
-      })
-    })
+  const options = {
+    source: mdFile,
+    destination: argv.output,
+    styles: join(dirname(__filename), 'pdf.css'),
+    debug: join(tmpDir, 'debug.html'),
+    pdf: {
+      format: 'A4',
+      orientation: 'portrait',
+      border: { top: '2cm', left: '1cm', right: '1cm', bottom: '1.5cm' }
+    }
+  }
+
+  mdpdf.convert(options).then((pdfPath) => {
+    log.info(`${pdfPath} written`)
+  }).catch((err) => {
+    log.error(err)
+  })
 
   function getMd (allNuggets, acc, nug) {
     const parts = [acc]
     parts.push(allNuggets[nug].body)
     return parts.join('\n')
   }
-}
-
-function concatFiles (tmpDir, fileList) {
-  const output = join(tmpDir, 'all.md')
-
-  return new Promise((resolve, reject) => {
-    const outputStream = createWriteStream(output)
-
-    fileList.forEach(filepath => {
-      const inputStream = createReadStream(filepath)
-      inputStream.pipe(outputStream)
-    })
-
-    outputStream.on('finish', () => {
-      resolve(output)
-    })
-
-    outputStream.on('error', err => {
-      reject(err)
-    })
-  })
 }
 
 async function getAllNuggets (db) {
@@ -105,12 +87,6 @@ async function getAllNuggets (db) {
     nugs[c._key] = new Nugget(c)
   }
   return nugs
-}
-
-function writeMdFile (dir, name, md) {
-  const path = join(dir, `${name}.md`)
-  writeFileSync(path, md)
-  return path
 }
 
 async function getPaths (db, mdFiles) {
