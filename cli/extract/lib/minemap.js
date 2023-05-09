@@ -1,8 +1,9 @@
 const { Nugget } = require('../../lib/nugget')
 
 exports.MineMap = class MineMap {
-  constructor () {
+  constructor (openTo = 2) {
     this.minemap = {}
+    this.openTo = openTo
   }
 
   addVerticies (vertices) {
@@ -87,12 +88,13 @@ exports.MineMap = class MineMap {
     return level
   }
 
-  #getOpenStates (maplevel) {
+  #getOpenStates (maplevel, openTo) {
     const openStates = {}
 
     function getOpenStatesLevel (level, isOpen) {
       for (const [id, vertex] of Object.entries(level)) {
-        if (vertex.seam) isOpen = false
+        const depth = id.split('|').length - 1
+        if (vertex.seam || depth > openTo) isOpen = false
         openStates[id] = isOpen
         getOpenStatesLevel(vertex.children, isOpen)
       }
@@ -111,7 +113,7 @@ exports.MineMap = class MineMap {
     if (seamsOnly) deduped = this.#seamsOnly(deduped)
 
     // determine which tree nodes are initially open or closed
-    const initialOpenState = this.#getOpenStates(deduped)
+    const initialOpenState = this.#getOpenStates(deduped, this.openTo)
 
     // convert objects-in-objects to the array based structure React Arborist needs
     const initialData = this.#convert(deduped)

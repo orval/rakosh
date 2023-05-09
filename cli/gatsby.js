@@ -55,6 +55,16 @@ exports.builder = (yargs) => {
       default: true,
       description: 'Run the build (use --no-build to not)'
     })
+    .option('mmap_open', {
+      type: 'number',
+      alias: 'm',
+      default: 2,
+      description: 'To what depth is the Mine Map open upon load',
+      coerce: m => {
+        if (Number.isInteger(m) && m >= 0) return m
+        throw new Error(`mmap_open value [${m}] is not valid`)
+      }
+    })
 }
 
 exports.handler = async function (argv) {
@@ -73,7 +83,7 @@ exports.handler = async function (argv) {
 
     await copyTemplates(argv.directory, argv.sitecustom)
     await extractNuggets(db, argv.directory)
-    await generateMineMap(db, argv.directory)
+    await generateMineMap(db, argv.directory, argv.m)
     if (argv.build) buildSite(argv.directory)
   } catch (err) {
     log.error(`ERROR: ${err}`)
@@ -202,7 +212,7 @@ async function extractNuggets (db, dir) {
   }
 }
 
-async function generateMineMap (db, dir) {
+async function generateMineMap (db, dir, mmapOpen) {
   const contentDir = join(dir, 'content')
   const mapFile = join(contentDir, 'minemap.json')
 
@@ -217,7 +227,7 @@ async function generateMineMap (db, dir) {
       RETURN vertices
   `)
 
-  const mm = new MineMap()
+  const mm = new MineMap(mmapOpen)
   for await (const path of cursor) {
     mm.addVerticies(processPassageSeams(path))
   }
