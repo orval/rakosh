@@ -1,48 +1,23 @@
 'use strict'
 const log = require('loglevel')
-const { aql, join: aqlJoin } = require('arangojs/aql')
 const { mkdtempSync, writeFileSync } = require('node:fs')
 const { tmpdir } = require('node:os')
 const { join, dirname } = require('node:path')
-const { Nugget } = require('../../lib/nugget')
+const { NuggetCatalog } = require('../../lib/nugget_catalog')
 const mdpdf = require('mdpdf')
 const toc = require('markdown-toc')
 
 exports.generatePdf = async function (db, argv) {
   log.info('generating pdf')
 
-  const allNuggets = await getAllNuggets(db, argv.include, argv.exclude)
-  const tmpDir = mkdtempSync(join(tmpdir(), 'rakosh-genpdf-'))
-  log.info(`writing temporary files to ${tmpDir}`)
+  const catalog = new NuggetCatalog(db, argv.include, argv.exclude)
+  await catalog.init()
 
-  const mdChunks = {}
-  const nugList = []
-
-  // create a markdown file for each seam
-  for (const seam of Object.values(allNuggets).filter(s => s.nuggets)) {
-    const seamBody = getMd(allNuggets, '', seam._key)
-    mdChunks[seam._key] = seam.nuggets.reduce((acc, nug) => getMd(allNuggets, acc, nug), seamBody)
-    nugList.push(seam._key, ...seam.nuggets)
-  }
-
-  // create a lookup of all nuggets written so far
-  const writtenNugs = nugList.reduce((acc, cur) => { acc[cur] = 1; return acc }, {})
-
-  // create a markdown file for each nugget not already written
-  for (const nugget of Object.values(allNuggets).filter(n => !(n._key in writtenNugs))) {
-    if (!nugget.body) continue
-    mdChunks[nugget._key] = nugget.body
-  }
-
-  // create a TOC only using paths for ordering at the moment
-  const paths = await getPaths(db, mdChunks)
-
-  // put the files into the order defined by `paths`
-  const orderedChunks = []
-  paths.forEach(p => orderedChunks.push(mdChunks[p.split('|').pop()]))
+  // this gets a chunk of markdown for each seam then for any remaining nuggets
+  const mdChunks = await catalog.getSeamNuggetMarkdown()
 
   // create a TOC
-  const allMd = orderedChunks.join('\n')
+  const allMd = mdChunks.join('\n')
   const tocMd = fixToc(toc(allMd, {
     firsth1: argv.toch1,
     maxdepth: argv.tocdepth,
@@ -50,6 +25,8 @@ exports.generatePdf = async function (db, argv) {
   }).content)
 
   // write markdown to file for use by mdpdf
+  const tmpDir = mkdtempSync(join(tmpdir(), 'rakosh-genpdf-'))
+  log.info(`writing temporary files to ${tmpDir}`)
   const mdFile = join(tmpDir, 'all.md')
   writeFileSync(mdFile, tocMd + '\n\n' + allMd)
 
@@ -72,60 +49,9 @@ exports.generatePdf = async function (db, argv) {
     log.error(err)
   })
 
-  function getMd (allNuggets, acc, nug) {
-    // nuggets could be filtered out so return the accumulator
-    if (!(nug in allNuggets)) return acc
-    const parts = [acc]
-    parts.push(allNuggets[nug].body)
-    return parts.join('\n')
-  }
-
   // although MD007 requires two spaces in nested lists, some
   // parsers require four
   function fixToc (md) {
     return md.replace(/ {2}/g, '    ')
   }
-}
-
-async function getAllNuggets (db, includes = [], excludes = []) {
-  const filters = []
-  includes.forEach(inc => filters.push(
-    aql`FILTER v.${inc.key} == ${inc.value}`
-  ))
-  excludes.forEach(exc => filters.push(
-    aql`FILTER v.${exc.key} != ${exc.value}`
-  ))
-
-  const cursor = await db.query(aql`
-    FOR v, e, p IN 0..10000 OUTBOUND "passage/adit" GRAPH "primary"
-      OPTIONS { uniqueVertices: "global", order: "weighted" }
-      ${aqlJoin(filters)}
-      RETURN v
-  `)
-
-  const nugs = {}
-  for await (const c of cursor) {
-    nugs[c._key] = new Nugget(c)
-  }
-  return nugs
-}
-
-async function getPaths (db, mdFiles) {
-  const cursor = await db.query(aql`
-    FOR v, e, p IN 0..10000 OUTBOUND 'passage/adit' GRAPH 'primary'
-      PRUNE v.nuggets
-      LET vertices = (
-          FOR vertex IN p.vertices
-              LET order_value = vertex.order == null ? 10000 : vertex.order
-              RETURN MERGE(vertex, { order: order_value })
-      )
-      SORT vertices[*].order ASC, vertices[*].label ASC
-      RETURN CONCAT_SEPARATOR("|", vertices[*]._key)
-  `)
-
-  const paths = []
-  for await (const c of cursor) {
-    if (c.split('|').pop() in mdFiles) paths.push(c)
-  }
-  return paths
 }
