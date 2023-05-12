@@ -1,6 +1,6 @@
 'use strict'
 const { aql, join } = require('arangojs/aql')
-const { Nugget } = require('./nugget')
+const { Nugget } = require('../../lib/nugget')
 
 exports.NuggetCatalog = class NuggetCatalog {
   constructor (db, includes = [], excludes = []) {

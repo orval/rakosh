@@ -3,7 +3,7 @@ const log = require('loglevel')
 const { mkdtempSync, writeFileSync } = require('node:fs')
 const { tmpdir } = require('node:os')
 const { join, dirname } = require('node:path')
-const { NuggetCatalog } = require('../../lib/nugget_catalog')
+const { NuggetCatalog } = require('../lib/nugget_catalog')
 const mdpdf = require('mdpdf')
 const toc = require('markdown-toc')
 
