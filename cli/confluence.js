@@ -1,6 +1,8 @@
 'use strict'
 const { Database } = require('arangojs')
 const { confluencePages } = require('./extract/confluence/pages')
+const { include } = require('./lib/option_include')
+const { exclude } = require('./lib/option_exclude')
 const log = require('loglevel')
 
 log.setLevel('WARN')
@@ -29,10 +31,12 @@ exports.builder = (yargs) => {
         return num
       }
     })
+    .option('include', include)
+    .option('exclude', exclude)
     .env('RAKOSH')
     .option('ccauth', {
       description: 'Confluence Cloud credentials in format <your_email@domain.com>:<your_user_api_token>',
-      default: process.env.RAKOSH_CC_AUTH
+      default: process.env.RAKOSH_CCAUTH
     })
     .check((argv) => {
       if (!argv.ccauth) {
