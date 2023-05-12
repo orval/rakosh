@@ -63,9 +63,57 @@ exports.NuggetCatalog = class NuggetCatalog {
 
     // put the files into the order defined by `paths`
     const orderedChunks = []
-    paths.forEach(p => orderedChunks.push(this.seamNuggetChunks[p.split('|').pop()]))
+    paths.forEach(p => {
+      const last = p.pop()
+      const md = this.seamNuggetChunks[last._key]
+      orderedChunks.push(this.rewriteHeadings(md, last))
+    })
 
     return orderedChunks
+  }
+
+  // heading depths/levels are taken from the graph depth and overwritten in the output
+  // markdown, which ensures the TOC is well ordered
+  rewriteHeadings (markdown, nugget) {
+    const MAX = 6
+    const depth = (nugget.depth > MAX) ? MAX : nugget.depth
+
+    if (!markdown) {
+      // create a heading when there's no nugget body
+      return `${'#'.repeat(depth)} ${nugget.label}\n`
+    }
+
+    const HEADING_RE = /^(#+)\s+(.+)$/gm
+    const matches = Array.from(markdown.matchAll(HEADING_RE))
+
+    if (matches.length) {
+      let last = depth
+
+      // the depth of each heading depends on the number of hashes
+      const depths = matches.map(m => m[1].length)
+
+      // create new heading depths based on passed-in depth and other limits
+      const newHeads = depths.map(l => l - depths[0] + depth)
+        // cannot go over the maximum allowed depth
+        .map(l => l > MAX ? MAX : l)
+        // do not allow a higher level heading than the first in the page
+        .map(l => l < depth ? depth : l)
+        // make sure the level only increases by one at a time
+        .map(l => {
+          const ret = (l > last + 1) ? last + 1 : l
+          last = l
+          return ret
+        })
+        // turn the lengths into strings of hashes
+        .map(l => '#'.repeat(l))
+
+      // replace the previously matched headings using replacer function
+      let idx = 0
+      return markdown.replace(HEADING_RE, (match, p1, p2) => [newHeads[idx++], p2].join(' '))
+    }
+
+    // create header if there wasn't one
+    return `${'#'.repeat(depth)} ${nugget.label}\n\n${markdown}`
   }
 
   initCheck () {
@@ -88,18 +136,14 @@ exports.NuggetCatalog = class NuggetCatalog {
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND 'passage/adit' GRAPH 'primary'
         PRUNE v.nuggets
-        LET vertices = (
-            FOR vertex IN p.vertices
-                LET order_value = vertex.order == null ? 10000 : vertex.order
-                RETURN MERGE(vertex, { order: order_value })
-        )
-        SORT vertices[*].order ASC, vertices[*].label ASC
-        RETURN CONCAT_SEPARATOR("|", vertices[*]._key)
+        RETURN p.vertices
     `)
 
     const paths = []
     for await (const c of cursor) {
-      if (c.split('|').pop() in this.seamNuggetChunks) paths.push(c)
+      const last = c.slice(-1)[0]
+      last.depth = c.length
+      paths.push(c)
     }
     return paths
   }
