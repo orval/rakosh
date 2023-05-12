@@ -5,4 +5,6 @@ nuggets:
 - 00d26410-0e18-4912-b26b-dbc173ec0bb8
 ---
 
+## Seam Set
+
 A seam is a set of nuggets at this level of the mine.
