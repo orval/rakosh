@@ -143,7 +143,9 @@ exports.NuggetCatalog = class NuggetCatalog {
     for await (const c of cursor) {
       const last = c.slice(-1)[0]
       last.depth = c.length
-      paths.push(c)
+      if (last._key in this.seamNuggetChunks || last._id.startsWith('passage')) {
+        paths.push(c)
+      }
     }
     return paths
   }
