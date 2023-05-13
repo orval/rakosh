@@ -1,6 +1,7 @@
 'use strict'
 exports.exclude = {
   description: 'Exclude nuggets with these "[key:value]" pairs; only word chars are allowed',
+  alias: 'e',
   string: true,
   coerce: exc => {
     if (!exc) throw new Error('--exclude requires key:value pair(s)')
