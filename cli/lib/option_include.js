@@ -4,7 +4,9 @@ exports.include = {
   alias: 'i',
   string: true,
   coerce: inc => {
-    if (!inc) throw new Error('--include requires key:value pair(s)')
+    if (!inc || typeof inc !== 'string') {
+      throw new Error('--include requires key:value pair(s)')
+    }
     const includes = []
     inc.split(',').forEach(p => {
       const match = p.match(/^([\w]+):([\w\- ]+)$/)

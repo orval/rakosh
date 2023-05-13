@@ -4,7 +4,9 @@ exports.exclude = {
   alias: 'e',
   string: true,
   coerce: exc => {
-    if (!exc) throw new Error('--exclude requires key:value pair(s)')
+    if (!exc || typeof exc !== 'string') {
+      throw new Error('--exclude requires key:value pair(s)')
+    }
     const excludes = []
     exc.split(',').forEach(p => {
       const match = p.match(/^([\w]+):([\w\- ]+)$/)
