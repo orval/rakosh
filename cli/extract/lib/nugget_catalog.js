@@ -3,10 +3,13 @@ const { aql, join } = require('arangojs/aql')
 const { Nugget } = require('../../lib/nugget')
 
 exports.NuggetCatalog = class NuggetCatalog {
-  constructor (db, includes = [], excludes = []) {
+  static HEADING_RE = /^(#+)\s+(.+)$/gm
+
+  constructor (db, includes = [], excludes = [], minLength) {
     this.db = db
     this.includes = includes
     this.excludes = excludes
+    this.minLength = minLength
     this.allNuggets = {}
     this.seamNuggetChunks = {}
     this.initialised = false
@@ -66,10 +69,16 @@ exports.NuggetCatalog = class NuggetCatalog {
     paths.forEach(p => {
       const last = p.pop()
       const md = this.seamNuggetChunks[last._key]
-      orderedChunks.push(this.rewriteHeadings(md, last))
+      if (this.#allowExtract(md)) {
+        orderedChunks.push(this.rewriteHeadings(md, last))
+      }
     })
 
     return orderedChunks
+  }
+
+  #allowExtract (markdown) {
+    return markdown.replace(NuggetCatalog.HEADING_RE, '').length > this.minLength
   }
 
   // heading depths/levels are taken from the graph depth and overwritten in the output
@@ -83,8 +92,7 @@ exports.NuggetCatalog = class NuggetCatalog {
       return `${'#'.repeat(depth)} ${nugget.label}\n`
     }
 
-    const HEADING_RE = /^(#+)\s+(.+)$/gm
-    const matches = Array.from(markdown.matchAll(HEADING_RE))
+    const matches = Array.from(markdown.matchAll(NuggetCatalog.HEADING_RE))
 
     if (matches.length) {
       let last = depth
@@ -109,7 +117,8 @@ exports.NuggetCatalog = class NuggetCatalog {
 
       // replace the previously matched headings using replacer function
       let idx = 0
-      return markdown.replace(HEADING_RE, (match, p1, p2) => [newHeads[idx++], p2].join(' '))
+      return markdown.replace(NuggetCatalog.HEADING_RE,
+        (match, p1, p2) => [newHeads[idx++], p2].join(' '))
     }
 
     // create header if there wasn't one

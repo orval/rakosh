@@ -10,7 +10,7 @@ const toc = require('markdown-toc')
 exports.generatePdf = async function (db, argv) {
   log.info('generating pdf')
 
-  const catalog = new NuggetCatalog(db, argv.include, argv.exclude)
+  const catalog = new NuggetCatalog(db, argv.include, argv.exclude, argv.minlength)
   await catalog.init()
 
   // this gets a chunk of markdown for each seam then for any remaining nuggets

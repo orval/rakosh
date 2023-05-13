@@ -36,6 +36,7 @@ exports.builder = (yargs) => {
     .env('RAKOSH')
     .option('ccauth', {
       description: 'Confluence Cloud credentials in format <your_email@domain.com>:<your_user_api_token>',
+      // TODO do not emit this in help
       default: process.env.RAKOSH_CCAUTH
     })
     .check((argv) => {
