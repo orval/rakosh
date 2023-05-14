@@ -69,34 +69,53 @@ exports.NuggetCatalog = class NuggetCatalog {
     const orderedChunks = []
 
     treeRoot.walk((node) => {
-      const nug = this.allNuggets[node.model.key]
-      if (!nug) return true
-      nug.depth = node.model.depth
-      const md = this.seamNuggetChunks[nug._key]
-      if (this.#canDoExtract(md)) {
-        orderedChunks.push(this.rewriteHeadings(md, nug))
+      const md = this.#mdForExtract(node.model.key, node.model.depth)
+      if (md && this.#allowExtract(md)) {
+        orderedChunks.push(this.rewriteHeadings(md, node.model.depth))
       }
       return true
     })
-
     return orderedChunks
   }
 
-  #canDoExtract (markdown) {
-    if (!markdown) return false
+  #mdForExtract (key, depth) {
+    const nug = this.allNuggets[key]
+    if (!nug) return undefined // has been filtered out
+
+    let retMd
+
+    if (key in this.seamNuggetChunks) {
+      retMd = this.seamNuggetChunks[key]
+    } else if (nug._id.startsWith('passage')) {
+      if (nug.body) {
+        retMd = nug.body
+      } else {
+        // create a heading when there's no nugget body
+        // TODO remove elipses
+        retMd = `${'#'.repeat(depth)} ${nug.label}\n`
+      }
+    }
+
+    if (retMd) {
+      // create header if there wasn't one
+      if (!retMd.match(NuggetCatalog.HEADING_RE)) {
+        return `${'#'.repeat(depth)} ${nug.label}\n\n${retMd}`
+      }
+      return retMd
+    }
+
+    return undefined
+  }
+
+  #allowExtract (markdown) {
     return markdown.replace(NuggetCatalog.HEADING_RE, '').length > this.minLength
   }
 
   // heading depths/levels are taken from the graph depth and overwritten in the output
   // markdown, which ensures the TOC is well ordered
-  rewriteHeadings (markdown, nugget) {
+  rewriteHeadings (markdown, depth) {
     const MAX = 6
-    const depth = (nugget.depth > MAX) ? MAX : nugget.depth
-
-    if (!markdown) {
-      // create a heading when there's no nugget body
-      return `${'#'.repeat(depth)} ${nugget.label}\n`
-    }
+    depth = (depth > MAX) ? MAX : depth
 
     const matches = Array.from(markdown.matchAll(NuggetCatalog.HEADING_RE))
 
@@ -127,8 +146,9 @@ exports.NuggetCatalog = class NuggetCatalog {
         (match, p1, p2) => [newHeads[idx++], p2].join(' '))
     }
 
-    // create header if there wasn't one
-    return `${'#'.repeat(depth)} ${nugget.label}\n\n${markdown}`
+    // markdown given to this function must have headers
+    // just return it -- might change this to a throw later
+    return markdown
   }
 
   initCheck () {
