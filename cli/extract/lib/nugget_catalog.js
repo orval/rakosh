@@ -1,6 +1,7 @@
 'use strict'
 const { aql, join } = require('arangojs/aql')
 const { Nugget } = require('../../lib/nugget')
+const TreeModel = require('tree-model')
 
 exports.NuggetCatalog = class NuggetCatalog {
   static HEADING_RE = /^(#+)\s+(.+)$/gm
@@ -62,22 +63,27 @@ exports.NuggetCatalog = class NuggetCatalog {
     }
 
     // ordering is determined by this paths query
-    const paths = await this.getPaths()
+    const treeRoot = await this.getTree()
 
     // put the files into the order defined by `paths`
     const orderedChunks = []
-    paths.forEach(p => {
-      const last = p.pop()
-      const md = this.seamNuggetChunks[last._key]
-      if (this.#allowExtract(md)) {
-        orderedChunks.push(this.rewriteHeadings(md, last))
+
+    treeRoot.walk((node) => {
+      const nug = this.allNuggets[node.model.key]
+      if (!nug) return true
+      nug.depth = node.model.depth
+      const md = this.seamNuggetChunks[nug._key]
+      if (this.#canDoExtract(md)) {
+        orderedChunks.push(this.rewriteHeadings(md, nug))
       }
+      return true
     })
 
     return orderedChunks
   }
 
-  #allowExtract (markdown) {
+  #canDoExtract (markdown) {
+    if (!markdown) return false
     return markdown.replace(NuggetCatalog.HEADING_RE, '').length > this.minLength
   }
 
@@ -141,23 +147,33 @@ exports.NuggetCatalog = class NuggetCatalog {
     return parts.join('\n')
   }
 
-  async getPaths () {
+  // turn '|' separated path strings into a TreeModel, which will allow
+  // operations like sorting on the tree later
+  async getTree () {
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND 'passage/adit' GRAPH 'primary'
         PRUNE v.nuggets
-        RETURN p.vertices
+        RETURN CONCAT_SEPARATOR("|", p.vertices[*]._key)
     `)
 
-    const paths = []
+    const tree = new TreeModel()
+    const root = tree.parse({ key: 'adit', depth: 1 })
+
     for await (const c of cursor) {
-      const last = c.slice(-1)[0]
-      last.depth = c.length
-      if (last._key in this.seamNuggetChunks ||
-        (last._id.startsWith('passage') && last.body)) {
-        // save path for seam/nugget chunks and passages with content body
-        paths.push(c)
+      let current = root
+      let depth = 1
+
+      // go over keys in path adding any child nodes that do not exist yet
+      for (const key of c.split('|')) {
+        const node = current.first(n => n.model.key === key)
+        if (node) {
+          current = node // key already added on prior iteration
+        } else {
+          current = current.addChild(tree.parse({ key, depth }))
+        }
+        depth++
       }
     }
-    return paths
+    return root
   }
 }
