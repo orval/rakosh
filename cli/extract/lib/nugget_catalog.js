@@ -14,21 +14,21 @@ exports.NuggetCatalog = class NuggetCatalog {
     this.allNuggets = {}
     this.seamNuggetChunks = {}
     this.initialised = false
+
+    this.filters = []
+    this.includes.forEach(inc => this.filters.push(
+      aql`FILTER v.${inc.key} == ${inc.value}`
+    ))
+    this.excludes.forEach(exc => this.filters.push(
+      aql`FILTER v.${exc.key} != ${exc.value}`
+    ))
   }
 
   async init () {
-    const filters = []
-    this.includes.forEach(inc => filters.push(
-      aql`FILTER v.${inc.key} == ${inc.value}`
-    ))
-    this.excludes.forEach(exc => filters.push(
-      aql`FILTER v.${exc.key} != ${exc.value}`
-    ))
-
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND "passage/adit" GRAPH "primary"
         OPTIONS { uniqueVertices: "global", order: "weighted" }
-        ${join(filters)}
+        ${join(this.filters)}
         RETURN v
     `)
 
@@ -69,6 +69,11 @@ exports.NuggetCatalog = class NuggetCatalog {
     const orderedChunks = []
 
     treeRoot.walk((node) => {
+      // empty passage leaf nodes are skipped
+      if (node.model.length === 0 && !node.hasChildren() && node.model.type === 'passage') {
+        return true
+      }
+
       const md = this.#mdForExtract(node.model.key, node.model.depth)
       if (md && this.#allowExtract(md)) {
         orderedChunks.push(this.rewriteHeadings(md, node.model.depth))
@@ -174,9 +179,11 @@ exports.NuggetCatalog = class NuggetCatalog {
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND 'passage/adit' GRAPH 'primary'
         PRUNE v.nuggets
-        RETURN { keys: CONCAT_SEPARATOR("|", p.vertices[*]._key), last: LAST(p.vertices[*]) }
+        ${join(this.filters)}
+        RETURN { keys: CONCAT_SEPARATOR("|", p.vertices[*]._key), nug: LAST(p.vertices[*]) }
     `)
 
+    // these small models are not full nuggets but are enough sort
     const tree = new TreeModel({ modelComparatorFn: Nugget.compare })
     const root = tree.parse({ key: 'adit', depth: 1, order: 0, label: 'adit' })
 
@@ -190,8 +197,14 @@ exports.NuggetCatalog = class NuggetCatalog {
         if (node) {
           current = node // key already added on prior iteration
         } else {
-          current = current.addChild(
-            tree.parse({ key, depth, label: c.last.label, order: c.last.order }))
+          current = current.addChild(tree.parse({
+            key,
+            depth,
+            label: c.nug.label,
+            order: c.nug.order,
+            type: (c.nug._id.startsWith('pass')) ? 'passage' : 'nugget',
+            length: (c.nug.body) ? c.nug.body.length : 0
+          }))
         }
         depth++
       }
