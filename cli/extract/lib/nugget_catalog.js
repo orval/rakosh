@@ -170,26 +170,28 @@ exports.NuggetCatalog = class NuggetCatalog {
   // turn '|' separated path strings into a TreeModel, which will allow
   // operations like sorting on the tree later
   async getTree () {
+    // TODO dedupe of secondary edges
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND 'passage/adit' GRAPH 'primary'
         PRUNE v.nuggets
-        RETURN CONCAT_SEPARATOR("|", p.vertices[*]._key)
+        RETURN { keys: CONCAT_SEPARATOR("|", p.vertices[*]._key), last: LAST(p.vertices[*]) }
     `)
 
-    const tree = new TreeModel()
-    const root = tree.parse({ key: 'adit', depth: 1 })
+    const tree = new TreeModel({ modelComparatorFn: Nugget.compare })
+    const root = tree.parse({ key: 'adit', depth: 1, order: 0, label: 'adit' })
 
     for await (const c of cursor) {
       let current = root
       let depth = 1
 
       // go over keys in path adding any child nodes that do not exist yet
-      for (const key of c.split('|')) {
+      for (const key of c.keys.split('|')) {
         const node = current.first(n => n.model.key === key)
         if (node) {
           current = node // key already added on prior iteration
         } else {
-          current = current.addChild(tree.parse({ key, depth }))
+          current = current.addChild(
+            tree.parse({ key, depth, label: c.last.label, order: c.last.order }))
         }
         depth++
       }
