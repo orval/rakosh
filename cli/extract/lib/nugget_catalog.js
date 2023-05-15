@@ -1,4 +1,5 @@
 'use strict'
+const assert = require('assert')
 const { aql, join } = require('arangojs/aql')
 const { Nugget } = require('../../lib/nugget')
 const TreeModel = require('tree-model')
@@ -92,6 +93,12 @@ exports.NuggetCatalog = class NuggetCatalog {
     this.populateChunks()
     const chunks = await this.getOrdered()
     return chunks.map(c => c.chunk)
+  }
+
+  // pull ordered chunks with model metadata included
+  async getSeamNuggetChunks () {
+    this.populateChunks()
+    return await this.getOrdered()
   }
 
   #mdForExtract (key, depth) {
@@ -196,9 +203,17 @@ exports.NuggetCatalog = class NuggetCatalog {
 
     // these small models are not full nuggets but are enough sort
     const tree = new TreeModel({ modelComparatorFn: Nugget.compare })
-    const root = tree.parse({ key: 'adit', depth: 1, order: 0, label: 'adit' })
+    let first = true
+    let root
 
     for await (const c of cursor) {
+      if (first) {
+        first = false
+        root = tree.parse({ key: 'adit', depth: 1, order: 0, label: c.nug.label })
+        assert.strictEqual(c.keys, 'adit', 'first vertex should be "adit"')
+        continue
+      }
+
       let current = root
       let depth = 1
 

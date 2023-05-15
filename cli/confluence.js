@@ -7,7 +7,7 @@ const log = require('loglevel')
 
 log.setLevel('WARN')
 
-exports.command = 'confluence <mine> <spacekey> <startpageid> [--ccauth]'
+exports.command = 'confluence <mine> <domain> <spacekey> <startpageid> [--ccauth]'
 
 exports.describe = 'Extract the data from a mine and publish as pages to Confluence Cloud'
 
@@ -15,6 +15,10 @@ exports.builder = (yargs) => {
   return yargs
     .positional('mine', {
       describe: 'The name of the mine to extract',
+      string: true
+    })
+    .positional('domain', {
+      description: 'The atlassian.net subdomain to connect to',
       string: true
     })
     .positional('spacekey', {
@@ -35,15 +39,13 @@ exports.builder = (yargs) => {
     .option('exclude', exclude)
     .env('RAKOSH')
     .option('ccauth', {
-      description: 'Confluence Cloud credentials in format <your_email@domain.com>:<your_user_api_token>',
-      // TODO do not emit this in help
-      default: process.env.RAKOSH_CCAUTH
+      description: 'Confluence Cloud credentials in format <your_email@domain.com>:<your_user_api_token>'
     })
     .check((argv) => {
-      if (!argv.ccauth) {
+      if (!argv.ccauth || argv.ccauth === 'RAKOSH_CCAUTH') {
         log.error('rakosh requires Confluence Cloud credentials in format <your_email@domain.com>:<your_user_api_token>')
-        log.error('Either set RAKOSH_CCAUTH in the environment or use --ccauth')
-        return false
+        log.error('Either set RAKOSH_CCAUTH in the environment or use --ccauth\n')
+        throw new Error('ccauth required')
       }
       return true
     })
