@@ -40,8 +40,32 @@ exports.NuggetCatalog = class NuggetCatalog {
     this.initialised = true
   }
 
+  // get an ordered array of markdown chunks with metadata
+  async getOrdered () {
+    // ordering is determined by walking the tree
+    const treeRoot = await this.getTree()
+
+    // put the files into the order defined by the tree
+    const orderedChunks = []
+
+    treeRoot.walk((node) => {
+      // empty passage leaf nodes are skipped
+      if (node.model.length === 0 && !node.hasChildren() && node.model.type === 'passage') {
+        return true
+      }
+
+      const md = this.#mdForExtract(node.model.key, node.model.depth)
+      if (md && this.#allowExtract(md)) {
+        const chunk = { chunk: this.rewriteHeadings(md, node.model.depth), ...node.model }
+        orderedChunks.push(chunk)
+      }
+      return true
+    })
+    return orderedChunks
+  }
+
   // get markdown chunks for seams then any non-seam nuggets
-  async getSeamNuggetMarkdown () {
+  populateChunks () {
     this.initCheck()
 
     const nugList = []
@@ -61,26 +85,13 @@ exports.NuggetCatalog = class NuggetCatalog {
       if (!nugget.body) continue
       this.seamNuggetChunks[nugget._key] = nugget.body
     }
+  }
 
-    // ordering is determined by this paths query
-    const treeRoot = await this.getTree()
-
-    // put the files into the order defined by `paths`
-    const orderedChunks = []
-
-    treeRoot.walk((node) => {
-      // empty passage leaf nodes are skipped
-      if (node.model.length === 0 && !node.hasChildren() && node.model.type === 'passage') {
-        return true
-      }
-
-      const md = this.#mdForExtract(node.model.key, node.model.depth)
-      if (md && this.#allowExtract(md)) {
-        orderedChunks.push(this.rewriteHeadings(md, node.model.depth))
-      }
-      return true
-    })
-    return orderedChunks
+  // pull just the markdown from the ordered chunks
+  async getSeamNuggetMarkdown () {
+    this.populateChunks()
+    const chunks = await this.getOrdered()
+    return chunks.map(c => c.chunk)
   }
 
   #mdForExtract (key, depth) {
