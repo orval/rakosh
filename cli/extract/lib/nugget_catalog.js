@@ -237,4 +237,10 @@ exports.NuggetCatalog = class NuggetCatalog {
     }
     return root
   }
+
+  getChunk (key, depth) {
+    const md = this.#mdForExtract(key, depth)
+    if (!md) return
+    return this.rewriteHeadings(md, depth)
+  }
 }

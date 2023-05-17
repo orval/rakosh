@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -41,6 +41,6 @@
     "docdep": "./cli/main.js deposit docs -r -v",
     "docext": "./cli/main.js gatsby docs docs/cust-dev.json heap --no-build -v",
     "docpdf": "./cli/main.js pdf docs -v --no-toch1 --tocdepth 2",
-    "doccon": "./cli/main.js confluence docs orval rakosh 164094"
+    "doccon": "./cli/main.js confluence docs orval rakosh 164094 -v"
   }
 }

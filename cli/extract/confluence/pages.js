@@ -76,6 +76,7 @@ class Confluence {
         return response.json()
       })
       .then(data => data.id)
+      .catch(error => console.error('getPage', error))
   }
 
   getPageByTitle (title) {
@@ -96,6 +97,7 @@ class Confluence {
         return response.json()
       })
       .then(data => data.results[0])
+      .catch(error => console.error('getPageByTitle', error))
   }
 
   addPage (pageId, title, markdown) {
@@ -120,7 +122,8 @@ class Confluence {
         }
         return response.json()
       })
-      .then(data => data.id)
+      .catch(error => console.error('addPage', error))
+      // .then(data => data.id)
   }
 
   updatePage (pageId, version, title, markdown) {
@@ -148,21 +151,40 @@ class Confluence {
         }
         return response.json()
       })
-      .then(data => {
-        return data.id
-      })
+      .catch(error => console.error('updatePage', error))
+      // .then(data => {
+      //   return data.id
+      // })
   }
 
-  async addOrReplacePage (title, markdown) {
+  async deletePage (pageId) {
+    return fetch(`https://${this.domain}/wiki/api/v2/pages/${encodeURIComponent(pageId)}`, {
+      method: 'DELETE',
+      headers: this.headers
+    })
+      .then(response => {
+        if (response.status !== 200) {
+          throw new Error(`${response.status} ${response.statusText}`)
+        }
+        return response.text()
+      })
+      .catch(error => console.error('deletePage', error))
+  }
+
+  async addOrReplacePage (parentId, title, markdown) {
     this.initCheck()
 
     const page = await this.getPageByTitle(title)
     if (page) {
-      const id = await this.updatePage(page.id, page.version.number + 1, title, markdown)
-      log.info(`updated page ${id} "${title}"`)
+      // await this.deletePage(page.id)
+      // console.log('Deleted', page.id)
+      const updatedPage = await this.updatePage(page.id, page.version.number + 1, title, markdown)
+      log.info(`updated page ${updatedPage.id} "${title}"`)
+      return updatedPage
     } else {
-      const newId = await this.addPage(this.startpageid, title, markdown)
-      log.info(`added page ${newId} "${title}"`)
+      const newPage = await this.addPage(parentId, title, markdown)
+      log.info(`added page ${newPage.id} "${title}"`)
+      return newPage
     }
   }
 }
@@ -176,7 +198,45 @@ exports.confluencePages = async function (db, argv) {
 
   const mdChunks = await catalog.getSeamNuggetChunks()
 
+  // deal with duplicate labels
+  const labels = {}
   for (const c of mdChunks) {
-    await confluence.addOrReplacePage(c.label, c.chunk)
+    if (c.label in labels) {
+      const newLabel = `${c.label} - ${labels[c.label] + 1}`
+      c.label = newLabel
+    } else {
+      labels[c.label] = 1
+    }
+  }
+
+  const written = {}
+  let parentId = confluence.startpageid
+
+  for (const c of mdChunks) {
+    if (c.key in written) {
+      console.log('already written', c.key)
+      continue
+    }
+
+    const pageData = await confluence.addOrReplacePage(parentId, c.label, c.chunk)
+    written[c.key] = parentId
+    parentId = pageData.id
+
+    if ('children' in c) {
+      for (const child of c.children) {
+        // console.log('child', child.key)
+        const chunk = catalog.getChunk(child.key, child.depth)
+        // console.log('WAT', chunk)
+
+        if (!chunk) {
+          // console.log('NOPE', child.key)
+          continue
+        }
+
+        const childData = await confluence.addOrReplacePage(parentId, child.label, chunk)
+        written[child.key] = parentId
+        // console.log('child _ ', childData.id)
+      }
+    }
   }
 }
