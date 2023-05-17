@@ -12,7 +12,7 @@ class Confluence {
       Accept: 'application/json',
       'Content-Type': 'application/json'
     }
-    this.domain = argv.domain + '.atlassian.net'
+    this.wiki = `https://${argv.domain}.atlassian.net/wiki`
     this.initialised = false
   }
 
@@ -42,7 +42,7 @@ class Confluence {
 
   getSpaces () {
     const queryString = new URLSearchParams({ keys: [this.spacekey] }).toString()
-    return fetch(`https://${this.domain}/wiki/api/v2/spaces?${queryString}`, { headers: this.headers })
+    return fetch(`${this.wiki}/api/v2/spaces?${queryString}`, { headers: this.headers })
       .then(response => {
         if (response.status !== 200) throw new Error(`${response.status} ${response.statusText}`)
         return response.text()
@@ -65,7 +65,7 @@ class Confluence {
       'body-format': 'storage'
     }).toString()
 
-    return fetch(`https://${this.domain}/wiki/api/v2/pages/${encodeURIComponent(pageId)}?${queryString}`, {
+    return fetch(`${this.wiki}/api/v2/pages/${encodeURIComponent(pageId)}?${queryString}`, {
       method: 'GET',
       headers: this.headers
     })
@@ -87,7 +87,7 @@ class Confluence {
     }).toString()
 
     return fetch(
-      `https://${this.domain}/wiki/rest/api/content?${queryString}`,
+      `${this.wiki}/rest/api/content?${queryString}`,
       { headers: this.headers }
     )
       .then(response => {
@@ -102,7 +102,7 @@ class Confluence {
 
   addPage (pageId, title, markdown) {
     const formatted = Confluence.format(markdown)
-    return fetch(`https://${this.domain}/wiki/api/v2/pages`, {
+    return fetch(`${this.wiki}/api/v2/pages`, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify({
@@ -128,7 +128,7 @@ class Confluence {
 
   updatePage (pageId, version, title, markdown) {
     const formatted = Confluence.format(markdown)
-    return fetch(`https://${this.domain}/wiki/api/v2/pages/${encodeURIComponent(pageId)}`, {
+    return fetch(`${this.wiki}/api/v2/pages/${encodeURIComponent(pageId)}`, {
       method: 'PUT',
       headers: this.headers,
       body: JSON.stringify({
@@ -158,7 +158,7 @@ class Confluence {
   }
 
   async deletePage (pageId) {
-    return fetch(`https://${this.domain}/wiki/api/v2/pages/${encodeURIComponent(pageId)}`, {
+    return fetch(`${this.wiki}/api/v2/pages/${encodeURIComponent(pageId)}`, {
       method: 'DELETE',
       headers: this.headers
     })
