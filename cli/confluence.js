@@ -19,7 +19,15 @@ exports.builder = (yargs) => {
     })
     .positional('domain', {
       description: 'The atlassian.net subdomain to connect to',
-      string: true
+      string: true,
+      coerce: (arg) => {
+        // only allow lowercase letters, numbers, and hyphens
+        // per https://community.atlassian.com/t5/Confluence-questions/change-subdomain/qaq-p/1874867
+        if (!arg.match(/^[a-z0-9-]+$/)) {
+          throw new Error(`Invalid domain [${arg}]`)
+        }
+        return arg
+      }
     })
     .positional('spacekey', {
       description: 'Confluence space key',
@@ -48,6 +56,10 @@ exports.builder = (yargs) => {
         throw new Error('ccauth required')
       }
       return true
+    })
+    .option('delete-all-under-start-page-id', {
+      boolean: true,
+      hidden: true
     })
 }
 

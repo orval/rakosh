@@ -79,6 +79,20 @@ class Confluence {
       .catch(error => console.error('getPage', error))
   }
 
+  getPages () {
+    return fetch(`${this.wiki}/api/v2/pages`, {
+      method: 'GET',
+      headers: this.headers
+    })
+      .then(response => {
+        if (response.status !== 200) {
+          throw new Error(`${response.status} ${response.statusText}`)
+        }
+        return response.json()
+      })
+      .catch(error => console.error('getPages', error))
+  }
+
   getPageByTitle (title) {
     const queryString = new URLSearchParams({
       spaceKey: this.spacekey,
@@ -123,7 +137,6 @@ class Confluence {
         return response.json()
       })
       .catch(error => console.error('addPage', error))
-      // .then(data => data.id)
   }
 
   updatePage (pageId, version, title, markdown) {
@@ -152,9 +165,6 @@ class Confluence {
         return response.json()
       })
       .catch(error => console.error('updatePage', error))
-      // .then(data => {
-      //   return data.id
-      // })
   }
 
   async deletePage (pageId) {
@@ -176,8 +186,6 @@ class Confluence {
 
     const page = await this.getPageByTitle(title)
     if (page) {
-      // await this.deletePage(page.id)
-      // console.log('Deleted', page.id)
       const updatedPage = await this.updatePage(page.id, page.version.number + 1, title, markdown)
       log.info(`updated page ${updatedPage.id} "${title}"`)
       return updatedPage
@@ -187,11 +195,24 @@ class Confluence {
       return newPage
     }
   }
+
+  async deleteAllUnderStartPageId () {
+    const pages = await this.getPages()
+    for (const p of pages.results.filter(d => d.parentId === this.startpageid)) {
+      log.info(`deleting page ${p.id}`)
+      await this.deletePage(p.id)
+    }
+  }
 }
 
 exports.confluencePages = async function (db, argv) {
   const confluence = new Confluence(argv)
   await confluence.init()
+
+  if (argv['delete-all-under-start-page-id']) {
+    await confluence.deleteAllUnderStartPageId()
+    return
+  }
 
   const catalog = new NuggetCatalog(db, argv.include, argv.exclude, 0)
   await catalog.init()
@@ -214,19 +235,18 @@ exports.confluencePages = async function (db, argv) {
 
   for (const c of mdChunks) {
     if (c.key in written) {
-      console.log('already written', c.key)
-      continue
+      // console.log('already written', c.key)
+      parentId = written[c.key]
+    } else {
+      const pageData = await confluence.addOrReplacePage(parentId, c.label, c.chunk)
+      parentId = pageData.id
+      written[c.key] = parentId
     }
-
-    const pageData = await confluence.addOrReplacePage(parentId, c.label, c.chunk)
-    written[c.key] = parentId
-    parentId = pageData.id
 
     if ('children' in c) {
       for (const child of c.children) {
-        // console.log('child', child.key)
+        // console.log('check child', parentId, child.key, child.depth)
         const chunk = catalog.getChunk(child.key, child.depth)
-        // console.log('WAT', chunk)
 
         if (!chunk) {
           // console.log('NOPE', child.key)
@@ -234,9 +254,10 @@ exports.confluencePages = async function (db, argv) {
         }
 
         const childData = await confluence.addOrReplacePage(parentId, child.label, chunk)
-        written[child.key] = parentId
-        // console.log('child _ ', childData.id)
+        written[child.key] = childData.id
+        // console.log('child added', childData.id)
       }
+      // console.log('children done', parentId)
     }
   }
 }
