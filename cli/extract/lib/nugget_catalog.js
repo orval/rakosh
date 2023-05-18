@@ -51,14 +51,13 @@ exports.NuggetCatalog = class NuggetCatalog {
 
     treeRoot.walk((node) => {
       // empty passage leaf nodes are skipped
-      if (node.model.length === 0 && !node.hasChildren() && node.model.type === 'passage') {
+      if (!node.model.body && !node.hasChildren() && node.model._id.startsWith('passage')) {
         return true
       }
 
-      const md = this.#mdForExtract(node.model.key, node.model.depth)
+      const md = this.#mdForExtract(node.model._key, node.model.depth)
       if (md && this.#allowExtract(md)) {
-        const chunk = { chunk: this.rewriteHeadings(md, node.model.depth), ...node.model }
-        orderedChunks.push(chunk)
+        orderedChunks.push(this.rewriteHeadings(md, node.model.depth))
       }
       return true
     })
@@ -91,8 +90,7 @@ exports.NuggetCatalog = class NuggetCatalog {
   // pull just the markdown from the ordered chunks
   async getSeamNuggetMarkdown () {
     this.populateChunks()
-    const chunks = await this.getOrdered()
-    return chunks.map(c => c.chunk)
+    return await this.getOrdered()
   }
 
   // pull ordered chunks with model metadata included
@@ -209,7 +207,7 @@ exports.NuggetCatalog = class NuggetCatalog {
     for await (const c of cursor) {
       if (first) {
         first = false
-        root = tree.parse({ key: 'adit', depth: 1, order: 0, label: c.nug.label })
+        root = tree.parse({ depth: 1, ...this.allNuggets.adit })
         assert.strictEqual(c.keys, 'adit', 'first vertex should be "adit"')
         continue
       }
@@ -219,18 +217,12 @@ exports.NuggetCatalog = class NuggetCatalog {
 
       // go over keys in path adding any child nodes that do not exist yet
       for (const key of c.keys.split('|')) {
-        const node = current.first(n => n.model.key === key)
+        const node = current.first(n => n.model._key === key)
         if (node) {
           current = node // key already added on prior iteration
         } else {
-          current = current.addChild(tree.parse({
-            key,
-            depth,
-            label: c.nug.label,
-            order: c.nug.order,
-            type: (c.nug._id.startsWith('pass')) ? 'passage' : 'nugget',
-            length: (c.nug.body) ? c.nug.body.length : 0
-          }))
+          const nugget = this.allNuggets[c.nug._key]
+          current = current.addChild(tree.parse({ depth, ...nugget }))
         }
         depth++
       }
