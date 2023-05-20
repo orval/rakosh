@@ -2,6 +2,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const log = require('loglevel')
 const { NuggetCatalog } = require('../lib/nugget_catalog')
 const md2c = require('@shogobg/markdown2confluence')
+const assert = require('assert')
 
 class Confluence {
   constructor (argv) {
@@ -115,6 +116,7 @@ class Confluence {
   }
 
   addPage (pageId, title, markdown) {
+    // console.log('addPage', pageId, title, markdown)
     const formatted = Confluence.format(markdown)
     return fetch(`${this.wiki}/api/v2/pages`, {
       method: 'POST',
@@ -183,6 +185,7 @@ class Confluence {
 
   async addOrReplacePage (parentId, title, markdown) {
     this.initCheck()
+    assert.ok(parentId)
 
     const page = await this.getPageByTitle(title)
     if (page) {
@@ -217,47 +220,44 @@ exports.confluencePages = async function (db, argv) {
   const catalog = new NuggetCatalog(db, argv.include, argv.exclude, 0)
   await catalog.init()
 
-  const mdChunks = await catalog.getSeamNuggetChunks()
+  const root = await catalog.getSeamNuggetTree()
 
   // deal with duplicate labels
-  const labels = {}
-  for (const c of mdChunks) {
-    if (c.label in labels) {
-      const newLabel = `${c.label} - ${labels[c.label] + 1}`
-      c.label = newLabel
-    } else {
-      labels[c.label] = 1
-    }
+  // const labels = {}
+  // for (const c of mdChunks) {
+  //   if (c.label in labels) {
+  //     const newLabel = `${c.label} - ${labels[c.label] + 1}`
+  //     c.label = newLabel
+  //   } else {
+  //     labels[c.label] = 1
+  //   }
+  // }
+
+  function doPage (parentId, node) {
+    return confluence.addOrReplacePage(parentId, node.model.label, node.model.chunks.join('\n'))
+      .then((pageData) => {
+        // console.log('blah', parentId, node.model.label)
+        return pageData
+      })
   }
 
-  const written = {}
-  let parentId = confluence.startpageid
+  let nodes = [{ parent: confluence.startpageid, node: root }]
 
-  for (const c of mdChunks) {
-    if (c.key in written) {
-      // console.log('already written', c.key)
-      parentId = written[c.key]
-    } else {
-      const pageData = await confluence.addOrReplacePage(parentId, c.label, c.chunk)
-      parentId = pageData.id
-      written[c.key] = parentId
-    }
+  while (nodes.length) {
+    // console.log('nodes.length', nodes.length)
+    const foo = nodes.reduce((prev, ent) => {
+      return prev
+        .then(() => doPage(ent.parent, ent.node))
+        .then((pageData) => {
+          return ent.node
+            .all(n => n.parent && n.parent.model._key === ent.node.model._key)
+            .map(d => {
+              return ({ parent: pageData.id, node: d })
+            })
+        })
+    }, Promise.resolve())
 
-    if ('children' in c) {
-      for (const child of c.children) {
-        // console.log('check child', parentId, child.key, child.depth)
-        const chunk = catalog.getChunk(child.key, child.depth)
-
-        if (!chunk) {
-          // console.log('NOPE', child.key)
-          continue
-        }
-
-        const childData = await confluence.addOrReplacePage(parentId, child.label, chunk)
-        written[child.key] = childData.id
-        // console.log('child added', childData.id)
-      }
-      // console.log('children done', parentId)
-    }
+    nodes = await foo
+    // console.log('FOO', nodes)
   }
 }

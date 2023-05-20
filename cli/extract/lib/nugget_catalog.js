@@ -64,6 +64,60 @@ exports.NuggetCatalog = class NuggetCatalog {
     return orderedChunks
   }
 
+  // collate markdown chunks into pages based on passage
+  async getPaged () {
+    const treeRoot = await this.getTree()
+
+    // walk to generate chunks
+    treeRoot.walk((node) => {
+      const md = this.#mdForExtract(node.model._key, node.model.depth)
+      if (md && this.#allowExtract(md)) {
+        // console.log('got chunk', node.model.depth, node.model.label)
+        node.model.chunks.push(md)
+        node.model.len = md.length
+        // console.log('gen', node.model.depth, node.model.label, node.model.type, node.model.key, node.model.chunks.length)
+      }
+      return true
+    })
+
+    treeRoot.walk((node) => {
+      if (node.parent) {
+        const parent = node.parent.model
+        // parent: passage, len <= 1000, not seam
+        // node: can have seam, len <= 1000, nugget
+        if (parent._id.startsWith('passage') &&
+          parent.len <= 1000 &&
+          !parent.nuggets &&
+          node.model._id.startsWith('nugget') &&
+          node.model.len <= 1000 &&
+          node.model.chunks.length > 0) {
+          // if (!node.model.body && !node.hasChildren() && node.model._id.startsWith('passage')) {
+          // console.log('collating', node.model.label, node.model._key)
+          node.parent.model.chunks.push(node.model.chunks[0])
+          // console.log('col', node.parent.model.depth, node.parent.model.label, node.parent.model.type, node.parent.model.key, node.parent.model.chunks.length, node.model.depth, node.model.label, node.model.type, node.model.key, node.model.chunks.length)
+        }
+      }
+      return true
+    })
+
+    return treeRoot
+
+    // walk again to get pages
+    // const pages = []
+    // treeRoot.walk((node) => {
+    //   if (node.model.type === 'passage') {
+    //     node.model.chunk = node.model.chunks.join('\n')
+    //     node.model.chunks = []
+    //     pages.push(node.model)
+    //   }
+    //   return true
+    // })
+    // console.log(pages)
+
+    // process.exit(1)
+    // return pages
+  }
+
   // get markdown chunks for seams then any non-seam nuggets
   populateChunks () {
     this.initCheck()
@@ -94,9 +148,9 @@ exports.NuggetCatalog = class NuggetCatalog {
   }
 
   // pull ordered chunks with model metadata included
-  async getSeamNuggetChunks () {
+  async getSeamNuggetTree () {
     this.populateChunks()
-    return await this.getOrdered()
+    return await this.getPaged()
   }
 
   #mdForExtract (key, depth) {
@@ -207,7 +261,7 @@ exports.NuggetCatalog = class NuggetCatalog {
     for await (const c of cursor) {
       if (first) {
         first = false
-        root = tree.parse({ depth: 1, ...this.allNuggets.adit })
+        root = tree.parse({ depth: 1, chunks: [], ...this.allNuggets.adit })
         assert.strictEqual(c.keys, 'adit', 'first vertex should be "adit"')
         continue
       }
@@ -222,7 +276,7 @@ exports.NuggetCatalog = class NuggetCatalog {
           current = node // key already added on prior iteration
         } else {
           const nugget = this.allNuggets[c.nug._key]
-          current = current.addChild(tree.parse({ depth, ...nugget }))
+          current = current.addChild(tree.parse({ depth, chunks: [], ...nugget }))
         }
         depth++
       }
