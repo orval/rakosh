@@ -116,7 +116,6 @@ class Confluence {
   }
 
   addPage (pageId, title, markdown) {
-    // console.log('addPage', pageId, title, markdown)
     const formatted = Confluence.format(markdown)
     return fetch(`${this.wiki}/api/v2/pages`, {
       method: 'POST',
@@ -222,42 +221,40 @@ exports.confluencePages = async function (db, argv) {
 
   const root = await catalog.getSeamNuggetTree()
 
-  // deal with duplicate labels
-  // const labels = {}
-  // for (const c of mdChunks) {
-  //   if (c.label in labels) {
-  //     const newLabel = `${c.label} - ${labels[c.label] + 1}`
-  //     c.label = newLabel
-  //   } else {
-  //     labels[c.label] = 1
-  //   }
-  // }
+  // append confluence children macro to pages with children
+  root.walk((n) => {
+    if (n.hasChildren()) n.model.chunks.push('\n----\n\n{children}')
+    return true
+  })
 
   function doPage (parentId, node) {
     return confluence.addOrReplacePage(parentId, node.model.label, node.model.chunks.join('\n'))
       .then((pageData) => {
-        // console.log('blah', parentId, node.model.label)
         return pageData
       })
   }
 
-  let nodes = [{ parent: confluence.startpageid, node: root }]
+  async function processNodes (nodes) {
+    if (nodes.length === 0) return
 
-  while (nodes.length) {
-    // console.log('nodes.length', nodes.length)
-    const foo = nodes.reduce((prev, ent) => {
+    // reduce() ensures pages are added in order
+    const children = []
+    await nodes.reduce((prev, ent) => {
       return prev
         .then(() => doPage(ent.parent, ent.node))
         .then((pageData) => {
           return ent.node
+            // find all children of this node
             .all(n => n.parent && n.parent.model._key === ent.node.model._key)
             .map(d => {
-              return ({ parent: pageData.id, node: d })
+              children.push({ parent: pageData.id, node: d })
+              return d.model._key
             })
         })
     }, Promise.resolve())
 
-    nodes = await foo
-    // console.log('FOO', nodes)
+    await processNodes(children)
   }
+
+  await processNodes([{ parent: confluence.startpageid, node: root }])
 }

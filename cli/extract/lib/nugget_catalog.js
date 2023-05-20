@@ -72,10 +72,7 @@ exports.NuggetCatalog = class NuggetCatalog {
     treeRoot.walk((node) => {
       const md = this.#mdForExtract(node.model._key, node.model.depth)
       if (md && this.#allowExtract(md)) {
-        // console.log('got chunk', node.model.depth, node.model.label)
         node.model.chunks.push(md)
-        node.model.len = md.length
-        // console.log('gen', node.model.depth, node.model.label, node.model.type, node.model._key, node.model.chunks.length)
       }
       return true
     })
@@ -84,13 +81,10 @@ exports.NuggetCatalog = class NuggetCatalog {
     treeRoot.walk((node) => {
       if (node.parent) {
         const pMod = node.parent.model
-        // console.log('X', pMod.depth, pMod.label, pMod.type, pMod._key, pMod.chunks.length, pMod.len,
-        //   '|', node.model.depth, node.model.label, node.model.type, node.model._key, node.model.chunks.length, node.model.len)
         if (pMod.type === 'passage' &&
           !pMod.nuggets &&
           node.model.type === 'nugget' &&
           node.model.chunks.length > 0) {
-          // console.log('collating', node.model.label, node.model._key)
           pMod.chunks.push(...node.model.chunks)
           node.model.chunks = []
         }
@@ -105,6 +99,17 @@ exports.NuggetCatalog = class NuggetCatalog {
       len = emptyLeaves.length
       emptyLeaves.forEach(n => n.drop())
     } while (len)
+
+    // deal with duplicate labels
+    const labels = {}
+    treeRoot.walk((n) => {
+      if (n.model.label in labels) {
+        const newLabel = `${n.parent.model.label} - ${n.model.label}`
+        n.model.label = newLabel
+      }
+      labels[n.model.label] = 1
+      return true
+    })
 
     return treeRoot
   }
