@@ -75,47 +75,38 @@ exports.NuggetCatalog = class NuggetCatalog {
         // console.log('got chunk', node.model.depth, node.model.label)
         node.model.chunks.push(md)
         node.model.len = md.length
-        // console.log('gen', node.model.depth, node.model.label, node.model.type, node.model.key, node.model.chunks.length)
+        // console.log('gen', node.model.depth, node.model.label, node.model.type, node.model._key, node.model.chunks.length)
       }
       return true
     })
 
+    // collate nuggets up to their passage to make pages
     treeRoot.walk((node) => {
       if (node.parent) {
-        const parent = node.parent.model
-        // parent: passage, len <= 1000, not seam
-        // node: can have seam, len <= 1000, nugget
-        if (parent._id.startsWith('passage') &&
-          parent.len <= 1000 &&
-          !parent.nuggets &&
-          node.model._id.startsWith('nugget') &&
-          node.model.len <= 1000 &&
+        const pMod = node.parent.model
+        // console.log('X', pMod.depth, pMod.label, pMod.type, pMod._key, pMod.chunks.length, pMod.len,
+        //   '|', node.model.depth, node.model.label, node.model.type, node.model._key, node.model.chunks.length, node.model.len)
+        if (pMod.type === 'passage' &&
+          !pMod.nuggets &&
+          node.model.type === 'nugget' &&
           node.model.chunks.length > 0) {
-          // if (!node.model.body && !node.hasChildren() && node.model._id.startsWith('passage')) {
           // console.log('collating', node.model.label, node.model._key)
-          node.parent.model.chunks.push(node.model.chunks[0])
-          // console.log('col', node.parent.model.depth, node.parent.model.label, node.parent.model.type, node.parent.model.key, node.parent.model.chunks.length, node.model.depth, node.model.label, node.model.type, node.model.key, node.model.chunks.length)
+          pMod.chunks.push(...node.model.chunks)
+          node.model.chunks = []
         }
       }
       return true
     })
 
+    // remove empty leaf nodes
+    let len
+    do {
+      const emptyLeaves = treeRoot.all(n => !n.hasChildren() && n.model.chunks.length === 0)
+      len = emptyLeaves.length
+      emptyLeaves.forEach(n => n.drop())
+    } while (len)
+
     return treeRoot
-
-    // walk again to get pages
-    // const pages = []
-    // treeRoot.walk((node) => {
-    //   if (node.model.type === 'passage') {
-    //     node.model.chunk = node.model.chunks.join('\n')
-    //     node.model.chunks = []
-    //     pages.push(node.model)
-    //   }
-    //   return true
-    // })
-    // console.log(pages)
-
-    // process.exit(1)
-    // return pages
   }
 
   // get markdown chunks for seams then any non-seam nuggets
