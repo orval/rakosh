@@ -1,9 +1,12 @@
 'use strict'
 exports.exclude = {
   description: 'Exclude nuggets with these "[key:value]" pairs; only word chars are allowed',
+  alias: 'e',
   string: true,
   coerce: exc => {
-    if (!exc) throw new Error('--exclude requires key:value pair(s)')
+    if (!exc || typeof exc !== 'string') {
+      throw new Error('--exclude requires key:value pair(s)')
+    }
     const excludes = []
     exc.split(',').forEach(p => {
       const match = p.match(/^([\w]+):([\w\- ]+)$/)

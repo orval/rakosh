@@ -1,9 +1,12 @@
 'use strict'
 exports.include = {
   description: 'Only include nuggets with these "[key:value]" pairs; only word chars are allowed',
+  alias: 'i',
   string: true,
   coerce: inc => {
-    if (!inc) throw new Error('--include requires key:value pair(s)')
+    if (!inc || typeof inc !== 'string') {
+      throw new Error('--include requires key:value pair(s)')
+    }
     const includes = []
     inc.split(',').forEach(p => {
       const match = p.match(/^([\w]+):([\w\- ]+)$/)

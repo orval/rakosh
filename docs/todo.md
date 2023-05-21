@@ -5,13 +5,11 @@ order: 5
 
 ### TODO
 
-* PDF extract
 * Confluence Cloud extract
 * buttons for breadcrumb & metadata, plus persistence
 * code highlighting -- `gatsby-transformer-remark`, `Prism`?
 * embedded images
 * slug aliases -- e.g. allow navigation to `/docs/concepts/mine`
-* confluence cloud extract
 * replace nugget links in MD with `<Link>` in MDX
 * CLI command to simplify creation of new FS vertices
 * search box usage hints

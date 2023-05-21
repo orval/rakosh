@@ -25,15 +25,27 @@ exports.builder = (yargs) => {
     .option('toch1', {
       type: 'boolean',
       default: true,
-      description: 'Include <H1> headings in TOC'
+      description: 'Include <H1> headings in TOC',
+      alias: 'h'
     })
     .option('tocdepth', {
       type: 'number',
       default: 3,
       description: 'Depth of headings in TOC',
+      alias: 'd',
       coerce: m => {
         if (Number.isInteger(m) && m >= 0) return m
         throw new Error(`tocdepth value [${m}] is not valid`)
+      }
+    })
+    .option('minlength', {
+      type: 'number',
+      default: 0,
+      description: 'Markdown body content below this length will not be extracted',
+      alias: 'm',
+      coerce: m => {
+        if (Number.isInteger(m) && m >= 0) return m
+        throw new Error(`minlength value [${m}] is not valid`)
       }
     })
     .option('include', include)

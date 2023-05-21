@@ -7,6 +7,7 @@ yargs(hideBin(process.argv))
   .command(require('./deposit'))
   .command(require('./gatsby'))
   .command(require('./pdf'))
+  .command(require('./confluence'))
   .command(require('./uuid'))
   .demandCommand(1)
   .option('verbose', {

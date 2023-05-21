@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -19,6 +19,7 @@
     "react": "^18.2.0"
   },
   "dependencies": {
+    "@shogobg/markdown2confluence": "^0.1.8",
     "arangojs": "^8.1.0",
     "front-matter": "^4.0.2",
     "loglevel": "^1.8.1",
@@ -27,6 +28,8 @@
     "mdpdf": "^3.0.1",
     "mustache": "^4.2.0",
     "ncp": "^2.0.0",
+    "node-fetch": "^3.3.1",
+    "tree-model": "^1.0.7",
     "uuid": "^9.0.0",
     "yargs": "^17.6.2"
   },
@@ -34,9 +37,10 @@
     "lint": "eslint cli",
     "devdep": "./cli/main.js deposit examples/my-mine -r -v",
     "devext": "./cli/main.js gatsby my-mine examples/my-mine/cust-dev.json heap --no-build -v -m 3",
-    "devpdf": "./cli/main.js pdf my-mine -v",
+    "devpdf": "./cli/main.js pdf my-mine -v --tocdepth 4",
     "docdep": "./cli/main.js deposit docs -r -v",
     "docext": "./cli/main.js gatsby docs docs/cust-dev.json heap --no-build -v",
-    "docpdf": "./cli/main.js pdf docs -v --no-toch1 --tocdepth 2"
+    "docpdf": "./cli/main.js pdf docs -v --no-toch1 --tocdepth 2",
+    "doccon": "./cli/main.js confluence docs orval rakosh 164094 -v"
   }
 }
