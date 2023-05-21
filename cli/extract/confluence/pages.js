@@ -81,7 +81,12 @@ class Confluence {
   }
 
   getPages () {
-    return fetch(`${this.wiki}/api/v2/pages`, {
+    const queryString = new URLSearchParams({
+      status: 'current',
+      limit: 250
+    }).toString()
+
+    return fetch(`${this.wiki}/api/v2/pages?${queryString}`, {
       method: 'GET',
       headers: this.headers
     })
