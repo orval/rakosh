@@ -77,7 +77,7 @@ class Confluence {
         return response.json()
       })
       .then(data => data.id)
-      .catch(error => console.error('getPage', error))
+      .catch(error => log.error('getPage', error))
   }
 
   getPages () {
@@ -96,7 +96,7 @@ class Confluence {
         }
         return response.json()
       })
-      .catch(error => console.error('getPages', error))
+      .catch(error => log.error('getPages', error))
   }
 
   getPageByTitle (title) {
@@ -117,7 +117,7 @@ class Confluence {
         return response.json()
       })
       .then(data => data.results[0])
-      .catch(error => console.error('getPageByTitle', error))
+      .catch(error => log.error('getPageByTitle', error))
   }
 
   addPage (pageId, title, markdown) {
@@ -142,7 +142,7 @@ class Confluence {
         }
         return response.json()
       })
-      .catch(error => console.error('addPage', error))
+      .catch(error => log.error('addPage', error))
   }
 
   updatePage (pageId, version, title, markdown) {
@@ -170,7 +170,7 @@ class Confluence {
         }
         return response.json()
       })
-      .catch(error => console.error('updatePage', error))
+      .catch(error => log.error('updatePage', error))
   }
 
   async deletePage (pageId) {
@@ -184,7 +184,7 @@ class Confluence {
         }
         return response.text()
       })
-      .catch(error => console.error('deletePage', error))
+      .catch(error => log.error('deletePage', error))
   }
 
   async addOrReplacePage (parentId, title, markdown) {
