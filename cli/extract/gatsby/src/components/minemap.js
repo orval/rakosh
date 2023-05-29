@@ -6,7 +6,7 @@ import { IoCaretDown, IoCaretForward } from 'react-icons/io5'
 import minemapJson from '../../content/minemap.json'
 import * as styles from './minemap.module.css'
 
-let rem = 16
+let rem = 14
 
 const MineMap = () => {
   const [searchTerm, setSearchTerm] = useState('')

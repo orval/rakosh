@@ -8,7 +8,6 @@
     "@mdx-js/react": "^2.3",
     "formik": "^2.2.9",
     "gatsby": "^5.9",
-    "gatsby-omni-font-loader": "^2.0.2",
     "gatsby-plugin-layout": "^4.9.0",
     "gatsby-plugin-local-search": "^2",
     "gatsby-plugin-mdx": "^5.7",
