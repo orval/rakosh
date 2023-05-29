@@ -4,7 +4,8 @@ import PropTypes from 'prop-types'
 import { navigate, Link } from 'gatsby'
 import { IoChevronForward } from 'react-icons/io5'
 import * as styles from './shortcodes.module.css'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import SyntaxHighlighter from 'react-syntax-highlighter'
+import { github } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import yaml from 'js-yaml'
 
 // there is ample opportunity for refactoring here
@@ -225,6 +226,29 @@ Table.propTypes = {
   children: PropTypes.any.isRequired
 }
 
+const Code = (props) => {
+  if (!('className' in props)) {
+    return <code>{props.children}</code>
+  }
+
+  const language = props.className.replace(/language-/, '')
+
+  return (
+    <SyntaxHighlighter
+      language={language}
+      style={github}
+      customStyle={ { backgroundColor: '{{{color_bg}}}' } }
+    >
+      {props.children}
+    </SyntaxHighlighter>
+  )
+}
+
+Code.propTypes = {
+  children: PropTypes.any.isRequired,
+  className: PropTypes.string
+}
+
 export const components = {
   NuggetBody,
   Nugget,
@@ -238,5 +262,6 @@ export const components = {
   Breadcrumbs,
   Crumbs,
   Crumb,
-  table: Table
+  table: Table,
+  code: Code
 }
