@@ -198,7 +198,11 @@ class Confluence {
       return updatedPage
     } else {
       const newPage = await this.addPage(parentId, title, markdown)
-      log.info(`added page ${newPage.id} "${title}"`)
+      if (newPage) {
+        log.info(`added page ${newPage.id} "${title}"`)
+      } else {
+        log.error(`failed to add "${title}"`)
+      }
       return newPage
     }
   }
