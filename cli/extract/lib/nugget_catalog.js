@@ -68,14 +68,23 @@ exports.NuggetCatalog = class NuggetCatalog {
   async getPaged () {
     const treeRoot = await this.getTree()
 
+    const toDrop = []
+
     // walk to generate chunks
     treeRoot.walk((node) => {
+      // skip empty leaf nodes
+      if (!node.hasChildren() && !('body' in node.model)) {
+        toDrop.push(node)
+        return true
+      }
       const md = this.#mdForExtract(node.model._key, node.model.depth)
       if (md && this.#allowExtract(md)) {
         node.model.chunks.push(md)
       }
       return true
     })
+
+    toDrop.forEach(d => d.drop())
 
     // collate nuggets up to their passage to make pages
     treeRoot.walk((node) => {
@@ -99,17 +108,6 @@ exports.NuggetCatalog = class NuggetCatalog {
       len = emptyLeaves.length
       emptyLeaves.forEach(n => n.drop())
     } while (len)
-
-    // deal with duplicate labels
-    const labels = {}
-    treeRoot.walk((n) => {
-      if (n.model.label in labels) {
-        const newLabel = `${n.parent.model.label} - ${n.model.label}`
-        n.model.label = newLabel
-      }
-      labels[n.model.label] = 1
-      return true
-    })
 
     return treeRoot
   }
@@ -244,7 +242,6 @@ exports.NuggetCatalog = class NuggetCatalog {
     // TODO dedupe of secondary edges
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND 'passage/adit' GRAPH 'primary'
-        PRUNE v.nuggets
         ${join(this.filters)}
         RETURN { keys: CONCAT_SEPARATOR("|", p.vertices[*]._key), nug: LAST(p.vertices[*]) }
     `)

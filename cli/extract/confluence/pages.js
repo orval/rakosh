@@ -233,11 +233,15 @@ exports.confluencePages = async function (db, argv) {
   // append confluence children macro to pages with children
   root.walk((n) => {
     if (n.hasChildren()) n.model.chunks.push('\n----\n\n{children}')
+
+    // also create a path-like title, which will prevent duplicate titles
+    const title = n.getPath().map(p => p.model.label).slice(1).join(' / ')
+    n.model.title = title || n.model.label
     return true
   })
 
   function doPage (parentId, node) {
-    return confluence.addOrReplacePage(parentId, node.model.label, node.model.chunks.join('\n'))
+    return confluence.addOrReplacePage(parentId, node.model.title, node.model.chunks.join('\n'))
       .then((pageData) => {
         return pageData
       })
