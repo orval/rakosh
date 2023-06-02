@@ -86,7 +86,7 @@ class Confluence {
       limit: 250
     }).toString()
 
-    return fetch(`${this.wiki}/api/v2/pages?${queryString}`, {
+    return fetch(`${this.wiki}/api/v2/spaces/${encodeURIComponent(this.spaceId)}/pages?${queryString}`, {
       method: 'GET',
       headers: this.headers
     })
