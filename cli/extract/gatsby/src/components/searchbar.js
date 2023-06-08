@@ -1,28 +1,55 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useFlexSearch } from 'react-use-flexsearch'
 import { Formik, Form, Field } from 'formik'
 import { useStaticQuery, graphql, Link } from 'gatsby'
 import Modal from 'react-modal'
 import * as styles from './searchbar.module.css'
 
-Modal.setAppElement(null)
+Modal.setAppElement('#___gatsby')
+
+const SearchResults = ({ query, store, index, closeModal }) => {
+  const results = useFlexSearch(query, index, store)
+  if (results && results.length === 0) {
+    return (<p>Not found</p>)
+  }
+  return (
+    <ul>
+      {results && results.map(result => (
+        <li key={result.id}><Link to={'/' + result.slug} onClick={closeModal}>{result.label}</Link></li>
+      ))}
+    </ul>
+  )
+}
 
 const SearchBar = () => {
   const [query, setQuery] = useState('')
+  const [searchIndex, setSearchIndex] = useState(null)
+  const [searchStore, setSearchStore] = useState(null)
   const [modalIsOpen, setIsOpen] = useState(false)
 
   const data = useStaticQuery(graphql`
     query SearchBarQuery {
       localSearchProspect {
-        index
-        store
+        publicIndexURL
+        publicStoreURL
       }
     }
   `)
 
-  const index = data.localSearchProspect.index
-  const store = data.localSearchProspect.store
-  const results = useFlexSearch(query, index, store)
+  useEffect(() => {
+    if (query.length > 0 && (searchIndex == null || searchStore == null)) {
+      async function fetchData () {
+        const queries = await Promise.all([
+          fetch(data.localSearchProspect.publicIndexURL),
+          fetch(data.localSearchProspect.publicStoreURL)
+        ])
+        setSearchIndex(await queries[0].text())
+        setSearchStore(await queries[1].json())
+      }
+
+      fetchData()
+    }
+  })
 
   function openModal () {
     setIsOpen(true)
@@ -52,11 +79,15 @@ const SearchBar = () => {
         onRequestClose={closeModal}
         contentLabel="Search Results"
       >
-        <ul>
-          {results && results.map(result => (
-            <li key={result.id}><Link to={'/' + result.slug} onClick={closeModal}>{result.label}</Link></li>
-          ))}
-        </ul>
+
+        {searchIndex != null && searchStore != null && query.length > 0 && (
+          <SearchResults
+            query={query}
+            store={searchStore}
+            index={searchIndex}
+            closeModal={closeModal}
+          />
+        )}
         <button onClick={closeModal}>close</button>
       </Modal>
     </div>
