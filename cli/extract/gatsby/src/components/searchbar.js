@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import PropTypes from 'prop-types'
 import { useFlexSearch } from 'react-use-flexsearch'
 import { Formik, Form, Field } from 'formik'
 import { useStaticQuery, graphql, Link } from 'gatsby'
@@ -19,6 +20,13 @@ const SearchResults = ({ query, store, index, closeModal }) => {
       ))}
     </ul>
   )
+}
+
+SearchResults.propTypes = {
+  query: PropTypes.string.isRequired,
+  store: PropTypes.object.isRequired,
+  index: PropTypes.string.isRequired,
+  closeModal: PropTypes.func.isRequired
 }
 
 const SearchBar = () => {
