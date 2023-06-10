@@ -36,7 +36,7 @@ function nav (key, tagName = '') {
 const Nugget = withNuggetPropTypes((props) => {
   const bordered = (props.inseam) ? '' : styles.bordered
   const tabIndex = (props.inseam) ? -1 : 0
-  const mainStyle = (props.direction) ? '' : styles.main
+  const mainStyle = (props.direction || props.inseam) ? '' : styles.main
   const className = `${bordered} ${mainStyle} ${styles.nugget}`
   const { globalValue } = useContext(LayoutContext)
 
@@ -93,9 +93,11 @@ const Seam = withNuggetPropTypes((props) => {
     >
       <div className={styles.container}>
         {props.children}
-        {globalValue.showMetadata && !props.direction
-          ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>)
-          : null }
+        <div className={styles.metadata}>
+          {globalValue.showMetadata && !props.direction
+            ? (<SyntaxHighlighter language="yaml">{getYaml(props)}</SyntaxHighlighter>)
+            : null }
+        </div>
       </div>
     </div>
   )
@@ -213,7 +215,7 @@ Crumb.propTypes = {
 }
 
 const NuggetBody = (props) => {
-  return (<div className={styles.content} tabIndex={-1}>{props.children}</div>)
+  return (<div tabIndex={-1}>{props.children}</div>)
 }
 NuggetBody.propTypes = {
   children: PropTypes.any.isRequired

@@ -3,7 +3,6 @@
  */
 
 import remarkGfm from 'remark-gfm'
-import fm from 'front-matter'
 
 const MDX_RE = new RegExp(
   '^<.?NuggetArea>$' +
@@ -17,14 +16,15 @@ const MDX_RE = new RegExp(
   '|^<.Nugget>$' +
   '|^<.Passage>$' +
   '|^<.Crumbs>$' +
+  '|^<.Seam>$' +
   '|^<.?Nuggets.{2,3}bound>$' +
   '|^<.?Passages.{2,3}bound>$'
 )
 
 // this strips a bunch of internal cruft from what is indexed for search
 function prepBody (mdx) {
-  const markdown = fm(mdx)
-  const lines = markdown.body.split('\n').filter(l => !MDX_RE.test(l.trim()))
+  const markdown = mdx.replace(/^<NuggetsInbound>$[\s\S]*/m, '')
+  const lines = markdown.split('\n').filter(l => !MDX_RE.test(l.trim()))
   return lines.join('\n')
 }
 

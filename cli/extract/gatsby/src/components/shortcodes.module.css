@@ -38,7 +38,9 @@
   flex-basis: 15%;
   justify-content: center;
   font-size: smaller;
+  min-height: 7rem;
   max-height: 20rem;
+  overflow: hidden;
 }
 
 .outboundnugget {
@@ -47,11 +49,13 @@
   flex-basis: 15%;
   justify-content: center;
   font-size: smaller;
+  min-height: 7rem;
   max-height: 20rem;
+  overflow: hidden;
 }
 
 .bordered {
-  border-radius: 2rem;
+  border-radius: 1rem;
   border: 0.3rem solid;
   padding: 0.5rem 1rem 0.5rem 1rem;
   margin: 0.2rem;
@@ -60,7 +64,8 @@
 }
 
 .main {
-  border-width: 0.5rem;
+  border-width: 0.6rem;
+  border-radius: 2rem;
   order: 1;
   flex-grow: 2;
   background-color: var(--color-main-bg);
@@ -94,8 +99,8 @@
   justify-content: space-between;
 }
 
-.content {
-  order: 1;
+.metadata {
+  order: 1001;
 }
 
 .breadcrumbs {
@@ -103,7 +108,7 @@
   display: flex;
   flex-wrap: wrap;
   flex-direction: column;
-  order: 2;
+  order: 1000;
 }
 
 .crumbs {
