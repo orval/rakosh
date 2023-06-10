@@ -108,16 +108,11 @@ exports.Nugget = class Nugget {
       ? ''
       : this.#getBreadcrumbs()
 
-    let body = ('body' in this) ? this.body : '### ' + this.label
-    if (entries.direction === 'outbound' || entries.direction === 'inbound') {
-      body = (body.length > 200) ? body.slice(0, 199).concat('…') : body
-    }
-
     const mostOfTheMdx = format(
       '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
       component,
       Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
-      body,
+      ('body' in this) ? this.body : '### ' + this.label,
       breadcrumbs,
       append
     )
