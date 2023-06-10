@@ -55,7 +55,7 @@
 }
 
 .bordered {
-  border-radius: 2rem;
+  border-radius: 1rem;
   border: 0.3rem solid;
   padding: 0.5rem 1rem 0.5rem 1rem;
   margin: 0.2rem;
@@ -64,7 +64,8 @@
 }
 
 .main {
-  border-width: 0.5rem;
+  border-width: 0.6rem;
+  border-radius: 2rem;
   order: 1;
   flex-grow: 2;
   background-color: var(--color-main-bg);
