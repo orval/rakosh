@@ -21,6 +21,7 @@
   "dependencies": {
     "@shogobg/markdown2confluence": "^0.1.8",
     "arangojs": "^8.1.0",
+    "fix-esm": "^1.0.1",
     "front-matter": "^4.0.2",
     "loglevel": "^1.8.1",
     "markdown-toc": "^1.2.0",
@@ -29,7 +30,11 @@
     "mustache": "^4.2.0",
     "ncp": "^2.0.0",
     "node-fetch": "^3.3.1",
+    "remark-directive": "^2.0.1",
+    "remark-parse": "^10.0.2",
+    "remark-stringify": "^10.0.3",
     "tree-model": "^1.0.7",
+    "unist-util-visit": "^4.1.2",
     "uuid": "^9.0.0",
     "yargs": "^17.6.2"
   },

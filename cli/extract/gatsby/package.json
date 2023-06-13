@@ -14,6 +14,7 @@
     "gatsby-source-filesystem": "^5",
     "js-yaml": "^4.1.0",
     "react": "^18",
+    "react-admonitions": "^2.1.0",
     "react-arborist": "^3",
     "react-dom": "^18",
     "react-helmet": "^6.1.0",

@@ -19,18 +19,14 @@ It is a key driver of sustainability and resilience, providing a platform for fo
 
 With its vibrant color and natural beauty, green grass is the epitome of progress, representing a commitment to excellence and a dedication to creating a brighter future for all.
 
-:::note{class=warning}
-
+:::tip
 This is testing an Admonition. _Yay!_
-
 :::
 
 Then another paragraph.
 
-:::drance
-
-An admonition with a username.
-
+:::note[Duncan]
+An admonition with a title.
 :::
 
 ## Bogus Heading

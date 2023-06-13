@@ -3,6 +3,7 @@ const { readFileSync } = require('node:fs')
 const markdownlint = require('markdownlint')
 const fm = require('front-matter')
 const yaml = require('js-yaml')
+const processMarkdown = require('./process_markdown')
 
 const lintConf = {
   'line-length': false,
@@ -112,7 +113,7 @@ exports.Nugget = class Nugget {
       '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
       component,
       Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
-      ('body' in this) ? this.body : '### ' + this.label,
+      ('body' in this) ? processMarkdown(this.body) : '### ' + this.label,
       breadcrumbs,
       append
     )
