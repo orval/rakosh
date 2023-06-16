@@ -5,10 +5,9 @@ order: 5
 
 ### TODO
 
-* support for admonitions/directives
+* slug aliases -- e.g. allow navigation to `/docs/concepts/mine`
 * buttons for breadcrumb & metadata, plus persistence
 * embedded images
-* slug aliases -- e.g. allow navigation to `/docs/concepts/mine`
 * better search results presentation
 * BUG: exception when `--include`/`--exclude` results in empty result set
 * replace nugget links in MD with `<Link>` in MDX
