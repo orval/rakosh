@@ -16,7 +16,7 @@ const SearchResults = ({ query, store, index, closeModal }) => {
   return (
     <ul>
       {results && results.map(result => (
-        <li key={result.id}><Link to={'/' + result.slug} onClick={closeModal}>{result.label}</Link></li>
+        <li key={result.id}><Link to={result.slug} onClick={closeModal}>{result.label}</Link></li>
       ))}
     </ul>
   )

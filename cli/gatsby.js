@@ -11,6 +11,7 @@ const ncpp = util.promisify(ncp)
 const { MineMap } = require('./extract/lib/minemap')
 const { Nugget } = require('./lib/nugget')
 const log = require('loglevel')
+const slugify = require('slugify')
 
 log.setLevel('WARN')
 
@@ -116,6 +117,7 @@ async function copyTemplates (dir, customizations) {
 async function extractNuggets (db, dir) {
   const contentDir = join(dir, 'content')
   const nuggetStash = {}
+  const slugLookup = {}
 
   // pull each nugget type into a stash of Nugget objects
   log.info('extracting passages')
@@ -142,7 +144,14 @@ async function extractNuggets (db, dir) {
       )
     `)
     const breadcrumbs = []
+    const paths = []
     for await (const c of cursor) {
+      // generate URL path for this nugget using slugified labels
+      paths.push('/' + c.filter(b => b._id !== 'passage/adit')
+        .map(b => slugify(b.label).toLowerCase())
+        .join('/')
+      )
+
       // filter out the adit and self then push non-zero length paths into list
       const crumb = c.filter(b => b._id !== 'passage/adit' && b._id !== _id)
         .map(({ _id, ...rest }) => rest)
@@ -150,6 +159,15 @@ async function extractNuggets (db, dir) {
       if (crumb.length > 0) breadcrumbs.push(crumb)
     }
     nugget.breadcrumbs = breadcrumbs
+    nugget.paths = paths
+
+    // have paths and keys map to the primary slug
+    if (paths.length > 1) {
+      paths.slice(1).forEach(e => { slugLookup[e] = paths[0] })
+    }
+    if (paths.length > 0) {
+      slugLookup[nugget._key] = paths[0]
+    }
   }
 
   // get all adjacent vertices for each nugget and write them to the slug
@@ -187,7 +205,7 @@ async function extractNuggets (db, dir) {
       append = nugget.nuggets.map(n => nuggetStash['nugget/' + n].getMdx({ inseam: true })).join('\n')
     }
 
-    const slug = (nugget._key === 'adit') ? '/' : nugget._key
+    const slug = (nugget.paths.length > 0) ? nugget.paths[0] : '/'
 
     const mdx = [
       nugget.getFrontMatter({ slug }),
@@ -210,6 +228,8 @@ async function extractNuggets (db, dir) {
 
     writeFileSync(join(contentDir, `${nugget._key}.mdx`), mdx.join('\n'))
   }
+
+  writeFileSync(join(contentDir, 'slug_lookup.json'), JSON.stringify(slugLookup, null, 2))
 }
 
 async function generateMineMap (db, dir, mmapOpen) {
