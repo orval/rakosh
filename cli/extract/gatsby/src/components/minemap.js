@@ -81,7 +81,7 @@ Node.propTypes = {
 
 const Row = ({ node, attrs, innerRef, children }) => {
   const nav = (key) => {
-    navigate((key === 'adit') ? '/' : slugLookup[key])
+    navigate((key === '/adit') ? '/' : slugLookup[key])
   }
 
   const handleClick = (event) => {
