@@ -104,6 +104,10 @@ exports.Nugget = class Nugget {
     delete entries.body
     delete entries.breadcrumbs
 
+    if (!entries.slug) {
+      entries.slug = (entries.paths.length > 0) ? entries.paths[0] : '/'
+    }
+
     // it is decreed that breadcrumbs are not required in outbound vertices
     const breadcrumbs = (entries.direction === 'outbound' || entries.inseam)
       ? ''

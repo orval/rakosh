@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -33,6 +33,7 @@
     "remark-directive": "^2.0.1",
     "remark-parse": "^10.0.2",
     "remark-stringify": "^10.0.3",
+    "slugify": "^1.6.6",
     "tree-model": "^1.0.7",
     "unist-util-visit-parents": "^5.1.3",
     "uuid": "^9.0.0",

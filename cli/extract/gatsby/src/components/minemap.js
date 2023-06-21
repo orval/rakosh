@@ -4,6 +4,7 @@ import { navigate } from 'gatsby'
 import { Tree } from 'react-arborist'
 import { IoCaretDown, IoCaretForward } from 'react-icons/io5'
 import minemapJson from '../../content/minemap.json'
+import slugLookup from '../../content/slug_lookup.json'
 import * as styles from './minemap.module.css'
 
 let rem = 14
@@ -80,13 +81,13 @@ Node.propTypes = {
 
 const Row = ({ node, attrs, innerRef, children }) => {
   const nav = (key) => {
-    navigate('/' + ((key === 'adit') ? '' : key))
+    navigate((key === '/adit') ? '/' : slugLookup[key])
   }
 
   const handleClick = (event) => {
     // navigate to clicked content or toggle the node open/closed
     if (event.target.dataset.type) {
-      nav(node.data.id.split('|').pop())
+      nav('/' + node.data.id.split('|').pop())
     } else {
       node.toggle()
     }
@@ -94,7 +95,7 @@ const Row = ({ node, attrs, innerRef, children }) => {
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      nav(node.data.id.split('|').pop())
+      nav('/' + node.data.id.split('|').pop())
     }
   }
 

@@ -30,7 +30,7 @@ function getYaml (props) {
 function nav (key, tagName = '') {
   if (tagName === 'A') return
   if (key === 'adit') navigate('/')
-  else navigate('/' + key)
+  else navigate(key)
 }
 
 const Nugget = withNuggetPropTypes((props) => {
@@ -41,12 +41,12 @@ const Nugget = withNuggetPropTypes((props) => {
   const { globalValue } = useContext(LayoutContext)
 
   const handleClick = (event) => {
-    nav(props._key, event.target.tagName)
+    nav(props.slug, event.target.tagName)
   }
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      nav(props._key)
+      nav(props.slug)
     }
   }
 
@@ -74,12 +74,12 @@ const Seam = withNuggetPropTypes((props) => {
   const { globalValue } = useContext(LayoutContext)
 
   const handleClick = (event) => {
-    nav(props._key, event.target.tagName)
+    nav(props.slug, event.target.tagName)
   }
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      nav(props._key)
+      nav(props.slug)
     }
   }
 
@@ -110,12 +110,12 @@ const Passage = withNuggetPropTypes((props) => {
   const { globalValue } = useContext(LayoutContext)
 
   const handleClick = (event) => {
-    nav(props._key, event.target.tagName)
+    nav(props.slug, event.target.tagName)
   }
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      nav(props._key)
+      nav(props.slug)
     }
   }
 
