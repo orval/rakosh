@@ -87,7 +87,7 @@ const Row = ({ node, attrs, innerRef, children }) => {
   const handleClick = (event) => {
     // navigate to clicked content or toggle the node open/closed
     if (event.target.dataset.type) {
-      nav(node.data.id.split('|').pop())
+      nav('/' + node.data.id.split('|').pop())
     } else {
       node.toggle()
     }
@@ -95,7 +95,7 @@ const Row = ({ node, attrs, innerRef, children }) => {
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      nav(node.data.id.split('|').pop())
+      nav('/' + node.data.id.split('|').pop())
     }
   }
 

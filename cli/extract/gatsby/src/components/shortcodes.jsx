@@ -46,7 +46,7 @@ const Nugget = withNuggetPropTypes((props) => {
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      nav(props._key)
+      nav(props.slug)
     }
   }
 
@@ -79,7 +79,7 @@ const Seam = withNuggetPropTypes((props) => {
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      nav(props._key)
+      nav(props.slug)
     }
   }
 
@@ -115,7 +115,7 @@ const Passage = withNuggetPropTypes((props) => {
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      nav(props._key)
+      nav(props.slug)
     }
   }
 

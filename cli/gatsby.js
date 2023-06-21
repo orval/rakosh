@@ -166,7 +166,7 @@ async function extractNuggets (db, dir) {
       paths.slice(1).forEach(e => { slugLookup[e] = paths[0] })
     }
     if (paths.length > 0) {
-      slugLookup[nugget._key] = paths[0]
+      slugLookup['/' + nugget._key] = paths[0]
     }
   }
 
