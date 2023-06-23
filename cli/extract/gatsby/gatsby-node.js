@@ -24,12 +24,17 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
   }
 
   const nuggets = result.data.nuggets.nodes
+  const slugs = {}
 
   nuggets.forEach(node => {
+    if (node.frontmatter.slug in slugs) {
+      console.error(`slug [${node.frontmatter.slug}] already exists -- processing file [${node.internal.contentFilePath}]`)
+    }
     createPage({
       path: node.frontmatter.slug,
       component: `${nuggetTemplate}?__contentFilePath=${node.internal.contentFilePath}`
     })
+    slugs[node.frontmatter.slug] = 1
   })
 }
 
