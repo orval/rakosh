@@ -5,13 +5,13 @@ order: 5
 
 ### TODO
 
-* slug aliases -- e.g. allow navigation to `/docs/concepts/mine`
+* short labels for use in slug
 * buttons for breadcrumb & metadata, plus persistence
 * embedded images
 * better search results presentation
 * BUG: exception when `--include`/`--exclude` results in empty result set
 * replace nugget links in MD with `<Link>` in MDX
-* CLI command to simplify creation of new FS vertices
+* CLI command to simplify creation of new FS nuggets
 * search box usage hints
 * finalize initial docs
 * "tags" for search (plus author)
