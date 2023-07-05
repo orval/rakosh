@@ -9,6 +9,7 @@ yargs(hideBin(process.argv))
   .command(require('./pdf'))
   .command(require('./confluence'))
   .command(require('./uuid'))
+  .command(require('./fs'))
   .demandCommand(1)
   .option('verbose', {
     alias: 'v',
