@@ -15,10 +15,11 @@ exports.describe = 'Commands for operating on a rakosh filesystem layout'
 
 exports.builder = (yargs) => {
   return yargs
-    // .option('interactive', {
-    //   alias: 'i',
-    //   describe: 'interactive filesystem operations'
-    // })
+    .option('interactive', {
+      alias: 'i',
+      hidden: true,
+      describe: 'interactive filesystem operations'
+    })
 
     // .option('create', {
     //   alias: 'c',
@@ -72,7 +73,10 @@ exports.handler = function (argv) {
     return false
   }
 
-  fsLayout.interactive()
+  if (argv.interactive) {
+    fsLayout.interactive()
+    return
+  }
 
   // root = tree.parse({ depth: 1, chunks: [], ...this.allNuggets.adit })
   // assert.strictEqual(c.keys, 'adit', 'first vertex should be "adit"')

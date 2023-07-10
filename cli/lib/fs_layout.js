@@ -8,6 +8,7 @@ const inquirer = require('inquirer')
 const { marked } = require('marked')
 const TerminalRenderer = require('marked-terminal')
 const yaml = require('js-yaml')
+const prompts = require('prompts')
 
 const RAKOSH_FS_LAYOUT_VERSION = '1.1'
 
@@ -19,9 +20,9 @@ exports.FsLayout = class FsLayout {
   constructor (dir) {
     this.tree = new TreeModel({ modelComparatorFn: Nugget.compare })
     this.dir = dir
-    console.time('myCode')
+    console.time('init time')
     this.init()
-    console.timeEnd('myCode')
+    console.timeEnd('init time')
     // if (!statSync(dir).isDirectory()) {
     //   throw new Error(`${dir} is not a directory`)
     // }
@@ -119,7 +120,66 @@ exports.FsLayout = class FsLayout {
   }
 
   interactive () {
-    this.#wibble('Navigate', this.root)
+    this.#wobble('Navigate', this.root)
+  }
+
+  #wobble (msg, node) {
+    // console.log(node)
+    if (!('children' in node.model)) {
+      const entries = Object.assign({}, node.model)
+      delete entries.body
+      console.log(`---\n${yaml.dump(entries).trim()}\n---`)
+      // console.log(marked(node.model.body))
+      this.#wobble('Navigate', node.parent)
+      return
+    }
+
+    (async () => {
+      const choices = node.model.children.map(c => {
+        let prefix = '📂'
+        switch (c.type) {
+          case 'nugget':
+            prefix = 'ℹ️ '
+            break
+          case 'passage':
+            prefix = '🗂️ '
+            break
+        }
+        return {
+          title: `${prefix} - ${c.label}`,
+          value: ('_key' in c) ? c._key : c.label
+        }
+      })
+      // choices.push(new inquirer.Separator())
+      // choices.push({ title: 'Add nugget', value: '__newnug__' })
+      // choices.push({ title: 'Add passage', value: '__newpass__' })
+      // choices.push({ title: 'Exit', value: '__exit__' })
+      if (node.model.depth > 0) {
+        choices.unshift({ title: '⬆️', value: '..', short: ' ' })
+      }
+
+      const response = await prompts({
+        type: 'select',
+        name: 'value',
+        message: '',
+        choices,
+        initial: 1
+      })
+      console.log(response)
+
+      if (response.value === '__exit__') return
+      if (response.value === '..') {
+        this.#wobble('Navigate', node.parent)
+        return
+      }
+
+      let childNode = node.first(n => n.model._key === response.value)
+      if (!childNode) {
+        childNode = node.first(n => n.model.label === response.value)
+      }
+      // console.log('__', childNode)
+      this.#wobble('Navigate', childNode)
+    })()
   }
 
   #wibble (message, node) {
