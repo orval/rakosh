@@ -23,7 +23,8 @@ const STANDARD_TAGS = _.zipObject([
   'body',
   'label',
   'fspath',
-  'children'
+  'children',
+  'nuggets'
 ])
 
 marked.setOptions({
@@ -34,16 +35,11 @@ exports.FsLayout = class FsLayout {
   constructor (dir) {
     this.tree = new TreeModel({ modelComparatorFn: Nugget.compare })
     this.dir = dir
-    console.time('init time')
     this.init()
-    console.timeEnd('init time')
-    // if (!statSync(dir).isDirectory()) {
-    //   throw new Error(`${dir} is not a directory`)
-    // }
   }
 
   init () {
-    this.root = this.tree.parse({}) //  depth: 1, _key: 'adit' })
+    this.root = this.tree.parse({})
     this.#buildTree(this.root, this.dir, 1)
 
     // this.root.walk(function (node) {
@@ -99,6 +95,8 @@ exports.FsLayout = class FsLayout {
       '---',
       `\n${this.#getChildHeader(this.root)} ${title}\n`
     ].join('\n'))
+
+    log.info(`New nugget "${title}" with _key ${tags._key} added at [${path}]`)
   }
 
   #getChildTags (node) {
@@ -191,9 +189,9 @@ exports.FsLayout = class FsLayout {
       this.#buildTree(passageNode, join(dir, d.name), depth++)
     }
 
-    // if (Object.keys(passageNuggets).length > 0) {
-    //   log.warn(`WARNING: saved nugget passage(s) not added to collection [${JSON.stringify(passageNuggets)}]`)
-    // }
+    if (Object.keys(passageNuggets).length > 0) {
+      log.warn(`WARNING: saved nugget passage(s) not added to collection [${JSON.stringify(passageNuggets)}]`)
+    }
   }
 
   interactive () {
@@ -313,39 +311,4 @@ exports.FsLayout = class FsLayout {
         }
       })
   }
-
-  // readDir (dir, parent) {
-  //   const dirContents = readdirSync(dir, { withFileTypes: true })
-  //   const mdFiles = dirContents.filter(e => e.isFile() && extname(e.name) === '.md')
-  //   const dirs = dirContents.filter(e => e.isDirectory())
-
-  //   for (const mdFile of mdFiles) {
-  //     const base = basename(mdFile.name, '.md')
-  //     const fsPath = join(dir, mdFile.name)
-
-  //     let nugget
-  //     try {
-  //       nugget = Nugget.fromMdFile(resolve(fsPath))
-  //       nugget.fspath = fsPath
-  //     } catch (error) {
-  //       log.warn(`WARNING: ${mdFile.name} does not appear to be a rakosh nugget file [${error}]`)
-  //       continue
-  //     }
-
-  //     if (nugget._key === 'adit') {
-  //       // check for presence of layout version -- allow for later version changes
-  //       if (!nugget.fs_layout) {
-  //         log.warn(`WARNING: no 'fs_layout' in ${base}.md, assuming version ${RAKOSH_FS_LAYOUT_VERSION}`)
-  //       } else if (nugget.fs_layout !== RAKOSH_FS_LAYOUT_VERSION) {
-  //         log.error(`ERROR: unknown 'fs_layout' ${nugget.fs_layout}, tool knows ${RAKOSH_FS_LAYOUT_VERSION}`)
-  //       }
-  //       // update the adit vertex with a document from this file
-  //       ///// update this.root
-  //       continue
-  //     }
-  //   }
-
-  //   for (const dir of dirs) {
-  //   }
-  // }
 }

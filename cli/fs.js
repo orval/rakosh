@@ -6,7 +6,7 @@ const { FsLayout } = require('./lib/fs_layout')
 
 log.setLevel('WARN')
 
-exports.command = 'fs <path>'
+exports.command = 'fs <path> <title>'
 // exports.command = 'fs <action> <nugget_type> <path>'
 
 exports.describe = 'Commands for operating on a rakosh filesystem layout'
@@ -64,6 +64,10 @@ exports.builder = (yargs) => {
         return p
       }
     })
+    .positional('title', {
+      describe: 'the title of the new nugget',
+      type: 'string'
+    })
 }
 
 exports.handler = function (argv) {
@@ -81,7 +85,7 @@ exports.handler = function (argv) {
   if (argv.interactive) {
     fsLayout.interactive()
   } else {
-    fsLayout.add(argv.path, 'TITLE')
+    fsLayout.add(argv.path, argv.title)
   }
 
   // root = tree.parse({ depth: 1, chunks: [], ...this.allNuggets.adit })
