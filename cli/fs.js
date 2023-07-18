@@ -1,14 +1,12 @@
 'use strict'
-const { v4: uuidv4 } = require('uuid')
 const { statSync, mkdirSync, accessSync, constants } = require('node:fs')
-// const { basename, join, resolve, extname } = require('node:path')
-const { resolve } = require('node:path')
+const { basename, dirname, join, resolve, extname } = require('node:path')
 const log = require('loglevel')
 const { FsLayout } = require('./lib/fs_layout')
 
 log.setLevel('WARN')
 
-exports.command = 'fs <directory>'
+exports.command = 'fs <path>'
 // exports.command = 'fs <action> <nugget_type> <path>'
 
 exports.describe = 'Commands for operating on a rakosh filesystem layout'
@@ -44,29 +42,36 @@ exports.builder = (yargs) => {
     //   normalize: true,
     //   coerce: d => resolve(d)
     // })
-    .positional('directory', {
-      describe: 'top-level directory of rakosh FS layout',
+    .positional('path', {
+      describe: 'path to the entity to act on',
       string: true,
       normalize: true,
-      coerce: d => {
-        d = resolve(d)
+      coerce: p => {
+        p = resolve(p)
+        const dirPath = dirname(p)
+        // const parts = p.split(path.sep)
         try {
-          if (!statSync(d).isDirectory()) throw new Error()
+          if (!statSync(dirPath).isDirectory()) throw new Error()
         } catch {
-          throw new Error(`${d} is not a directory`)
+          throw new Error(`${dirPath} is not a directory`)
         }
-        return d
+        // const base = basename(p)
+        const ext = extname(p)
+        if (ext !== '' && ext !== '.md') {
+          throw new Error(`Unrecognised file type for ${p}`)
+        }
+        // console.log(base, ext)
+        return p
       }
     })
 }
 
 exports.handler = function (argv) {
   if (argv.verbose) log.setLevel('INFO')
-  // console.log('SDDSDSDSDSDS', argv)
   let fsLayout
 
   try {
-    fsLayout = new FsLayout(argv.directory)
+    fsLayout = new FsLayout(dirname(argv.path))
   } catch (err) {
     // throw new Error(`Failed to blah ${err}`)
     log.error(`Failed to blah ${err}`)
@@ -75,7 +80,8 @@ exports.handler = function (argv) {
 
   if (argv.interactive) {
     fsLayout.interactive()
-    return
+  } else {
+    fsLayout.add(argv.path, 'TITLE')
   }
 
   // root = tree.parse({ depth: 1, chunks: [], ...this.allNuggets.adit })
@@ -94,7 +100,6 @@ exports.handler = function (argv) {
   // }
 
   // log.warn(`${argv.action} ${argv.nugget_type} [${argv.path}]`)
-  // uuidv4()
 }
 
 function fileExists (filepath) {

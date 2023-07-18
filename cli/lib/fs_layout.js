@@ -1,5 +1,7 @@
 'use strict'
-const { statSync, readdirSync } = require('node:fs')
+const _ = require('lodash')
+const { v4: uuidv4 } = require('uuid')
+const { statSync, readdirSync, writeFileSync } = require('node:fs')
 const { basename, join, resolve, extname } = require('node:path')
 const TreeModel = require('tree-model')
 const { Nugget } = require('./nugget')
@@ -9,8 +11,20 @@ const { marked } = require('marked')
 const TerminalRenderer = require('marked-terminal')
 const yaml = require('js-yaml')
 const prompts = require('prompts')
+const ss = require('simple-statistics')
 
 const RAKOSH_FS_LAYOUT_VERSION = '1.1'
+
+const STANDARD_TAGS = _.zipObject([
+  'type',
+  'depth',
+  '_key',
+  'passage',
+  'body',
+  'label',
+  'fspath',
+  'children'
+])
 
 marked.setOptions({
   renderer: new TerminalRenderer()
@@ -36,16 +50,79 @@ exports.FsLayout = class FsLayout {
     //   console.log(JSON.stringify(node.model, null, 2))
     //   return true
     // })
+  }
 
-    // inquirer.registerPrompt('directory', require('inquirer-select-directory'))
-    // inquirer.prompt([{
-    //   type: 'directory',
-    //   name: 'from',
-    //   message: 'Where you like to put this component?',
-    //   basePath: this.dir
-    // }]).then(function (answers) {
-    //   console.log(answers)
-    // })
+  add (path, title) {
+    if (this.#fileDoesNotExist(path)) {
+      const ext = extname(path)
+      if (ext === '') {
+        this.addPassage(path, title)
+      } else if (ext === '.md') {
+        this.addNugget(path, title)
+      } else {
+        log.error(`file type ${ext} not supported`)
+      }
+    } else {
+      log.error(`${path} already exists`)
+    }
+  }
+
+  #fileDoesNotExist (filepath) {
+    try {
+      statSync(filepath)
+    } catch (err) {
+      if (err.code === 'ENOENT') return true
+    }
+    return false
+  }
+
+  addNugget (path, title) {
+    const tags = this.#getChildTags(this.root)
+
+    // set the next order value if order tags exist
+    if ('order' in tags) {
+      tags.order = _.last(tags.order.sort()) + 1
+    }
+
+    // convert tag arrays into suggestion strings
+    for (const [k, v] of Object.entries(tags)) {
+      if (k === 'order') continue
+      tags[k] = _.uniq(v).join(', ')
+    }
+
+    // create a unique key
+    tags._key = uuidv4()
+
+    writeFileSync(path, [
+      '---',
+      yaml.dump(tags).trim(),
+      '---',
+      `\n${this.#getChildHeader(this.root)} ${title}\n`
+    ].join('\n'))
+  }
+
+  #getChildTags (node) {
+    // get arrays of the non-standard tag values
+    return node.model.children.reduce((acc, cur) => {
+      for (const [k, v] of Object.entries(cur)) {
+        if (k in STANDARD_TAGS) continue
+        if (k in acc) acc[k].push(v)
+        else acc[k] = [v]
+      }
+      return acc
+    }, {})
+  }
+
+  #getChildHeader (node) {
+    // use the child node headers to work out the new header level
+    const levels = node.model.children.reduce((acc, cur) => {
+      if ('body' in cur) {
+        const match = /^(#+)\s+/.exec(cur.body)
+        if (match && match.length > 1) acc.push(match[1].length)
+      }
+      return acc
+    }, [])
+    return '#'.repeat(ss.median(levels))
   }
 
   #buildTree (parent, dir, depth) {
@@ -124,12 +201,10 @@ exports.FsLayout = class FsLayout {
   }
 
   #wobble (msg, node) {
-    // console.log(node)
     if (!('children' in node.model)) {
       const entries = Object.assign({}, node.model)
       delete entries.body
-      console.log(`---\n${yaml.dump(entries).trim()}\n---`)
-      // console.log(marked(node.model.body))
+      log.info(`---\n${yaml.dump(entries).trim()}\n---`)
       this.#wobble('Navigate', node.parent)
       return
     }
@@ -165,7 +240,6 @@ exports.FsLayout = class FsLayout {
         choices,
         initial: 1
       })
-      console.log(response)
 
       if (response.value === '__exit__') return
       if (response.value === '..') {
@@ -177,7 +251,6 @@ exports.FsLayout = class FsLayout {
       if (!childNode) {
         childNode = node.first(n => n.model.label === response.value)
       }
-      // console.log('__', childNode)
       this.#wobble('Navigate', childNode)
     })()
   }
@@ -186,13 +259,11 @@ exports.FsLayout = class FsLayout {
     if (!('children' in node.model)) {
       const entries = Object.assign({}, node.model)
       delete entries.body
-      console.log(`---\n${yaml.dump(entries).trim()}\n---`)
-      // console.log(marked(node.model.body))
+      log.info(`---\n${yaml.dump(entries).trim()}\n---`)
       this.#wibble('Navigate', node.parent)
       return
     }
 
-    // console.log('wibble', JSON.stringify(node.model.children, null, 2))
     const choices = node.model.children.map(c => {
       let prefix = '📂'
       switch (c.type) {
@@ -225,7 +296,6 @@ exports.FsLayout = class FsLayout {
         pageSize: 10
       }])
       .then((answers) => {
-        // console.log('A', answers)
         if (answers.floop === '__exit__') return
         if (answers.floop === '..') this.#wibble('Navigate', node.parent)
 
@@ -233,7 +303,6 @@ exports.FsLayout = class FsLayout {
         if (!childNode) {
           childNode = node.first(n => n.model.label === answers.floop)
         }
-        // console.log('__', childNode)
         this.#wibble('Navigate', childNode)
       })
       .catch((error) => {
