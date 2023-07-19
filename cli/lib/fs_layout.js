@@ -41,11 +41,6 @@ exports.FsLayout = class FsLayout {
   init () {
     this.root = this.tree.parse({})
     this.#buildTree(this.root, this.dir, 1)
-
-    // this.root.walk(function (node) {
-    //   console.log(JSON.stringify(node.model, null, 2))
-    //   return true
-    // })
   }
 
   add (path, title) {
@@ -105,7 +100,6 @@ exports.FsLayout = class FsLayout {
       mkdirSync(path)
       log.info(`directory created [${path}]`)
       const passage = basename(path)
-      console.log('PPPP', passage)
       this.addNugget(mdFile, title, { passage })
     } else {
       log.warn(`WARNING: passage nugget already exists [${path}]`)
