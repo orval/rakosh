@@ -132,7 +132,7 @@ exports.FsLayout = class FsLayout {
       return acc
     }, [])
 
-    if (levels.length === 0) return 3 // arbitrarily use ### when unknown
+    if (levels.length === 0) return '###' // arbitrarily use 3 levels when unknown
     return '#'.repeat(ss.median(levels))
   }
 
