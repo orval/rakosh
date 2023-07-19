@@ -107,8 +107,10 @@ exports.FsLayout = class FsLayout {
   }
 
   #getChildTags (node) {
+    const children = node.model.children ?? []
+
     // get arrays of the non-standard tag values
-    return node.model.children.reduce((acc, cur) => {
+    return children.reduce((acc, cur) => {
       for (const [k, v] of Object.entries(cur)) {
         if (k in STANDARD_TAGS) continue
         if (k in acc) acc[k].push(v)
@@ -119,14 +121,18 @@ exports.FsLayout = class FsLayout {
   }
 
   #getChildHeader (node) {
+    const children = node.model.children ?? []
+
     // use the child node headers to work out the new header level
-    const levels = node.model.children.reduce((acc, cur) => {
+    const levels = children.reduce((acc, cur) => {
       if ('body' in cur) {
         const match = /^(#+)\s+/.exec(cur.body)
         if (match && match.length > 1) acc.push(match[1].length)
       }
       return acc
     }, [])
+
+    if (levels.length === 0) return 3 // arbitrarily use ### when unknown
     return '#'.repeat(ss.median(levels))
   }
 
