@@ -1,7 +1,7 @@
 'use strict'
 const _ = require('lodash')
 const { v4: uuidv4 } = require('uuid')
-const { statSync, readdirSync, writeFileSync } = require('node:fs')
+const { statSync, readdirSync, writeFileSync, mkdirSync } = require('node:fs')
 const { basename, join, resolve, extname } = require('node:path')
 const TreeModel = require('tree-model')
 const { Nugget } = require('./nugget')
@@ -59,7 +59,7 @@ exports.FsLayout = class FsLayout {
         log.error(`file type ${ext} not supported`)
       }
     } else {
-      log.error(`${path} already exists`)
+      log.warn(`WARNING: path already exists [${path}]`)
     }
   }
 
@@ -72,7 +72,7 @@ exports.FsLayout = class FsLayout {
     return false
   }
 
-  addNugget (path, title) {
+  addNugget (path, title, additions = {}) {
     const tags = this.#getChildTags(this.root)
 
     // set the next order value if order tags exist
@@ -91,12 +91,25 @@ exports.FsLayout = class FsLayout {
 
     writeFileSync(path, [
       '---',
-      yaml.dump(tags).trim(),
+      yaml.dump(Object.assign(additions, tags)).trim(),
       '---',
       `\n${this.#getChildHeader(this.root)} ${title}\n`
     ].join('\n'))
 
-    log.info(`New nugget "${title}" with _key ${tags._key} added at [${path}]`)
+    log.info(`new nugget "${title}" with _key ${tags._key} added at [${path}]`)
+  }
+
+  addPassage (path, title) {
+    const mdFile = path + '.md'
+    if (this.#fileDoesNotExist(mdFile)) {
+      mkdirSync(path)
+      log.info(`directory created [${path}]`)
+      const passage = basename(path)
+      console.log('PPPP', passage)
+      this.addNugget(mdFile, title, { passage })
+    } else {
+      log.warn(`WARNING: passage nugget already exists [${path}]`)
+    }
   }
 
   #getChildTags (node) {
