@@ -211,6 +211,8 @@ exports.FsLayout = class FsLayout {
   }
 
   #interactiveLoop (node) {
+    if (node === undefined) return
+
     if (!('children' in node.model)) {
       const entries = Object.assign({}, node.model)
       delete entries.body

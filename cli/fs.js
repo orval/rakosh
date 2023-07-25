@@ -15,6 +15,7 @@ exports.builder = (yargs) => {
     .option('interactive', {
       alias: 'i',
       hidden: true,
+      boolean: true,
       describe: 'interactive filesystem operations'
     })
     .positional('path', {
