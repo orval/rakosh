@@ -6,7 +6,6 @@ const { basename, join, resolve, extname } = require('node:path')
 const TreeModel = require('tree-model')
 const { Nugget } = require('./nugget')
 const log = require('loglevel')
-const inquirer = require('inquirer')
 const { marked } = require('marked')
 const TerminalRenderer = require('marked-terminal')
 const yaml = require('js-yaml')
@@ -208,15 +207,15 @@ exports.FsLayout = class FsLayout {
   }
 
   interactive () {
-    this.#wobble('Navigate', this.root)
+    this.#interactiveLoop(this.root)
   }
 
-  #wobble (msg, node) {
+  #interactiveLoop (node) {
     if (!('children' in node.model)) {
       const entries = Object.assign({}, node.model)
       delete entries.body
       log.info(`---\n${yaml.dump(entries).trim()}\n---`)
-      this.#wobble('Navigate', node.parent)
+      this.#interactiveLoop(node.parent)
       return
     }
 
@@ -236,13 +235,13 @@ exports.FsLayout = class FsLayout {
           value: ('_key' in c) ? c._key : c.label
         }
       })
-      // choices.push(new inquirer.Separator())
       // choices.push({ title: 'Add nugget', value: '__newnug__' })
       // choices.push({ title: 'Add passage', value: '__newpass__' })
-      // choices.push({ title: 'Exit', value: '__exit__' })
       if (node.model.depth > 0) {
         choices.unshift({ title: '⬆️', value: '..', short: ' ' })
       }
+
+      choices.push({ title: 'Exit', value: '__exit__' })
 
       const response = await prompts({
         type: 'select',
@@ -254,7 +253,7 @@ exports.FsLayout = class FsLayout {
 
       if (response.value === '__exit__') return
       if (response.value === '..') {
-        this.#wobble('Navigate', node.parent)
+        this.#interactiveLoop(node.parent)
         return
       }
 
@@ -262,66 +261,7 @@ exports.FsLayout = class FsLayout {
       if (!childNode) {
         childNode = node.first(n => n.model.label === response.value)
       }
-      this.#wobble('Navigate', childNode)
+      this.#interactiveLoop(childNode)
     })()
-  }
-
-  #wibble (message, node) {
-    if (!('children' in node.model)) {
-      const entries = Object.assign({}, node.model)
-      delete entries.body
-      log.info(`---\n${yaml.dump(entries).trim()}\n---`)
-      this.#wibble('Navigate', node.parent)
-      return
-    }
-
-    const choices = node.model.children.map(c => {
-      let prefix = '📂'
-      switch (c.type) {
-        case 'nugget':
-          prefix = 'ℹ️ '
-          break
-        case 'passage':
-          prefix = '🗂️ '
-          break
-      }
-      return {
-        name: `${prefix} - ${c.label}`,
-        value: ('_key' in c) ? c._key : c.label
-      }
-    })
-    choices.push(new inquirer.Separator())
-    choices.push({ name: 'Add nugget', value: '__newnug__' })
-    choices.push({ name: 'Add passage', value: '__newpass__' })
-    choices.push({ name: 'Exit', value: '__exit__' })
-    if (node.model.depth > 0) {
-      choices.unshift({ name: '⬆️', value: '..', short: ' ' })
-    }
-
-    inquirer
-      .prompt([{
-        type: 'list',
-        message: node.model.label,
-        name: 'floop',
-        choices,
-        pageSize: 10
-      }])
-      .then((answers) => {
-        if (answers.floop === '__exit__') return
-        if (answers.floop === '..') this.#wibble('Navigate', node.parent)
-
-        let childNode = node.first(n => n.model._key === answers.floop)
-        if (!childNode) {
-          childNode = node.first(n => n.model.label === answers.floop)
-        }
-        this.#wibble('Navigate', childNode)
-      })
-      .catch((error) => {
-        if (error.isTtyError) {
-          log.error('Prompt could not be rendered in the current environment')
-        } else {
-          log.error(`Something else went wrong: ${error}`)
-        }
-      })
   }
 }
