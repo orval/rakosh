@@ -5,10 +5,13 @@ order: 5
 
 ### TODO
 
+* favicon
 * short labels for use in slug
 * buttons for breadcrumb & metadata, plus persistence
-* embedded images
+* horizontal scrolling for outbound nuggets
+* reduce how much is rendered in non-main nuggets
 * better search results presentation
+* embedded images
 * BUG: exception when `--include`/`--exclude` results in empty result set
 * replace nugget links in MD with `<Link>` in MDX
 * CLI command to simplify creation of new FS nuggets
