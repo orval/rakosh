@@ -5,11 +5,12 @@ order: 5
 
 ### TODO
 
+* `--include` & `--exclude` for gatsby output
 * favicon
 * short labels for use in slug
-* buttons for breadcrumb & metadata, plus persistence
-* horizontal scrolling for outbound nuggets
 * reduce how much is rendered in non-main nuggets
+* horizontal scrolling for outbound nuggets
+* buttons for breadcrumb & metadata, plus persistence
 * better search results presentation
 * embedded images
 * BUG: exception when `--include`/`--exclude` results in empty result set
