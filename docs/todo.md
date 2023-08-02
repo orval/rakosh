@@ -6,6 +6,7 @@ order: 5
 ### TODO
 
 * `--include` & `--exclude` for gatsby output
+* BUG: slug lookup sometimes lists secondary slug first meaning 404 on primary
 * favicon
 * short labels for use in slug
 * reduce how much is rendered in non-main nuggets
