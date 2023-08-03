@@ -25,11 +25,15 @@ exports.NuggetCatalog = class NuggetCatalog {
     ))
   }
 
+  // return the aql-joined filters
+  getFilters () {
+    return join(this.filters)
+  }
+
   async init () {
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND "passage/adit" GRAPH "primary"
         OPTIONS { uniqueVertices: "global", order: "weighted" }
-        ${join(this.filters)}
         RETURN v
     `)
 
@@ -246,19 +250,11 @@ exports.NuggetCatalog = class NuggetCatalog {
         RETURN { keys: CONCAT_SEPARATOR("|", p.vertices[*]._key), nug: LAST(p.vertices[*]) }
     `)
 
-    // these small models are not full nuggets but are enough sort
+    // TreeModel will sort in the same way as a Nugget list
     const tree = new TreeModel({ modelComparatorFn: Nugget.compare })
-    let first = true
-    let root
+    const root = tree.parse({ depth: 0, chunks: [], ...this.allNuggets.adit })
 
     for await (const c of cursor) {
-      if (first) {
-        first = false
-        root = tree.parse({ depth: 1, chunks: [], ...this.allNuggets.adit })
-        assert.strictEqual(c.keys, 'adit', 'first vertex should be "adit"')
-        continue
-      }
-
       let current = root
       let depth = 1
 
@@ -268,7 +264,8 @@ exports.NuggetCatalog = class NuggetCatalog {
         if (node) {
           current = node // key already added on prior iteration
         } else {
-          const nugget = this.allNuggets[c.nug._key]
+          const nugget = this.allNuggets[key]
+          assert.ok(nugget)
           current = current.addChild(tree.parse({ depth, chunks: [], ...nugget }))
         }
         depth++

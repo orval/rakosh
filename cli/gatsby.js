@@ -10,6 +10,9 @@ const util = require('util')
 const ncpp = util.promisify(ncp)
 const { MineMap } = require('./extract/lib/minemap')
 const { Nugget } = require('./lib/nugget')
+const { NuggetCatalog } = require('./extract/lib/nugget_catalog')
+const { include } = require('./lib/option_include')
+const { exclude } = require('./lib/option_exclude')
 const log = require('loglevel')
 const slugify = require('slugify')
 
@@ -66,6 +69,8 @@ exports.builder = (yargs) => {
         throw new Error(`mmap_open value [${m}] is not valid`)
       }
     })
+    .option('include', include)
+    .option('exclude', exclude)
 }
 
 exports.handler = async function (argv) {
@@ -80,11 +85,15 @@ exports.handler = async function (argv) {
       throw new Error(`mine ${argv.mine} does not exist`)
     }
 
+    const catalog = new NuggetCatalog(db, argv.include, argv.exclude, 0)
+    await catalog.init()
+    const root = await catalog.getTree()
+
     log.info(`extracting to ${argv.directory}`)
 
     await copyTemplates(argv.directory, argv.sitecustom)
-    await extractNuggets(db, argv.directory)
-    await generateMineMap(db, argv.directory, argv.m)
+    await extractNuggets(db, argv.directory, root)
+    await generateMineMap(db, argv.directory, argv.m, catalog.getFilters())
     if (argv.build) buildSite(argv.directory)
   } catch (err) {
     log.error(`ERROR: ${err}`)
@@ -114,23 +123,16 @@ async function copyTemplates (dir, customizations) {
   await ncpp(templateDir, dir, options)
 }
 
-async function extractNuggets (db, dir) {
+async function extractNuggets (db, dir, root) {
   const contentDir = join(dir, 'content')
   const nuggetStash = {}
   const slugLookup = {}
 
-  // pull each nugget type into a stash of Nugget objects
-  log.info('extracting passages')
-  const pcursor = await db.query(aql`FOR p IN passage FILTER p.passage RETURN p`)
-  for await (const p of pcursor) {
-    nuggetStash[p._id] = new Nugget(p, p.body)
-  }
-
-  log.info('extracting nuggets')
-  const ncursor = await db.query(aql`FOR n IN nugget RETURN n`)
-  for await (const n of ncursor) {
-    nuggetStash[n._id] = new Nugget(n, n.body)
-  }
+  // pull each nugget in the tree into a stash of Nugget objects
+  root.walk((n) => {
+    nuggetStash[n.model._id] = new Nugget(n.model, n.model.body)
+    return true
+  })
 
   // breadcrumbs!
   for (const [_id, nugget] of Object.entries(nuggetStash)) {
@@ -185,10 +187,12 @@ async function extractNuggets (db, dir) {
     for await (const c of cursor) {
       if (c.e._from === _id) {
         const nug = nuggetStash[c.e._to]
+        if (!nug) continue // filtered nuggets will not be in the stash
         if (nug.passage) passagesOutbound.push(nug)
         else nuggetsOutbound.push(nug)
       } else if (c.e._to === _id) {
         const nug = nuggetStash[c.e._from]
+        if (!nug) continue // filtered nuggets will not be in the stash
         if (nug.passage) passagesInbound.push(nug)
         else nuggetsInbound.push(nug)
       }
@@ -202,7 +206,10 @@ async function extractNuggets (db, dir) {
     // collect up Nugget MDX to append to Seam component
     let append = ''
     if ('nuggets' in nugget) {
-      append = nugget.nuggets.map(n => nuggetStash['nugget/' + n].getMdx({ inseam: true })).join('\n')
+      append = nugget.nuggets
+        .filter(n => n in nuggetStash)
+        .map(n => nuggetStash['nugget/' + n].getMdx({ inseam: true }))
+        .join('\n')
     }
 
     const slug = (nugget.paths.length > 0) ? nugget.paths[0] : '/'
@@ -232,12 +239,13 @@ async function extractNuggets (db, dir) {
   writeFileSync(join(contentDir, 'slug_lookup.json'), JSON.stringify(slugLookup, null, 2))
 }
 
-async function generateMineMap (db, dir, mmapOpen) {
+async function generateMineMap (db, dir, mmapOpen, filters) {
   const contentDir = join(dir, 'content')
   const mapFile = join(contentDir, 'minemap.json')
 
   const cursor = await db.query(aql`
     FOR v, e, p IN 1..100 OUTBOUND 'passage/adit' GRAPH 'primary'
+      ${filters}
       LET vertices = (
           FOR vertex IN p.vertices
               LET order_value = vertex.order == null ? 10000 : vertex.order
