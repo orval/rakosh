@@ -11,7 +11,8 @@ exports.exclude = {
     exc.split(',').forEach(p => {
       const match = p.match(/^([\w]+):([\w\- ]+)$/)
       if (!match) throw new Error(`exclude [${p}] is not a valid key or value format`)
-      excludes.push({ key: match[1], value: match[2] })
+      const num = Number(match[2])
+      excludes.push({ key: match[1], value: (isNaN(num)) ? match[2] : num })
     })
     return excludes
   }

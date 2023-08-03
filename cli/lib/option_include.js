@@ -11,7 +11,8 @@ exports.include = {
     inc.split(',').forEach(p => {
       const match = p.match(/^([\w]+):([\w\- ]+)$/)
       if (!match) throw new Error(`include [${p}] is not a valid key or value format`)
-      includes.push({ key: match[1], value: match[2] })
+      const num = Number(match[2])
+      includes.push({ key: match[1], value: (isNaN(num)) ? match[2] : num })
     })
     return includes
   }
