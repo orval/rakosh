@@ -207,7 +207,7 @@ async function extractNuggets (db, dir, root) {
     let append = ''
     if ('nuggets' in nugget) {
       append = nugget.nuggets
-        .filter(n => n in nuggetStash)
+        .filter(n => 'nugget/' + n in nuggetStash)
         .map(n => nuggetStash['nugget/' + n].getMdx({ inseam: true }))
         .join('\n')
     }
