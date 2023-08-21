@@ -5,7 +5,7 @@ order: 5
 
 ### TODO
 
-* BUG: slug lookup sometimes lists secondary slug first meaning 404 on primary
+* BUG: slug lookup sometimes lists secondary slug first
 * favicon
 * better styling of content in gatsby, e.g. blockquote
 * short labels for use in slug
