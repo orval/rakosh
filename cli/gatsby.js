@@ -142,7 +142,7 @@ async function extractNuggets (db, dir, root) {
       FILTER v._id == 'passage/adit'
       RETURN REVERSE(
         FOR vertex IN p.vertices[*]
-        RETURN { _id: vertex._id, label: vertex.label, _key: vertex._key }
+        RETURN { _id: vertex._id, label: vertex.label, shortlabel: vertex.shortlabel, _key: vertex._key }
       )
     `)
     const breadcrumbs = []
@@ -150,7 +150,7 @@ async function extractNuggets (db, dir, root) {
     for await (const c of cursor) {
       // generate URL path for this nugget using slugified labels
       paths.push('/' + c.filter(b => b._id !== 'passage/adit')
-        .map(b => slugify(b.label).toLowerCase())
+        .map(b => slugify(b.shortlabel || b.label).toLowerCase())
         .join('/')
       )
 

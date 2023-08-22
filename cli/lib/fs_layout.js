@@ -21,6 +21,7 @@ const STANDARD_TAGS = _.zipObject([
   'passage',
   'body',
   'label',
+  'shortlabel',
   'fspath',
   'children',
   'nuggets'
