@@ -8,7 +8,6 @@ order: 5
 * BUG: slug lookup sometimes lists secondary slug first
 * favicon
 * better styling of content in gatsby, e.g. blockquote
-* short labels for use in slug
 * reduce how much is rendered in non-main nuggets
 * horizontal scrolling for outbound nuggets
 * buttons for breadcrumb & metadata, plus persistence
