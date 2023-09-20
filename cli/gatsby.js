@@ -1,6 +1,6 @@
 'use strict'
 const { statSync, writeFileSync, readFileSync } = require('node:fs')
-const { join } = require('node:path')
+const { join, extname } = require('node:path')
 const { execFileSync } = require('node:child_process')
 const { Database } = require('arangojs')
 const { aql } = require('arangojs/aql')
@@ -101,13 +101,22 @@ exports.handler = async function (argv) {
   }
 }
 
+const extensionsToTransform = new Set(['.js', '.jsx', '.mjs', '.json', '.css'])
+
 async function copyTemplates (dir, customizations) {
   // copy and transform template layout to target directory
   log.info(`copy template files to target directory ${dir}`)
   const templateDir = join(__dirname, 'extract', 'gatsby')
 
   const options = {
-    transform: function (read, write) {
+    transform: function (read, write, file) {
+      const ext = extname(file.name)
+
+      // only transform files that are in our list
+      if (!extensionsToTransform.has(ext)) {
+        return read.pipe(write)
+      }
+
       let template = ''
       read.on('data', function (chunk) {
         template += chunk

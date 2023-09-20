@@ -82,7 +82,23 @@ const config = {
             body: prepBody(node.body)
           }))
       }
-    }
+    },
+    {
+      resolve: 'gatsby-plugin-manifest',
+      options: {
+        name: '{{{mine_name}}}',
+        short_name: '{{{mine_name}}}',
+        start_url: '{{{path_prefix}}}',
+        background_color: '#f7f0eb',
+        theme_color: '#a2466c',
+        display: 'standalone',
+        icon: 'src/images/icon.png',
+        icon_options: {
+          purpose: 'any maskable'
+        }
+      }
+    },
+    'gatsby-plugin-offline'
   ]
 }
 
