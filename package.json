@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -52,6 +52,7 @@
     "docext": "./cli/main.js gatsby docs docs/cust-dev.json heap --no-build -v",
     "docpdf": "./cli/main.js pdf docs -v --no-toch1 --tocdepth 2",
     "doccon": "./cli/main.js confluence docs orval rakosh 164094 -v",
-    "devcon": "./cli/main.js confluence my-mine orval rakosh 1441893 -v --exclude poodle:wibble"
+    "devcon": "./cli/main.js confluence my-mine orval rakosh 1441893 -v --exclude poodle:wibble",
+    "fs" : "./cli/main.js fs"
   }
 }

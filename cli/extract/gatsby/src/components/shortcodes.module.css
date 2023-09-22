@@ -47,11 +47,10 @@
   display: flex;
   order: 2;
   flex-basis: 15%;
-  justify-content: center;
   font-size: smaller;
   min-height: 7rem;
   max-height: 20rem;
-  overflow: hidden;
+  overflow-y: hidden;
 }
 
 .bordered {
