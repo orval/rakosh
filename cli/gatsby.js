@@ -1,5 +1,5 @@
 'use strict'
-const { statSync, writeFileSync, readFileSync } = require('node:fs')
+const { statSync, writeFileSync, readFileSync, copyFileSync } = require('node:fs')
 const { join, extname } = require('node:path')
 const { execFileSync } = require('node:child_process')
 const { Database } = require('arangojs')
@@ -92,6 +92,7 @@ exports.handler = async function (argv) {
     log.info(`extracting to ${argv.directory}`)
 
     await copyTemplates(argv.directory, argv.sitecustom)
+    copyIcon(argv.directory, argv.sitecustom)
     await extractNuggets(db, argv.directory, root)
     await generateMineMap(db, argv.directory, argv.m, catalog.getFilters())
     if (argv.build) buildSite(argv.directory)
@@ -130,6 +131,14 @@ async function copyTemplates (dir, customizations) {
   }
 
   await ncpp(templateDir, dir, options)
+}
+
+function copyIcon (dir, customizations) {
+  // user can specify an icon with path reletive to package.json
+  if ('icon' in customizations) {
+    // errors are caught and logged outside
+    copyFileSync(customizations.icon, join(dir, 'src', 'images', 'icon.png'))
+  }
 }
 
 async function extractNuggets (db, dir, root) {
