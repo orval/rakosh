@@ -57,6 +57,9 @@ const MineMap = () => {
         indent={rem}
         initialOpenState={minemapJson.initialOpenState}
         searchTerm={searchTerm}
+        searchMatch={
+          (node, term) => node.data.name.toLowerCase().includes(term.toLowerCase())
+        }
       >
         {Node}
       </Tree>
