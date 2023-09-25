@@ -5,7 +5,7 @@ order: 5
 
 ### TODO
 
-* map search finds UUIDs
+* BUG: map search finds UUIDs
 * BUG: slug lookup sometimes lists secondary slug first
 * favicon
 * better styling of content in gatsby, e.g. blockquote
