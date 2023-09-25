@@ -126,3 +126,7 @@
 .table th {
   text-align: left;
 }
+
+.outboundnugget .nugget {
+  min-width: 5rem;
+}
