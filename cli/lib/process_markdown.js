@@ -11,7 +11,7 @@ function processMarkdown (markdown) {
     .use(remarkParse)
     .use(remarkDirective)
     .use(directiveToReactAdmon)
-    .use(remarkStringify)
+    .use(remarkStringify, { resourceLink: true })
 
   return processor.processSync(markdown).toString()
 
