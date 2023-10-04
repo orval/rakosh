@@ -36,7 +36,7 @@ exports.handler = async function (argv) {
   inspect(argv.directory)
 }
 
-function inspect(path) {
+function inspect (path) {
   const dirContents = readdirSync(path, { withFileTypes: true })
   const mdFiles = dirContents.filter(e => e.isFile() && extname(e.name) === '.md')
   const dirs = dirContents.filter(e => e.isDirectory())
