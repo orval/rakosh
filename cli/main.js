@@ -5,6 +5,7 @@ const { hideBin } = require('yargs/helpers')
 
 yargs(hideBin(process.argv))
   .command(require('./deposit'))
+  .command(require('./inspect'))
   .command(require('./gatsby'))
   .command(require('./pdf'))
   .command(require('./confluence'))
