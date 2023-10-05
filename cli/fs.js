@@ -6,7 +6,7 @@ const { FsLayout } = require('./lib/fs_layout')
 
 log.setLevel('WARN')
 
-exports.command = 'fs <path> <title>'
+exports.command = 'fs <action> <path> [<title>]'
 
 exports.describe = 'Commands for operating on a rakosh filesystem layout'
 
@@ -17,6 +17,10 @@ exports.builder = (yargs) => {
       hidden: true,
       boolean: true,
       describe: 'interactive filesystem operations'
+    })
+    .positional('action', {
+      choices: ['add', 'lint']
+      // describe: 'just check the layout is valid'
     })
     .positional('path', {
       describe: 'path to the entity to act on',
@@ -41,6 +45,14 @@ exports.builder = (yargs) => {
       describe: 'the title of the new nugget',
       type: 'string'
     })
+    .check((argv) => {
+      if (argv.action === 'lint' && argv.title) {
+        log.warn('title ignored when linting')
+      } else if (argv.action === 'add' && !argv.title) {
+        throw new Error('title missing')
+      }
+      return true
+    })
 }
 
 exports.handler = function (argv) {
@@ -48,10 +60,17 @@ exports.handler = function (argv) {
   let fsLayout
 
   try {
-    fsLayout = new FsLayout(dirname(argv.path))
+    // lint takes path to adit's dir
+    const path = (argv.action === 'add') ? dirname(argv.path) : argv.path
+    fsLayout = new FsLayout(path)
   } catch (err) {
     log.error(`Failed to obtain FsLayout ${err}`)
     return false
+  }
+
+  if (argv.action === 'lint') {
+    log.info(`found ${fsLayout.size()} nuggets`)
+    return true
   }
 
   if (argv.interactive) {

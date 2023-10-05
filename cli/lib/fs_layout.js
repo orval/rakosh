@@ -58,6 +58,10 @@ exports.FsLayout = class FsLayout {
     }
   }
 
+  size () {
+    return this.root.all(() => true).length
+  }
+
   #fileDoesNotExist (filepath) {
     try {
       statSync(filepath)
