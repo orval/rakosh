@@ -40,3 +40,10 @@ rakosh fs examples/my-mine/my-first-lode/floop "Floop"
 ```
 
 This with create the directory `examples/my-mine/my-first-lode/floop` and it's associated data in `examples/my-mine/my-first-lode/floop.md`
+
+To check that the FS Layout can be parsed:
+
+```sh
+$ rakosh fs -v lint examples/my-mine
+found 169 nuggets
+```
