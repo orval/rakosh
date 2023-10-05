@@ -6,6 +6,7 @@ nuggets:
   - da4fc47f-d5a1-421f-8ed8-299343f4a0e2
   - 8e03a31c-4624-4c1c-bf7c-fb6d9ddbcbae
   - 0179441b-3aea-4753-9671-76bcd2f107a7
+  - 00e30e0e-2c2b-4f08-900b-e3d047dc6d25
 ---
 
 ## CLI

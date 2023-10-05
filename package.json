@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.10.7",
+  "version": "0.11.0",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -53,6 +53,6 @@
     "docpdf": "./cli/main.js pdf docs -v --no-toch1 --tocdepth 2",
     "doccon": "./cli/main.js confluence docs orval rakosh 164094 -v",
     "devcon": "./cli/main.js confluence my-mine orval rakosh 1441893 -v --exclude poodle:wibble",
-    "fs" : "./cli/main.js fs"
+    "fs" : "./cli/main.js fs -v add"
   }
 }
