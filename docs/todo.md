@@ -7,6 +7,7 @@ order: 5
 
 * BUG: slug lookup sometimes lists secondary slug first
 * better styling of content in gatsby, e.g. blockquote
+* prevent inbound or outbound passages from rendering wide when they contain code blocks
 * reduce how much is rendered in non-main nuggets
 * buttons for breadcrumb & metadata, plus persistence of button state
 * better search results presentation
