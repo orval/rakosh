@@ -100,6 +100,9 @@ async function deposit (graph, fsLayout) {
       node.model.schema_version = RAKOSH_SCHEMA_VERSION
     }
 
+    // do not include children within vertex document
+    if ('children' in node.model) delete node.model.children
+
     vPromises.push(graph.vertexCollection(node.model.type).save(node.model)
       .then(vertex => {
         log.info(`added vertex ${vertex._id}: ${node.model.label}`)
