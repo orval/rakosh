@@ -72,7 +72,6 @@ exports.handler = async function (argv) {
     await createGraph(db, fsLayout)
   } catch (err) {
     log.error(`ERROR: ${err}`)
-    console.error(err.stack)
     process.exit(1)
   }
 }
