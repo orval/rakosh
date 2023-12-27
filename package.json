@@ -53,6 +53,7 @@
     "docpdf": "./cli/main.js pdf docs -v --no-toch1 --tocdepth 2",
     "doccon": "./cli/main.js confluence docs orval rakosh 164094 -v",
     "devcon": "./cli/main.js confluence my-mine orval rakosh 1441893 -v --exclude poodle:wibble",
-    "fs" : "./cli/main.js fs -v add"
+    "fsadd" : "./cli/main.js fs -v add",
+    "fslint" : "./cli/main.js fs -v lint"
   }
 }
