@@ -158,7 +158,7 @@ exports.FsLayout = class FsLayout {
           nugget.fspath = fsPath
           nugget.depth = depth
         } catch (error) {
-          log.warn(`WARNING: ${mdFile.name} does not appear to be a rakosh nugget file [${error}]`)
+          log.warn(`WARNING: ${mdFile.name} is not a valid rakosh nugget file [${error}]`)
           continue
         }
 
@@ -196,7 +196,7 @@ exports.FsLayout = class FsLayout {
         nugget.depth = depth
         nugget.link = `${nugget.type}/${nugget._key}`
       } catch (error) {
-        log.warn(`WARNING: ${lnFile.name} does not appear to be a rakosh nugget file [${error}]`)
+        log.warn(`WARNING: ${lnFile.name} is not a valid rakosh nugget file [${error}]`)
         continue
       }
       parent.addChild(this.tree.parse(nugget.document))
