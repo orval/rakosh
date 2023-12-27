@@ -4,6 +4,7 @@ const markdownlint = require('markdownlint')
 const fm = require('front-matter')
 const yaml = require('js-yaml')
 const processMarkdown = require('./process_markdown')
+const { Media } = require('./media')
 
 const lintConf = {
   'line-length': false,
@@ -39,6 +40,8 @@ exports.Nugget = class Nugget {
     if (!Nugget.Types.includes(this.type)) {
       throw new Error(`Unknown Nugget type ${this.type}`)
     }
+
+    this.media = new Media(attributes)
   }
 
   // if there's no label attribute get it from the body, falling back to '_key'
@@ -54,13 +57,15 @@ exports.Nugget = class Nugget {
     return (label.length > 25) ? label.slice(0, 24).concat('…') : label
   }
 
-  static fromMdFile (mdFile) {
-    const content = readFileSync(mdFile, { encoding: 'utf-8' })
+  static fromMdFile (relativePath, depth) {
+    const content = readFileSync(relativePath, { encoding: 'utf-8' })
     const errors = markdownlint.sync({ strings: { content }, config: lintConf })
     if (errors.content.length > 0) {
-      throw new Error(`Markdown issue in [${mdFile}]:` + errors.toString())
+      throw new Error(`Markdown issue in [${relativePath}]:` + errors.toString())
     }
     const markdown = fm(content)
+    markdown.attributes.depth = depth
+    markdown.attributes.fspath = relativePath
     return new Nugget(markdown.attributes, markdown.body)
   }
 
@@ -73,8 +78,10 @@ exports.Nugget = class Nugget {
   }
 
   get document () {
-    // for now all entries go into the ArangoDB Document
-    return this
+    // flatten Nugget and Media into one object
+    const obj = { ...this, ...this.media }
+    delete obj.media
+    return obj
   }
 
   // generate YAML front matter for MDX file

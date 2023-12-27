@@ -2,7 +2,7 @@
 const _ = require('lodash')
 const { v4: uuidv4 } = require('uuid')
 const { statSync, readdirSync, writeFileSync, mkdirSync } = require('node:fs')
-const { basename, join, resolve, extname } = require('node:path')
+const { basename, join, extname } = require('node:path')
 const TreeModel = require('tree-model')
 const { Nugget } = require('./nugget')
 const log = require('loglevel')
@@ -12,7 +12,7 @@ const yaml = require('js-yaml')
 const prompts = require('prompts')
 const ss = require('simple-statistics')
 
-const RAKOSH_FS_LAYOUT_VERSION = '1.1'
+const RAKOSH_FS_LAYOUT_VERSION = '1.2'
 
 const STANDARD_TAGS = _.zipObject([
   'type',
@@ -24,7 +24,10 @@ const STANDARD_TAGS = _.zipObject([
   'shortlabel',
   'fspath',
   'children',
-  'nuggets'
+  'nuggets',
+  'media_path',
+  'media_relpath',
+  'media_type'
 ])
 
 marked.setOptions({
@@ -154,9 +157,7 @@ exports.FsLayout = class FsLayout {
       if (mdFile.name.endsWith('.md')) {
         let nugget
         try {
-          nugget = Nugget.fromMdFile(resolve(fsPath))
-          nugget.fspath = fsPath
-          nugget.depth = depth
+          nugget = Nugget.fromMdFile(fsPath, depth)
         } catch (error) {
           log.warn(`WARNING: ${mdFile.name} is not a valid rakosh nugget file [${error}]`)
           continue
@@ -191,9 +192,7 @@ exports.FsLayout = class FsLayout {
       const fsPath = join(dir, lnFile.name)
       let nugget
       try {
-        nugget = Nugget.fromMdFile(resolve(fsPath))
-        nugget.fspath = fsPath
-        nugget.depth = depth
+        nugget = Nugget.fromMdFile(fsPath, depth)
         nugget.link = `${nugget.type}/${nugget._key}`
       } catch (error) {
         log.warn(`WARNING: ${lnFile.name} is not a valid rakosh nugget file [${error}]`)
