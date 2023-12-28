@@ -41,7 +41,16 @@ const config = {
       options: {
         mdxOptions: {
           remarkPlugins: [remarkGfm]
-        }
+        },
+        gatsbyRemarkPlugins: [
+          {
+            resolve: 'gatsby-remark-images',
+            options: {
+              maxWidth: 1000
+            }
+          },
+          'gatsby-plugin-sharp'
+        ]
       }
     },
     {
