@@ -32,6 +32,7 @@
     "dev": "gatsby develop",
     "clean": "gatsby clean",
     "serve": "gatsby serve",
+    "serve2": "gatsby serve --port 54321",
     "deploy": "gatsby build --prefix-paths"
   }
 }
