@@ -252,6 +252,14 @@ async function extractNuggets (db, dir, root) {
     ]
 
     writeFileSync(join(contentDir, `${nugget._key}.mdx`), mdx.join('\n'))
+
+    if ('media_relpath' in nugget) {
+      // copy media file into the content directory using _key as the basename
+      const ext = extname(nugget.media_relpath)
+      const mediaFile = join(contentDir, `${nugget._key}${ext}`)
+      log.info(`copying media file [${nugget.media_relpath}] to [${mediaFile}]`)
+      copyFileSync(nugget.media_relpath, mediaFile)
+    }
   }
 
   writeFileSync(join(contentDir, 'slug_lookup.json'), JSON.stringify(slugLookup, null, 2))
