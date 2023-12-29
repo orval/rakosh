@@ -87,13 +87,12 @@ exports.handler = async function (argv) {
 
     const catalog = new NuggetCatalog(db, argv.include, argv.exclude, 0)
     await catalog.init()
-    const root = await catalog.getTree()
 
     log.info(`extracting to ${argv.directory}`)
 
     await copyTemplates(argv.directory, argv.sitecustom)
     copyIcon(argv.directory, argv.sitecustom)
-    await extractNuggets(db, argv.directory, root)
+    await extractNuggets(db, argv.directory, catalog)
     await generateMineMap(db, argv.directory, argv.m, catalog.getFilters())
     if (argv.build) buildSite(argv.directory)
   } catch (err) {
@@ -141,10 +140,12 @@ function copyIcon (dir, customizations) {
   }
 }
 
-async function extractNuggets (db, dir, root) {
+async function extractNuggets (db, dir, catalog) {
   const contentDir = join(dir, 'content')
   const nuggetStash = {}
   const slugLookup = {}
+
+  const root = await catalog.getTree()
 
   // pull each nugget in the tree into a stash of Nugget objects
   root.walk((n) => {
