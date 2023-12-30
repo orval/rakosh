@@ -3,6 +3,7 @@ const assert = require('assert')
 const { aql, join } = require('arangojs/aql')
 const { Nugget } = require('../../lib/nugget')
 const TreeModel = require('tree-model')
+const slugify = require('slugify')
 
 exports.NuggetCatalog = class NuggetCatalog {
   static HEADING_RE = /^(#+)\s+(.+)$/gm
@@ -15,6 +16,7 @@ exports.NuggetCatalog = class NuggetCatalog {
     this.allNuggets = {}
     this.seamNuggetChunks = {}
     this.initialised = false
+    this.slugLookup = {}
 
     this.filters = []
     this.includes.forEach(inc => this.filters.push(
@@ -153,7 +155,10 @@ exports.NuggetCatalog = class NuggetCatalog {
 
   #mdForExtract (key, depth) {
     const nug = this.allNuggets[key]
-    if (!nug) return undefined // has been filtered out
+    if (!nug) {
+      console.error('DOES THIS EVER HAPPEN?') // TODO
+      return undefined // has been filtered out
+    }
 
     let retMd
 
@@ -274,9 +279,140 @@ exports.NuggetCatalog = class NuggetCatalog {
     return root
   }
 
-  getChunk (key, depth) {
+  getChunk (key, depth) { // TODO delete?
     const md = this.#mdForExtract(key, depth)
     if (!md) return
     return this.rewriteHeadings(md, depth)
+  }
+
+  // generate breadcrumb data for each nugget in the catalog
+  #generateBreadcrumbs (treeRoot) {
+    this.slugLookup = {}
+
+    treeRoot.walk(node => {
+      // query the paths from the given vertex back to the adit
+      this.db.query(aql`
+        FOR v, e, p IN 1..100 INBOUND ${node.model._id} GRAPH 'primary'
+        FILTER v._id == 'passage/adit'
+        RETURN REVERSE(
+          FOR vertex IN p.vertices[*]
+          RETURN { _id: vertex._id, label: vertex.label, shortlabel: vertex.shortlabel, _key: vertex._key }
+        )
+      `)
+        .then(cursor => {
+          const breadcrumbs = []
+          const paths = []
+
+          cursor.forEach(c => {
+            // generate URL path for this nugget using slugified labels
+            paths.push('/' + c.filter(b => b._id !== 'passage/adit')
+              .map(b => slugify(b.shortlabel || b.label).toLowerCase())
+              .join('/')
+            )
+
+            // filter out the adit and self then push non-zero length paths into list
+            const crumb = c.filter(b => b._id !== 'passage/adit' && b._id !== node.model._id)
+              .map(({ _id, ...rest }) => rest)
+
+            if (crumb.length > 0) breadcrumbs.push(crumb)
+          }).then(() => {
+            this.allNuggets[node.model._key].breadcrumbs = breadcrumbs
+            this.allNuggets[node.model._key].paths = paths
+
+            // have paths and keys map to the primary slug
+            if (paths.length > 1) {
+              paths.slice(1).forEach(e => { this.slugLookup[e] = paths[0] })
+            }
+            if (paths.length > 0) {
+              this.slugLookup['/' + node.model._key] = paths[0]
+            }
+          })
+        })
+        .catch(error => {
+          console.error(error)
+          throw error
+        })
+    })
+  }
+
+  // generate MDX pages and a lookup table of slugs/paths
+  async foo () {
+    const treeRoot = await this.getTree()
+    this.#generateBreadcrumbs(treeRoot)
+    const mdxNuggets = []
+    const promises = []
+
+    treeRoot.walk(async (node) => {
+      const promise = (async () => {
+        const nugget = this.allNuggets[node.model._key]
+
+        // get all adjacent vertices for each nugget and write them to the page
+        const cursor = await this.db.query(aql`
+          FOR v, e IN 1..1 ANY ${nugget._id} GRAPH 'primary'
+          RETURN { v, e }
+        `)
+        // RETURN { from: e._from, to: e._to }
+
+        const nuggetsOutbound = []
+        const passagesOutbound = []
+        const nuggetsInbound = []
+        const passagesInbound = []
+
+        for await (const c of cursor) {
+          if (c.e._from === nugget._id) {
+            const [type, key] = c.e._to.split('/')
+            if (type === 'passage') passagesOutbound.push(this.allNuggets[key])
+            else nuggetsOutbound.push(this.allNuggets[key])
+          } else if (c.e._to === nugget._id) {
+            const [type, key] = c.e._from.split('/')
+            if (type === 'passage') passagesInbound.push(this.allNuggets[key])
+            else nuggetsInbound.push(this.allNuggets[key])
+          }
+        }
+
+        nuggetsOutbound.sort(Nugget.compare)
+        passagesOutbound.sort(Nugget.compare)
+        nuggetsInbound.sort(Nugget.compare)
+        passagesInbound.sort(Nugget.compare)
+
+        // collect up Nugget MDX to append to Seam component
+        let append = ''
+        if ('nuggets' in nugget) {
+          append = nugget.nuggets
+            // .filter(n => 'nugget/' + n in nuggetStash) TODO: check filter behaviour here
+            .map(n => this.allNuggets[n].getMdx({ inseam: true }))
+            .join('\n')
+        }
+
+        console.log('np', nugget._key)
+        const slug = (nugget.paths.length > 0) ? nugget.paths[0] : '/'
+
+        const mdx = [
+          nugget.getFrontMatter({ slug }),
+          '<NuggetArea>',
+          nugget.getMdx({ slug }, append),
+          '<NuggetsInbound>',
+          ...nuggetsInbound.map(v => v.getMdx({ direction: 'inbound' })),
+          '</NuggetsInbound>',
+          '<NuggetsOutbound>',
+          ...nuggetsOutbound.map(v => v.getMdx({ direction: 'outbound' })),
+          '</NuggetsOutbound>',
+          '</NuggetArea>',
+          '<PassagesInbound>',
+          ...passagesInbound.map(v => v.getMdx({ direction: 'inbound' })),
+          '</PassagesInbound>',
+          '<PassagesOutbound>',
+          ...passagesOutbound.map(v => v.getMdx({ direction: 'outbound' })),
+          '</PassagesOutbound>'
+        ]
+
+        mdxNuggets.push([nugget, mdx.join('\n')])
+      })()
+
+      promises.push(promise)
+    })
+
+    await Promise.all(promises)
+    return mdxNuggets
   }
 }
