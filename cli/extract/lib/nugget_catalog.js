@@ -384,7 +384,6 @@ exports.NuggetCatalog = class NuggetCatalog {
             .join('\n')
         }
 
-        console.log('np', nugget._key)
         const slug = (nugget.paths.length > 0) ? nugget.paths[0] : '/'
 
         const mdx = [
