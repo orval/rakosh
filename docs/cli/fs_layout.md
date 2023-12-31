@@ -14,7 +14,7 @@ The directory pointed to by the `rakosh deposit` command must contain a markdown
 ```yaml
 ---
 _key: adit
-fs_layout: '1.1'
+fs_layout: '1.2'
 ---
 ```
 

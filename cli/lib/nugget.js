@@ -110,6 +110,7 @@ exports.Nugget = class Nugget {
     const entries = Object.assign(additions, this.document)
     delete entries.body
     delete entries.breadcrumbs
+    delete entries.chunks
 
     if (!entries.slug) {
       entries.slug = (entries.paths.length > 0) ? entries.paths[0] : '/'
