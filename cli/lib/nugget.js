@@ -1,9 +1,10 @@
 const { format } = require('node:util')
 const { readFileSync } = require('node:fs')
-const markdownlint = require('markdownlint')
+
 const fm = require('front-matter')
+const markdownlint = require('markdownlint')
 const yaml = require('js-yaml')
-const processMarkdown = require('./process_markdown')
+
 const { Media } = require('./media')
 
 const lintConf = {
@@ -91,7 +92,7 @@ exports.Nugget = class Nugget {
     return format('---\n%s---\n', yaml.dump(entries))
   }
 
-  #getBreadcrumbs () {
+  getBreadcrumbs () {
     if (this.breadcrumbs.length === 0) return ''
     const bcrumbs = ['<Breadcrumbs>']
 
@@ -102,35 +103,5 @@ exports.Nugget = class Nugget {
     }
     bcrumbs.push('</Breadcrumbs>')
     return bcrumbs.join('\n')
-  }
-
-  // generate an MDX component named after the type
-  getMdx (additions = {}, append = '') {
-    const component = ('nuggets' in this) ? 'Seam' : this.type.charAt(0).toUpperCase() + this.type.slice(1)
-    const entries = Object.assign(additions, this.document)
-    delete entries.body
-    delete entries.breadcrumbs
-    delete entries.chunks
-
-    if (!entries.slug) {
-      entries.slug = (entries.paths.length > 0) ? entries.paths[0] : '/'
-    }
-
-    // it is decreed that breadcrumbs are not required in outbound vertices
-    const breadcrumbs = (entries.direction === 'outbound' || entries.inseam)
-      ? ''
-      : this.#getBreadcrumbs()
-
-    const mostOfTheMdx = format(
-      '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
-      component,
-      Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
-      ('body' in this) ? processMarkdown(this.body) : '### ' + this.label,
-      breadcrumbs,
-      append
-    )
-
-    // mostly pointless tidying up of the MDX
-    return format('%s\n</%s>\n', mostOfTheMdx.trimEnd(), component)
   }
 }
