@@ -1,5 +1,6 @@
 'use strict'
 const assert = require('assert')
+const { extname } = require('node:path')
 const { format } = require('node:util')
 
 const { aql, join } = require('arangojs/aql')
@@ -12,6 +13,18 @@ const { unified } = require('fix-esm').require('unified')
 const { visitParents } = require('unist-util-visit-parents')
 
 const { Nugget } = require('../../lib/nugget')
+
+function modifyLinks ({ allNuggets }) {
+  return (tree) => {
+    visitParents(tree, 'image', (node, ancestors) => {
+      const nugget = allNuggets[node.url]
+      if (nugget && Nugget.UUID_RE.test(node.url)) {
+        // rewrite the require UUID URL to include the media file extension
+        node.url = node.url + extname(nugget.media_path)
+      }
+    })
+  }
+}
 
 exports.NuggetCatalog = class NuggetCatalog {
   static HEADING_RE = /^(#+)\s+(.+)$/gm
@@ -349,6 +362,7 @@ exports.NuggetCatalog = class NuggetCatalog {
     const processor = unified()
       .use(remarkParse)
       .use(remarkDirective)
+      .use(modifyLinks, { allNuggets: this.allNuggets })
       .use(directiveToReactAdmon)
       .use(remarkStringify, { resourceLink: true })
 
@@ -410,11 +424,15 @@ exports.NuggetCatalog = class NuggetCatalog {
       ? ''
       : nugget.getBreadcrumbs()
 
+    const body = (entries.media_type === 'image/png')
+      ? `![${entries.label}](${entries._key})`
+      : (('body' in nugget) ? nugget.body : '### ' + nugget.label)
+
     const mostOfTheMdx = format(
       '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
       component,
       Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
-      ('body' in nugget) ? this.processMarkdown(nugget.body) : '### ' + nugget.label,
+      this.processMarkdown(body),
       breadcrumbs,
       append
     )

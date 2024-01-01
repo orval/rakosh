@@ -7,6 +7,7 @@ order: 5
 
 * embedded images
 * BUG: slug lookup sometimes lists secondary slug first
+* BUG: apostrophe in label
 * better styling of content in gatsby, e.g. blockquote
 * better PDF styling
 * prevent inbound or outbound passages from rendering wide when they contain code blocks
