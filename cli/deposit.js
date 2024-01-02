@@ -1,9 +1,11 @@
 'use strict'
 const { statSync } = require('node:fs')
 const { basename } = require('node:path')
+
 const { Database } = require('arangojs')
-const { FsLayout } = require('./lib/fs_layout')
 const log = require('loglevel')
+
+const { FsLayout } = require('./lib/fs_layout')
 
 log.setLevel('WARN')
 

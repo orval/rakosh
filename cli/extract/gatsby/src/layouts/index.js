@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
 import PropTypes from 'prop-types'
-import * as styles from './layout.module.css'
-import MineMap from '../components/minemap'
-import SearchBar from '../components/searchbar'
+import React, { useState } from 'react'
+
 import ContentGrid from '../components/contentgrid'
 import LayoutContext from '../components/layoutcontext'
+import MineMap from '../components/minemap'
+import SearchBar from '../components/searchbar'
+
+import * as styles from './layout.module.css'
 
 const Layout = ({ children }) => {
   const [globalValue, setGlobalValue] = useState({

@@ -1,12 +1,13 @@
-import React, { useContext, Children } from 'react'
-import LayoutContext from './layoutcontext'
-import PropTypes from 'prop-types'
 import { navigate, Link } from 'gatsby'
+import yaml from 'js-yaml'
+import PropTypes from 'prop-types'
+import React, { useContext, Children } from 'react'
 import { IoChevronForward } from 'react-icons/io5'
-import * as styles from './shortcodes.module.css'
 import SyntaxHighlighter from 'react-syntax-highlighter'
 import { github } from 'react-syntax-highlighter/dist/esm/styles/hljs'
-import yaml from 'js-yaml'
+
+import * as styles from './shortcodes.module.css'
+import LayoutContext from './layoutcontext'
 
 // there is ample opportunity for refactoring here
 

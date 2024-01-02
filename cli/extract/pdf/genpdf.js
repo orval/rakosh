@@ -1,11 +1,13 @@
 'use strict'
-const log = require('loglevel')
 const { mkdtempSync, writeFileSync } = require('node:fs')
-const { tmpdir } = require('node:os')
 const { join, dirname } = require('node:path')
-const { NuggetCatalog } = require('../lib/nugget_catalog')
-const mdpdf = require('mdpdf')
+const { tmpdir } = require('node:os')
+
+const log = require('loglevel')
 const toc = require('markdown-toc')
+const mdpdf = require('mdpdf')
+
+const { NuggetCatalog } = require('../lib/nugget_catalog')
 
 exports.generatePdf = async function (db, argv) {
   log.info('generating pdf')

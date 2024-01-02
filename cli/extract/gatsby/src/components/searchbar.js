@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react'
-import PropTypes from 'prop-types'
-import { useFlexSearch } from 'react-use-flexsearch'
 import { Formik, Form, Field } from 'formik'
 import { useStaticQuery, graphql, Link } from 'gatsby'
+import PropTypes from 'prop-types'
+import React, { useState, useEffect } from 'react'
 import Modal from 'react-modal'
+import { useFlexSearch } from 'react-use-flexsearch'
+
 import * as styles from './searchbar.module.css'
 
 Modal.setAppElement('#___gatsby')

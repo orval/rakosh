@@ -1,16 +1,18 @@
 'use strict'
-const _ = require('lodash')
-const { v4: uuidv4 } = require('uuid')
 const { statSync, readdirSync, writeFileSync, mkdirSync } = require('node:fs')
 const { basename, join, extname } = require('node:path')
-const TreeModel = require('tree-model')
-const { Nugget } = require('./nugget')
+
+const yaml = require('js-yaml')
+const _ = require('lodash')
 const log = require('loglevel')
 const { marked } = require('marked')
 const TerminalRenderer = require('marked-terminal')
-const yaml = require('js-yaml')
 const prompts = require('prompts')
 const ss = require('simple-statistics')
+const TreeModel = require('tree-model')
+const { v4: uuidv4 } = require('uuid')
+
+const { Nugget } = require('./nugget')
 
 const RAKOSH_FS_LAYOUT_VERSION = '1.2'
 

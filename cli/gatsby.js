@@ -1,19 +1,21 @@
 'use strict'
+const { execFileSync } = require('node:child_process')
 const { statSync, writeFileSync, readFileSync, copyFileSync } = require('node:fs')
 const { join, extname } = require('node:path')
-const { execFileSync } = require('node:child_process')
+const util = require('util')
+
 const { Database } = require('arangojs')
 const { aql } = require('arangojs/aql')
-const ncp = require('ncp').ncp
+const log = require('loglevel')
 const mustache = require('mustache')
-const util = require('util')
+const ncp = require('ncp').ncp
 const ncpp = util.promisify(ncp)
+
 const { MineMap } = require('./extract/lib/minemap')
 const { Nugget } = require('./lib/nugget')
 const { NuggetCatalog } = require('./extract/lib/nugget_catalog')
-const { include } = require('./lib/option_include')
 const { exclude } = require('./lib/option_exclude')
-const log = require('loglevel')
+const { include } = require('./lib/option_include')
 
 log.setLevel('WARN')
 

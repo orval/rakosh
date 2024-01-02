@@ -1,8 +1,10 @@
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
-const log = require('loglevel')
-const { NuggetCatalog } = require('../lib/nugget_catalog')
-const md2c = require('@shogobg/markdown2confluence')
 const assert = require('assert')
+
+const log = require('loglevel')
+const md2c = require('@shogobg/markdown2confluence')
+
+const { NuggetCatalog } = require('../lib/nugget_catalog')
 
 class Confluence {
   constructor (argv) {
