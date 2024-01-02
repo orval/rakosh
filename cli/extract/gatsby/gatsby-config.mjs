@@ -46,7 +46,7 @@ const config = {
           {
             resolve: 'gatsby-remark-images',
             options: {
-              maxWidth: 1000
+              maxWidth: 650
             }
           },
           'gatsby-plugin-sharp'
