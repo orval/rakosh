@@ -190,7 +190,6 @@ exports.NuggetCatalog = class NuggetCatalog {
         retMd = nug.body
       } else {
         // create a heading when there's no nugget body
-        // TODO remove elipses
         retMd = `${'#'.repeat(depth)} ${nug.label}\n`
       }
     }
