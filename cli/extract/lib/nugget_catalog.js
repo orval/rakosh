@@ -84,7 +84,7 @@ exports.NuggetCatalog = class NuggetCatalog {
 
       const md = this.#mdForExtract(node.model._key, node.model.depth)
       if (md && this.#allowExtract(md)) {
-        orderedChunks.push(this.rewriteHeadings(md, node.model.depth))
+        orderedChunks.push(this.#rewriteHeadings(md, node.model.depth))
       }
       return true
     })
@@ -176,11 +176,6 @@ exports.NuggetCatalog = class NuggetCatalog {
 
   #mdForExtract (key, depth) {
     const nug = this.allNuggets[key]
-    if (!nug) {
-      console.error('DOES THIS EVER HAPPEN?') // TODO
-      return undefined // has been filtered out
-    }
-
     let retMd
 
     if (key in this.seamNuggetChunks) {
@@ -211,7 +206,7 @@ exports.NuggetCatalog = class NuggetCatalog {
 
   // heading depths/levels are taken from the graph depth and overwritten in the output
   // markdown, which ensures the TOC is well ordered
-  rewriteHeadings (markdown, depth) {
+  #rewriteHeadings (markdown, depth) {
     const MAX = 6
     depth = (depth > MAX) ? MAX : depth
 
@@ -297,12 +292,6 @@ exports.NuggetCatalog = class NuggetCatalog {
       }
     }
     return root
-  }
-
-  getChunk (key, depth) { // TODO delete?
-    const md = this.#mdForExtract(key, depth)
-    if (!md) return
-    return this.rewriteHeadings(md, depth)
   }
 
   // generate breadcrumb data for each nugget in the catalog
