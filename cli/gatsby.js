@@ -145,7 +145,7 @@ function copyIcon (dir, customizations) {
 async function extractNuggets (db, dir, catalog) {
   const contentDir = join(dir, 'content')
 
-  const nugs = await catalog.foo()
+  const nugs = await catalog.getAllMdx()
   for (const [nugget, mdx] of nugs) {
     writeFileSync(join(contentDir, `${nugget._key}.mdx`), mdx)
 

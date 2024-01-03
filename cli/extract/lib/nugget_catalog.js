@@ -307,12 +307,13 @@ exports.NuggetCatalog = class NuggetCatalog {
   }
 
   // generate breadcrumb data for each nugget in the catalog
-  #generateBreadcrumbs (treeRoot) {
+  async #generateBreadcrumbs (treeRoot) {
     this.slugLookup = {}
+    const promises = []
 
     treeRoot.walk(node => {
       // query the paths from the given vertex back to the adit
-      this.db.query(aql`
+      promises.push(this.db.query(aql`
         FOR v, e, p IN 1..100 INBOUND ${node.model._id} GRAPH 'primary'
         FILTER v._id == 'passage/adit'
         RETURN REVERSE(
@@ -353,7 +354,10 @@ exports.NuggetCatalog = class NuggetCatalog {
           console.error(error)
           throw error
         })
+      )
     })
+
+    await Promise.all(promises)
   }
 
   // markdown is parsed into an AST so that markdown directives can be replaced
@@ -442,9 +446,15 @@ exports.NuggetCatalog = class NuggetCatalog {
   }
 
   // generate MDX pages and a lookup table of slugs/paths
-  async foo () {
+  async getAllMdx () {
     const treeRoot = await this.getTree()
     this.#generateBreadcrumbs(treeRoot)
+
+    function notInTree (id) {
+      const node = treeRoot.first(n => { return n.model._id === id })
+      return (typeof node === 'undefined')
+    }
+
     const mdxNuggets = []
     const promises = []
 
@@ -466,10 +476,16 @@ exports.NuggetCatalog = class NuggetCatalog {
 
         for await (const c of cursor) {
           if (c.e._from === nugget._id) {
+            // ignore the vertex if it is not in the tree
+            if (notInTree(c.e._to)) continue
+
             const [type, key] = c.e._to.split('/')
             if (type === 'passage') passagesOutbound.push(this.allNuggets[key])
             else nuggetsOutbound.push(this.allNuggets[key])
           } else if (c.e._to === nugget._id) {
+            // ignore the vertex if it is not in the tree
+            if (notInTree(c.e._from)) continue
+
             const [type, key] = c.e._from.split('/')
             if (type === 'passage') passagesInbound.push(this.allNuggets[key])
             else nuggetsInbound.push(this.allNuggets[key])
@@ -485,7 +501,7 @@ exports.NuggetCatalog = class NuggetCatalog {
         let append = ''
         if ('nuggets' in nugget) {
           append = nugget.nuggets
-            // .filter(n => 'nugget/' + n in nuggetStash) TODO: check filter behaviour here
+            .filter(n => !notInTree(`nugget/${n}`))
             .map(n => this.getMdx(this.allNuggets[n], { inseam: true }))
             .join('\n')
         }
