@@ -9,7 +9,7 @@ order: 5
 * BUG: slug lookup sometimes lists secondary slug first
 * BUG: apostrophe in label
 * better styling of content in gatsby, e.g. blockquote
-* better PDF styling
+* better PDF styling, including title at top
 * prevent inbound or outbound passages from rendering wide when they contain code blocks
 * reduce how much is rendered in non-main nuggets
 * buttons for breadcrumb & metadata, plus persistence of button state

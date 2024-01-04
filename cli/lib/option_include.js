@@ -11,9 +11,16 @@ exports.include = {
     inc.split(',').forEach(p => {
       const match = p.match(/^([\w]+):([\w\- ]+)$/)
       if (!match) throw new Error(`include [${p}] is not a valid key or value format`)
-      const num = Number(match[2])
-      includes.push({ key: match[1], value: (isNaN(num)) ? match[2] : num })
+      includes.push({ key: match[1], value: getValue(match[2]) })
     })
     return includes
   }
+}
+
+function getValue (str) {
+  // true & false get converted to boolean
+  if (str === 'true' || str === 'false') return str === 'true'
+
+  const num = Number(str)
+  return isNaN(num) ? str : num
 }
