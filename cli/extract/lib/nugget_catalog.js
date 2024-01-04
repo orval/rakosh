@@ -476,15 +476,25 @@ exports.NuggetCatalog = class NuggetCatalog {
             if (notInTree(c.e._to)) continue
 
             const [type, key] = c.e._to.split('/')
-            if (type === 'passage') passagesOutbound.push(this.allNuggets[key])
-            else nuggetsOutbound.push(this.allNuggets[key])
+            const nug = this.allNuggets[key]
+
+            // skip if it is a hidden nugget
+            if (nug.__hidden) continue
+
+            if (type === 'passage') passagesOutbound.push(nug)
+            else nuggetsOutbound.push(nug)
           } else if (c.e._to === nugget._id) {
             // ignore the vertex if it is not in the tree
             if (notInTree(c.e._from)) continue
 
             const [type, key] = c.e._from.split('/')
-            if (type === 'passage') passagesInbound.push(this.allNuggets[key])
-            else nuggetsInbound.push(this.allNuggets[key])
+            const nug = this.allNuggets[key]
+
+            // skip if it is a hidden nugget
+            if (nug.__hidden) continue
+
+            if (type === 'passage') passagesInbound.push(nug)
+            else nuggetsInbound.push(nug)
           }
         }
 
