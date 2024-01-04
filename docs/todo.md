@@ -14,7 +14,6 @@ order: 5
 * reduce how much is rendered in non-main nuggets
 * buttons for breadcrumb & metadata, plus persistence of button state
 * better search results presentation
-* BUG: exception when `--include`/`--exclude` results in empty result set
 * replace nugget links in MD with `<Link>` in MDX
 * CLI command to simplify creation of new FS nuggets
 * search box usage hints
