@@ -31,8 +31,6 @@ exports.NuggetCatalog = class NuggetCatalog {
 
   constructor (db, includes = [], excludes = [], minLength) {
     this.db = db
-    this.includes = includes
-    this.excludes = excludes
     this.minLength = minLength
     this.allNuggets = {}
     this.seamNuggetChunks = {}
@@ -40,12 +38,22 @@ exports.NuggetCatalog = class NuggetCatalog {
     this.slugLookup = {}
 
     this.filters = []
-    this.includes.forEach(inc => this.filters.push(
-      aql`FILTER v.${inc.key} == ${inc.value}`
-    ))
-    this.excludes.forEach(exc => this.filters.push(
-      aql`FILTER v.${exc.key} != ${exc.value}`
-    ))
+
+    if (includes.length > 0) {
+      this.filters.push(join(
+        includes.map((i, index) => (index === 0)
+          ? aql`FILTER v.${i.key} == ${i.value}`
+          : aql`v.${i.key} == ${i.value}`)
+        , ' OR '))
+    }
+
+    if (excludes.length > 0) {
+      this.filters.push(join(
+        excludes.map((e, index) => (index === 0)
+          ? aql`FILTER v.${e.key} != ${e.value}`
+          : aql`v.${e.key} != ${e.value}`)
+        , ' AND '))
+    }
   }
 
   // return the aql-joined filters
@@ -266,7 +274,7 @@ exports.NuggetCatalog = class NuggetCatalog {
     // TODO dedupe of secondary edges
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND 'passage/adit' GRAPH 'primary'
-        ${join(this.filters)}
+        ${this.getFilters()}
         RETURN { keys: CONCAT_SEPARATOR("|", p.vertices[*]._key), nug: LAST(p.vertices[*]) }
     `)
 
