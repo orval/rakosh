@@ -470,33 +470,58 @@ exports.NuggetCatalog = class NuggetCatalog {
         const nuggetsInbound = []
         const passagesInbound = []
 
-        for await (const c of cursor) {
-          if (c.e._from === nugget._id) {
-            // ignore the vertex if it is not in the tree
-            if (notInTree(c.e._to)) continue
+        const processAdjacent = (id, isOutbound) => {
+          // ignore the vertex if it is not in the tree
+          if (notInTree(id)) return
 
-            const [type, key] = c.e._to.split('/')
-            const nug = this.allNuggets[key]
+          const [type, key] = id.split('/')
+          const nug = this.allNuggets[key]
 
-            // skip if it is a hidden nugget
-            if (nug.__hidden) continue
+          // skip if it is a hidden nugget
+          if (nug.__hidden) return
 
-            if (type === 'passage') passagesOutbound.push(nug)
-            else nuggetsOutbound.push(nug)
-          } else if (c.e._to === nugget._id) {
-            // ignore the vertex if it is not in the tree
-            if (notInTree(c.e._from)) continue
-
-            const [type, key] = c.e._from.split('/')
-            const nug = this.allNuggets[key]
-
-            // skip if it is a hidden nugget
-            if (nug.__hidden) continue
-
-            if (type === 'passage') passagesInbound.push(nug)
-            else nuggetsInbound.push(nug)
+          if (type === 'passage') {
+            isOutbound ? passagesOutbound.push(nug) : passagesInbound.push(nug)
+          } else {
+            isOutbound ? nuggetsOutbound.push(nug) : nuggetsInbound.push(nug)
           }
         }
+
+        for await (const c of cursor) {
+          if (c.e._from === nugget._id) {
+            processAdjacent(c.e._to, true)
+          } else if (c.e._to === nugget._id) {
+            processAdjacent(c.e._from, false)
+          }
+        }
+
+        // for await (const c of cursor) {
+        //   if (c.e._from === nugget._id) {
+        //     // ignore the vertex if it is not in the tree
+        //     if (notInTree(c.e._to)) continue
+
+        //     const [type, key] = c.e._to.split('/')
+        //     const nug = this.allNuggets[key]
+
+        //     // skip if it is a hidden nugget
+        //     if (nug.__hidden) continue
+
+        //     if (type === 'passage') passagesOutbound.push(nug)
+        //     else nuggetsOutbound.push(nug)
+        //   } else if (c.e._to === nugget._id) {
+        //     // ignore the vertex if it is not in the tree
+        //     if (notInTree(c.e._from)) continue
+
+        //     const [type, key] = c.e._from.split('/')
+        //     const nug = this.allNuggets[key]
+
+        //     // skip if it is a hidden nugget
+        //     if (nug.__hidden) continue
+
+        //     if (type === 'passage') passagesInbound.push(nug)
+        //     else nuggetsInbound.push(nug)
+        //   }
+        // }
 
         nuggetsOutbound.sort(Nugget.compare)
         passagesOutbound.sort(Nugget.compare)
