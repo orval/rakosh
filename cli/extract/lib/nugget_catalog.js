@@ -495,34 +495,6 @@ exports.NuggetCatalog = class NuggetCatalog {
           }
         }
 
-        // for await (const c of cursor) {
-        //   if (c.e._from === nugget._id) {
-        //     // ignore the vertex if it is not in the tree
-        //     if (notInTree(c.e._to)) continue
-
-        //     const [type, key] = c.e._to.split('/')
-        //     const nug = this.allNuggets[key]
-
-        //     // skip if it is a hidden nugget
-        //     if (nug.__hidden) continue
-
-        //     if (type === 'passage') passagesOutbound.push(nug)
-        //     else nuggetsOutbound.push(nug)
-        //   } else if (c.e._to === nugget._id) {
-        //     // ignore the vertex if it is not in the tree
-        //     if (notInTree(c.e._from)) continue
-
-        //     const [type, key] = c.e._from.split('/')
-        //     const nug = this.allNuggets[key]
-
-        //     // skip if it is a hidden nugget
-        //     if (nug.__hidden) continue
-
-        //     if (type === 'passage') passagesInbound.push(nug)
-        //     else nuggetsInbound.push(nug)
-        //   }
-        // }
-
         nuggetsOutbound.sort(Nugget.compare)
         passagesOutbound.sort(Nugget.compare)
         nuggetsInbound.sort(Nugget.compare)
