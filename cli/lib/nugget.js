@@ -43,6 +43,7 @@ exports.Nugget = class Nugget {
     }
 
     this.media = new Media(attributes)
+    this.chunks = []
   }
 
   // if there's no label attribute get it from the body, falling back to '_key'

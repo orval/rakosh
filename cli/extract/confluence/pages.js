@@ -189,21 +189,29 @@ class Confluence {
       .catch(error => log.error('deletePage', error))
   }
 
-  async addOrReplacePage (parentId, title, markdown) {
+  async addOrReplacePage (catalog, parentId, node) {
     this.initCheck()
     assert.ok(parentId)
+    const nugget = catalog.fromNode(node)
+    const markdown = nugget.chunks.join('\n')
 
-    const page = await this.getPageByTitle(title)
+    const page = await this.getPageByTitle(nugget.title)
     if (page) {
-      const updatedPage = await this.updatePage(page.id, page.version.number + 1, title, markdown)
-      log.info(`updated page ${updatedPage.id} "${title}"`)
+      const updatedPage = await this.updatePage(
+        page.id,
+        page.version.number + 1,
+        nugget.title,
+        markdown
+      )
+
+      log.info(`updated page ${updatedPage.id} "${nugget.title}"`)
       return updatedPage
     } else {
-      const newPage = await this.addPage(parentId, title, markdown)
+      const newPage = await this.addPage(parentId, nugget.title, markdown)
       if (newPage) {
-        log.info(`added page ${newPage.id} "${title}"`)
+        log.info(`added page ${newPage.id} "${nugget.title}"`)
       } else {
-        log.error(`failed to add "${title}"`)
+        log.error(`failed to add "${nugget.title}"`)
       }
       return newPage
     }
@@ -234,29 +242,30 @@ exports.confluencePages = async function (db, argv) {
 
   // append confluence children macro to pages with children
   root.walk((n) => {
-    if (n.hasChildren()) n.model.chunks.push('\n----\n\n{children}')
+    const nugget = catalog.fromNode(n)
+    if (n.hasChildren()) nugget.chunks.push('\n----\n\n{children}')
 
     // also create a path-like title, which will prevent duplicate titles
-    const title = n.getPath().map(p => p.model.label).slice(1).join(' / ')
-    n.model.title = title || n.model.label
+    const title = n.getPath().map(p => catalog.fromNode(p).label).slice(1).join(' / ')
+    nugget.title = title || nugget.label
     return true
   })
 
-  function doPage (parentId, node) {
-    return confluence.addOrReplacePage(parentId, node.model.title, node.model.chunks.join('\n'))
+  function doPage (catalog, parentId, node) {
+    return confluence.addOrReplacePage(catalog, parentId, node)
       .then((pageData) => {
         return pageData
       })
   }
 
-  async function processNodes (nodes) {
+  async function processNodes (catalog, nodes) {
     if (nodes.length === 0) return
 
     // reduce() ensures pages are added in order
     const children = []
     await nodes.reduce((prev, ent) => {
       return prev
-        .then(() => doPage(ent.parent, ent.node))
+        .then(() => doPage(catalog, ent.parent, ent.node))
         .then((pageData) => {
           return ent.node
             // find all children of this node
@@ -268,8 +277,8 @@ exports.confluencePages = async function (db, argv) {
         })
     }, Promise.resolve())
 
-    await processNodes(children)
+    await processNodes(catalog, children)
   }
 
-  await processNodes([{ parent: confluence.startpageid, node: root }])
+  await processNodes(catalog, [{ parent: confluence.startpageid, node: root }])
 }

@@ -61,6 +61,14 @@ exports.NuggetCatalog = class NuggetCatalog {
     return join(this.filters)
   }
 
+  // get a nugget using a TreeModel node
+  fromNode (node) {
+    assert.ok(node.model)
+    const nugget = this.allNuggets[node.model._key]
+    assert.ok(nugget)
+    return nugget
+  }
+
   async init () {
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND "passage/adit" GRAPH "primary"
@@ -85,14 +93,16 @@ exports.NuggetCatalog = class NuggetCatalog {
     const orderedChunks = []
 
     treeRoot.walk((node) => {
+      const nugget = this.fromNode(node)
+
       // empty passage leaf nodes are skipped
-      if (!node.model.body && !node.hasChildren() && node.model._id.startsWith('passage')) {
+      if (!nugget.body && !node.hasChildren() && nugget._id.startsWith('passage')) {
         return true
       }
 
-      const md = this.#mdForExtract(node.model._key, node.model.depth)
+      const md = this.#mdForExtract(nugget._key, nugget.depth)
       if (md && this.#allowExtract(md)) {
-        orderedChunks.push(this.#rewriteHeadings(md, node.model.depth))
+        orderedChunks.push(this.#rewriteHeadings(md, nugget.depth))
       }
       return true
     })
@@ -107,14 +117,16 @@ exports.NuggetCatalog = class NuggetCatalog {
 
     // walk to generate chunks
     treeRoot.walk((node) => {
+      const nugget = this.fromNode(node)
+
       // skip empty leaf nodes
-      if (!node.hasChildren() && !('body' in node.model)) {
+      if (!node.hasChildren() && !('body' in nugget)) {
         toDrop.push(node)
         return true
       }
-      const md = this.#mdForExtract(node.model._key, node.model.depth)
+      const md = this.#mdForExtract(nugget._key, nugget.depth)
       if (md && this.#allowExtract(md)) {
-        node.model.chunks.push(md)
+        nugget.chunks.push(md)
       }
       return true
     })
@@ -123,14 +135,16 @@ exports.NuggetCatalog = class NuggetCatalog {
 
     // collate nuggets up to their passage to make pages
     treeRoot.walk((node) => {
+      const nugget = this.fromNode(node)
+
       if (node.parent) {
-        const pMod = node.parent.model
-        if (pMod.type === 'passage' &&
-          !pMod.nuggets &&
-          node.model.type === 'nugget' &&
-          node.model.chunks.length > 0) {
-          pMod.chunks.push(...node.model.chunks)
-          node.model.chunks = []
+        const pNug = this.fromNode(node.parent)
+        if (pNug.type === 'passage' &&
+          !pNug.nuggets &&
+          nugget.type === 'nugget' &&
+          nugget.chunks.length > 0) {
+          pNug.chunks.push(...nugget.chunks)
+          nugget.chunks = []
         }
       }
       return true
@@ -139,7 +153,10 @@ exports.NuggetCatalog = class NuggetCatalog {
     // remove empty leaf nodes
     let len
     do {
-      const emptyLeaves = treeRoot.all(n => !n.hasChildren() && n.model.chunks.length === 0)
+      const emptyLeaves = treeRoot.all(n => {
+        const nugget = this.fromNode(n)
+        return !n.hasChildren() && nugget.chunks.length === 0
+      })
       len = emptyLeaves.length
       emptyLeaves.forEach(n => n.drop())
     } while (len)
@@ -280,11 +297,10 @@ exports.NuggetCatalog = class NuggetCatalog {
 
     // TreeModel will sort in the same way as a Nugget list
     const tree = new TreeModel({ modelComparatorFn: Nugget.compare })
-    const root = tree.parse({ depth: 0, chunks: [], ...this.allNuggets.adit })
+    const root = tree.parse({ _key: 'adit', order: 0, label: this.allNuggets.adit.label })
 
     for await (const c of cursor) {
       let current = root
-      let depth = 1
 
       // go over keys in path adding any child nodes that do not exist yet
       for (const key of c.keys.split('|')) {
@@ -294,9 +310,12 @@ exports.NuggetCatalog = class NuggetCatalog {
         } else {
           const nugget = this.allNuggets[key]
           assert.ok(nugget)
-          current = current.addChild(tree.parse({ depth, chunks: [], ...nugget }))
+          current = current.addChild(tree.parse({
+            _key: nugget._key,
+            label: nugget.label,
+            order: nugget.order
+          }))
         }
-        depth++
       }
     }
     return root
@@ -308,9 +327,11 @@ exports.NuggetCatalog = class NuggetCatalog {
     const promises = []
 
     treeRoot.walk(node => {
+      const nugget = this.fromNode(node)
+
       // query the paths from the given vertex back to the adit
       promises.push(this.db.query(aql`
-        FOR v, e, p IN 1..100 INBOUND ${node.model._id} GRAPH 'primary'
+        FOR v, e, p IN 1..100 INBOUND ${nugget._id} GRAPH 'primary'
         FILTER v._id == 'passage/adit'
         RETURN REVERSE(
           FOR vertex IN p.vertices[*]
@@ -329,20 +350,20 @@ exports.NuggetCatalog = class NuggetCatalog {
             )
 
             // filter out the adit and self then push non-zero length paths into list
-            const crumb = c.filter(b => b._id !== 'passage/adit' && b._id !== node.model._id)
+            const crumb = c.filter(b => b._id !== 'passage/adit' && b._id !== nugget._id)
               .map(({ _id, ...rest }) => rest)
 
             if (crumb.length > 0) breadcrumbs.push(crumb)
           }).then(() => {
-            this.allNuggets[node.model._key].breadcrumbs = breadcrumbs
-            this.allNuggets[node.model._key].paths = paths
+            nugget.breadcrumbs = breadcrumbs
+            nugget.paths = paths
 
             // have paths and keys map to the primary slug
             if (paths.length > 1) {
               paths.slice(1).forEach(e => { this.slugLookup[e] = paths[0] })
             }
             if (paths.length > 0) {
-              this.slugLookup['/' + node.model._key] = paths[0]
+              this.slugLookup['/' + nugget._key] = paths[0]
             }
           })
         })
@@ -446,8 +467,8 @@ exports.NuggetCatalog = class NuggetCatalog {
     const treeRoot = await this.getTree()
     this.#generateBreadcrumbs(treeRoot)
 
-    function notInTree (id) {
-      const node = treeRoot.first(n => { return n.model._id === id })
+    function notInTree (key) {
+      const node = treeRoot.first(n => { return n.model._key === key })
       return (typeof node === 'undefined')
     }
 
@@ -456,7 +477,7 @@ exports.NuggetCatalog = class NuggetCatalog {
 
     treeRoot.walk(async (node) => {
       const promise = (async () => {
-        const nugget = this.allNuggets[node.model._key]
+        const nugget = this.fromNode(node)
 
         // get all adjacent vertices for each nugget and write them to the page
         const cursor = await this.db.query(aql`
@@ -471,11 +492,11 @@ exports.NuggetCatalog = class NuggetCatalog {
         const passagesInbound = []
 
         const processAdjacent = (id, isOutbound) => {
-          // ignore the vertex if it is not in the tree
-          if (notInTree(id)) return
-
           const [type, key] = id.split('/')
           const nug = this.allNuggets[key]
+
+          // ignore the vertex if it is not in the tree
+          if (notInTree(key)) return
 
           // skip if it is a hidden nugget
           if (nug.__hidden) return
@@ -504,7 +525,7 @@ exports.NuggetCatalog = class NuggetCatalog {
         let append = ''
         if ('nuggets' in nugget) {
           append = nugget.nuggets
-            .filter(n => !notInTree(`nugget/${n}`))
+            .filter(n => !notInTree(n))
             .map(n => this.getMdx(this.allNuggets[n], { inseam: true }))
             .join('\n')
         }
