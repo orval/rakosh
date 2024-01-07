@@ -1,6 +1,8 @@
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
 const assert = require('assert')
 
+const { FormData } = require('formdata-node')
+const { fileFromPathSync } = require('formdata-node/file-from-path')
 const log = require('loglevel')
 const md2c = require('@shogobg/markdown2confluence')
 
@@ -10,8 +12,11 @@ class Confluence {
   constructor (argv) {
     this.spacekey = argv.spacekey
     this.startpageid = argv.startpageid
+    this.authHeaders = {
+      Authorization: `Basic ${Buffer.from(argv.ccauth).toString('base64')}`
+    }
     this.headers = {
-      Authorization: `Basic ${Buffer.from(argv.ccauth).toString('base64')}`,
+      ...this.authHeaders,
       Accept: 'application/json',
       'Content-Type': 'application/json'
     }
@@ -175,7 +180,7 @@ class Confluence {
       .catch(error => log.error('updatePage', error))
   }
 
-  async deletePage (pageId) {
+  deletePage (pageId) {
     return fetch(`${this.wiki}/api/v2/pages/${encodeURIComponent(pageId)}`, {
       method: 'DELETE',
       headers: this.headers
@@ -187,6 +192,32 @@ class Confluence {
         return response.text()
       })
       .catch(error => log.error('deletePage', error))
+  }
+
+  attach (pageId, uuidName, media) {
+    const file = fileFromPathSync(media.media_relpath, uuidName, { type: media.media_type })
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('minorEdit', 'true')
+    // TODO formData.append('comment', <alt text or title>)
+
+    return fetch(
+      `${this.wiki}/rest/api/content/${pageId}/child/attachment`,
+      {
+        method: 'PUT',
+        headers: { 'X-Atlassian-Token': 'nocheck', ...this.authHeaders },
+        body: formData
+      }
+    )
+      .then(response => {
+        if (response.status !== 200) {
+          throw new Error(`${response.status} ${response.statusText}`)
+        }
+        return response.json()
+      })
+      .then(data => data.results[0])
+      .catch(error => log.error('attach', error))
   }
 
   async addOrReplacePage (catalog, parentId, node) {
@@ -205,6 +236,12 @@ class Confluence {
       )
 
       log.info(`updated page ${updatedPage.id} "${nugget.title}"`)
+
+      for (const [uuidName, media] of Object.entries(nugget.refs)) {
+        await this.attach(updatedPage.id, uuidName, media)
+        log.info(`attached ${uuidName} to page ${updatedPage.id}`)
+      }
+
       return updatedPage
     } else {
       const newPage = await this.addPage(parentId, nugget.title, markdown)

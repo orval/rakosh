@@ -14,13 +14,14 @@ const { visitParents } = require('unist-util-visit-parents')
 
 const { Nugget } = require('../../lib/nugget')
 
-function modifyLinks ({ allNuggets }) {
+function modifyLinks ({ allNuggets, key }) {
   return (tree) => {
     visitParents(tree, 'image', (node, ancestors) => {
-      const nugget = allNuggets[node.url]
-      if (nugget && Nugget.UUID_RE.test(node.url)) {
-        // rewrite the require UUID URL to include the media file extension
-        node.url = node.url + extname(nugget.media_path)
+      const mediaObj = allNuggets[node.url].media
+      if (mediaObj && Nugget.UUID_RE.test(node.url)) {
+        // rewrite the required UUID URL to include the media file extension
+        node.url = node.url + extname(mediaObj.media_path)
+        allNuggets[key].refs[node.url] = mediaObj
       }
     })
   }
@@ -144,6 +145,7 @@ exports.NuggetCatalog = class NuggetCatalog {
           nugget.type === 'nugget' &&
           nugget.chunks.length > 0) {
           pNug.chunks.push(...nugget.chunks)
+          Object.assign(pNug.refs, nugget.refs)
           nugget.chunks = []
         }
       }
@@ -204,10 +206,10 @@ exports.NuggetCatalog = class NuggetCatalog {
     let retMd
 
     if (key in this.seamNuggetChunks) {
-      retMd = this.seamNuggetChunks[key]
+      retMd = this.processMarkdown(this.seamNuggetChunks[key], key)
     } else if (nug._id.startsWith('passage')) {
       if (nug.body) {
-        retMd = nug.body
+        retMd = this.processMarkdown(nug.body, nug._key)
       } else {
         // create a heading when there's no nugget body
         retMd = `${'#'.repeat(depth)} ${nug.label}\n`
@@ -281,7 +283,7 @@ exports.NuggetCatalog = class NuggetCatalog {
     if (!(key in this.allNuggets)) return acc
 
     const parts = [acc]
-    parts.push(this.allNuggets[key].body)
+    parts.push(this.processMarkdown(this.allNuggets[key].body, key))
     return parts.join('\n')
   }
 
@@ -379,11 +381,11 @@ exports.NuggetCatalog = class NuggetCatalog {
 
   // markdown is parsed into an AST so that markdown directives can be replaced
   // with JSX for react-admonitions, then compiled back into markdown
-  processMarkdown (markdown) {
+  processMarkdown (markdown, key) { // TODO maybe refactor this to just take key and get markdown from nugget
     const processor = unified()
       .use(remarkParse)
       .use(remarkDirective)
-      .use(modifyLinks, { allNuggets: this.allNuggets })
+      .use(modifyLinks, { allNuggets: this.allNuggets, key })
       .use(directiveToReactAdmon)
       .use(remarkStringify, { resourceLink: true })
 
@@ -453,7 +455,7 @@ exports.NuggetCatalog = class NuggetCatalog {
       '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
       component,
       Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
-      this.processMarkdown(body),
+      this.processMarkdown(body, entries._key),
       breadcrumbs,
       append
     )
