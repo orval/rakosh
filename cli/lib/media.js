@@ -17,6 +17,7 @@ exports.Media = class Media {
     }
 
     if ('media_path' in attributes) {
+      this.media_path = attributes.media_path
       this.media_relpath = join(dirname(attributes.fspath), attributes.media_path)
       readFileSync(this.media_relpath) // throws exception if the file does not exist
     }
