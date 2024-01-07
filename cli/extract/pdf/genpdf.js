@@ -1,5 +1,5 @@
 'use strict'
-const { mkdtempSync, writeFileSync } = require('node:fs')
+const { mkdtempSync, writeFileSync, copyFileSync } = require('node:fs')
 const { join, dirname } = require('node:path')
 const { tmpdir } = require('node:os')
 
@@ -16,7 +16,7 @@ exports.generatePdf = async function (db, argv) {
   await catalog.init()
 
   // this gets a chunk of markdown for each seam then for any remaining nuggets
-  const mdChunks = await catalog.getSeamNuggetMarkdown()
+  const [mdChunks, refs] = await catalog.getSeamNuggetMarkdown()
 
   // create a TOC
   const allMd = mdChunks.join('\n')
@@ -31,6 +31,11 @@ exports.generatePdf = async function (db, argv) {
   log.info(`writing temporary files to ${tmpDir}`)
   const mdFile = join(tmpDir, 'all.md')
   writeFileSync(mdFile, tocMd + '\n\n' + allMd)
+
+  // copy all media files to temp dir
+  for (const [uuidName, media] of Object.entries(refs)) {
+    copyFileSync(media.relpath, join(tmpDir, uuidName))
+  }
 
   // create the PDF
   const options = {

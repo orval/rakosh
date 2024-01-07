@@ -109,7 +109,15 @@ exports.NuggetCatalog = class NuggetCatalog {
       }
       return true
     })
-    return orderedChunks
+
+    // gather all processed refs
+    const refs = {}
+    treeRoot.walk((node) => {
+      const nugget = this.fromNode(node)
+      Object.assign(refs, nugget.refs)
+    })
+
+    return [orderedChunks, refs]
   }
 
   // collate markdown chunks into pages based on passage
