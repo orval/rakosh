@@ -28,6 +28,7 @@ exports.Nugget = class Nugget {
     }
 
     if (!this._key) throw new Error('no _key attribute in Nugget')
+    if (!this.fspath) throw new Error('no fspath attribute in Nugget')
     if (this._key === 'adit') this.passage = '.'
 
     if (body) this.body = body
@@ -44,6 +45,7 @@ exports.Nugget = class Nugget {
 
     this.media = new Media(attributes)
     this.chunks = []
+    this.refs = {}
   }
 
   // if there's no label attribute get it from the body, falling back to '_key'
@@ -79,6 +81,7 @@ exports.Nugget = class Nugget {
     return a.label.localeCompare(b.label)
   }
 
+  // a document is a representation for use in ArangoDB
   get document () {
     // flatten Nugget and Media into one object
     const obj = { ...this, ...this.media }
