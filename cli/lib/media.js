@@ -3,23 +3,26 @@ const { readFileSync } = require('node:fs')
 
 exports.Media = class Media {
   static MARKDOWN = 'text/markdown; charset=UTF-8'
+  static PNG = 'image/png'
+
   static Types = [
     Media.MARKDOWN,
-    'image/png'
+    Media.PNG
   ]
 
-  constructor (attributes) {
-    this.media_type = ('media_type' in attributes) ? attributes.media_type : Media.MARKDOWN
+  constructor (fspath, obj) {
+    if (!obj.path) throw new Error('No path attribute in Media')
+    if (!obj.type) throw new Error('No type attribute in Media')
 
     // check type is supported
-    if (!Media.Types.includes(this.media_type)) {
-      throw new Error(`Unknown media type ${this.media_type}`)
+    if (!Media.Types.includes(obj.type)) {
+      throw new Error(`Unknown media type ${obj.type}`)
     }
 
-    if ('media_path' in attributes) {
-      this.media_path = attributes.media_path
-      this.media_relpath = join(dirname(attributes.fspath), attributes.media_path)
-      readFileSync(this.media_relpath) // throws exception if the file does not exist
-    }
+    this.path = obj.path
+    this.type = obj.type
+
+    this.relpath = join(dirname(fspath), this.path)
+    readFileSync(this.relpath) // throws exception if the file does not exist
   }
 }

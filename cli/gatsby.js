@@ -149,12 +149,14 @@ async function extractNuggets (db, dir, catalog) {
   for (const [nugget, mdx] of nugs) {
     writeFileSync(join(contentDir, `${nugget._key}.mdx`), mdx)
 
-    if ('media_relpath' in nugget) {
+    if ('__media' in nugget) {
+      const source = nugget.__media.path
+
       // copy media file into the content directory using _key as the basename
-      const ext = extname(nugget.media_relpath)
+      const ext = extname(source)
       const mediaFile = join(contentDir, `${nugget._key}${ext}`)
-      log.info(`copying media file [${nugget.media_relpath}] to [${mediaFile}]`)
-      copyFileSync(nugget.media_relpath, mediaFile)
+      log.info(`copying media file [${source}] to [${mediaFile}]`)
+      copyFileSync(source, mediaFile)
     }
   }
 

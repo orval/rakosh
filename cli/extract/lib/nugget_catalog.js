@@ -17,10 +17,12 @@ const { Nugget } = require('../../lib/nugget')
 function modifyLinks ({ allNuggets, key }) {
   return (tree) => {
     visitParents(tree, 'image', (node, ancestors) => {
-      const mediaObj = allNuggets[node.url].media
-      if (mediaObj && Nugget.UUID_RE.test(node.url)) {
+      if (!Nugget.UUID_RE.test(node.url) || !(node.url in allNuggets)) return
+
+      const mediaObj = allNuggets[node.url].__media
+      if (mediaObj) {
         // rewrite the required UUID URL to include the media file extension
-        node.url = node.url + extname(mediaObj.media_path)
+        node.url = node.url + extname(mediaObj.path)
         allNuggets[key].refs[node.url] = mediaObj
       }
     })
@@ -447,7 +449,7 @@ exports.NuggetCatalog = class NuggetCatalog {
       ? ''
       : nugget.getBreadcrumbs()
 
-    const body = (entries.media_type === 'image/png')
+    const body = ('__media' in entries && entries.__media.type === 'image/png')
       ? `![${entries.label}](${entries._key})`
       : (('body' in nugget) ? nugget.body : '### ' + nugget.label)
 

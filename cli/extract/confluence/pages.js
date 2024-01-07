@@ -195,7 +195,7 @@ class Confluence {
   }
 
   attach (pageId, uuidName, media) {
-    const file = fileFromPathSync(media.media_relpath, uuidName, { type: media.media_type })
+    const file = fileFromPathSync(media.relpath, uuidName, { type: media.type })
 
     const formData = new FormData()
     formData.append('file', file)

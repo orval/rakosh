@@ -43,7 +43,10 @@ exports.Nugget = class Nugget {
       throw new Error(`Unknown Nugget type ${this.type}`)
     }
 
-    this.media = new Media(attributes)
+    if ('__media' in attributes) {
+      this.__media = new Media(this.fspath, attributes.__media)
+    }
+
     this.chunks = []
     this.refs = {}
   }
@@ -83,9 +86,10 @@ exports.Nugget = class Nugget {
 
   // a document is a representation for use in ArangoDB
   get document () {
-    // flatten Nugget and Media into one object
-    const obj = { ...this, ...this.media }
-    delete obj.media
+    // remove items that do not need to be stored
+    const obj = Object.assign({}, this)
+    delete obj.refs
+    delete obj.chunks
     return obj
   }
 
