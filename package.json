@@ -22,6 +22,7 @@
     "@shogobg/markdown2confluence": "^0.1.8",
     "arangojs": "^8.1.0",
     "fix-esm": "^1.0.1",
+    "formdata-node": "^6.0.3",
     "front-matter": "^4.0.2",
     "lodash": "^4.17.21",
     "loglevel": "^1.8.1",
@@ -53,7 +54,7 @@
     "docpdf": "./cli/main.js pdf docs -v --no-toch1 --tocdepth 2",
     "doccon": "./cli/main.js confluence docs orval2 rakosh 131293 -v",
     "devcon": "./cli/main.js confluence my-mine orval2 test 917514 -v --exclude poodle:wibble",
-    "fsadd" : "./cli/main.js fs -v add",
-    "fslint" : "./cli/main.js fs -v lint"
+    "fsadd": "./cli/main.js fs -v add",
+    "fslint": "./cli/main.js fs -v lint"
   }
 }
