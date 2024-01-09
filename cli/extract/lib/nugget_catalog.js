@@ -1,6 +1,5 @@
 'use strict'
 const assert = require('assert')
-const { extname } = require('node:path')
 const { format } = require('node:util')
 
 const { aql, join } = require('arangojs/aql')
@@ -10,26 +9,11 @@ const remarkStringify = require('fix-esm').require('remark-stringify').default
 const slugify = require('slugify')
 const TreeModel = require('tree-model')
 const { unified } = require('fix-esm').require('unified')
-const { visitParents } = require('unist-util-visit-parents')
 
 const { Nugget } = require('../../lib/nugget')
 
 const { directiveToReactAdmon } = require('./admonition')
-
-function modifyLinks ({ allNuggets, key }) {
-  return (tree) => {
-    visitParents(tree, 'image', (node, ancestors) => {
-      if (!Nugget.UUID_RE.test(node.url) || !(node.url in allNuggets)) return
-
-      const mediaObj = allNuggets[node.url].__media
-      if (mediaObj) {
-        // rewrite the required UUID URL to include the media file extension
-        node.url = node.url + extname(mediaObj.path)
-        allNuggets[key].refs[node.url] = mediaObj
-      }
-    })
-  }
-}
+const { rewriteImageLink } = require('./rewrite_image_link')
 
 exports.NuggetCatalog = class NuggetCatalog {
   static HEADING_RE = /^(#+)\s+(.+)$/gm
@@ -397,7 +381,7 @@ exports.NuggetCatalog = class NuggetCatalog {
     const processor = unified()
       .use(remarkParse)
       .use(remarkDirective)
-      .use(modifyLinks, { allNuggets: this.allNuggets, key })
+      .use(rewriteImageLink, { allNuggets: this.allNuggets, key })
       .use(directiveToReactAdmon)
       .use(remarkStringify, { resourceLink: true })
 
