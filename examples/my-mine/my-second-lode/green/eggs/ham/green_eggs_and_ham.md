@@ -23,4 +23,4 @@ But the weight was too much, the turtles cried out,
 So Yertle fell down, and his friends were set free,
 Learning that kindness and sharing was the key.
 
-![This does not exist](e04e3a0d-af98-4751-8afb-ab5a55a8ba88)
+![This does not exist](/e04e3a0d-af98-4751-8afb-ab5a55a8ba88)
