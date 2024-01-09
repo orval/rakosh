@@ -9,13 +9,14 @@ const { Nugget } = require('../../lib/nugget')
 exports.rewriteImageLink = function ({ allNuggets, key }) {
   return (tree) => {
     visitParents(tree, 'image', (node, ancestors) => {
-      if (!Nugget.UUID_RE.test(node.url) || !(node.url in allNuggets)) return
+      const uuid = node.url.slice(1)
+      if (!Nugget.UUID_RE.test(uuid) || !(uuid in allNuggets)) return
 
-      const mediaObj = allNuggets[node.url].__media
+      const mediaObj = allNuggets[uuid].__media
       if (mediaObj) {
         // rewrite the required UUID URL to include the media file extension
         node.url = node.url + extname(mediaObj.path)
-        allNuggets[key].refs[node.url] = mediaObj
+        allNuggets[key].refs[uuid] = mediaObj
       }
     })
   }
