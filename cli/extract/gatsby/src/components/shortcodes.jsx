@@ -253,6 +253,7 @@ Code.propTypes = {
 }
 
 export const components = {
+  Link,
   NuggetBody,
   Nugget,
   Seam,

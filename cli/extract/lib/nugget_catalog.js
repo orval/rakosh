@@ -13,6 +13,7 @@ const { unified } = require('fix-esm').require('unified')
 const { Nugget } = require('../../lib/nugget')
 
 const { directiveToReactAdmon } = require('./admonition')
+const { rewriteGatsbyLink } = require('./rewrite_gatsby_link')
 const { rewriteImageLink } = require('./rewrite_image_link')
 
 exports.NuggetCatalog = class NuggetCatalog {
@@ -202,10 +203,10 @@ exports.NuggetCatalog = class NuggetCatalog {
     let retMd
 
     if (key in this.seamNuggetChunks) {
-      retMd = this.processMarkdown(this.seamNuggetChunks[key], key)
+      retMd = this.#processMarkdown(this.seamNuggetChunks[key], key)
     } else if (nug._id.startsWith('passage')) {
       if (nug.body) {
-        retMd = this.processMarkdown(nug.body, nug._key)
+        retMd = this.#processMarkdown(nug.body, nug._key)
       } else {
         // create a heading when there's no nugget body
         retMd = `${'#'.repeat(depth)} ${nug.label}\n`
@@ -279,7 +280,7 @@ exports.NuggetCatalog = class NuggetCatalog {
     if (!(key in this.allNuggets)) return acc
 
     const parts = [acc]
-    parts.push(this.processMarkdown(this.allNuggets[key].body, key))
+    parts.push(this.#processMarkdown(this.allNuggets[key].body, key))
     return parts.join('\n')
   }
 
@@ -377,14 +378,18 @@ exports.NuggetCatalog = class NuggetCatalog {
 
   // markdown is parsed into an AST so that markdown directives can be replaced
   // with JSX for react-admonitions, then compiled back into markdown
-  processMarkdown (markdown, key) { // TODO maybe refactor this to just take key and get markdown from nugget
+  #processMarkdown (markdown, key, gatsby = false) { // TODO maybe refactor this to just take key and get markdown from nugget
     const processor = unified()
       .use(remarkParse)
       .use(remarkDirective)
       .use(rewriteImageLink, { allNuggets: this.allNuggets, key })
       .use(directiveToReactAdmon)
-      .use(remarkStringify, { resourceLink: true })
 
+    if (gatsby) {
+      processor.use(rewriteGatsbyLink, { allNuggets: this.allNuggets, key })
+    }
+
+    processor.use(remarkStringify, { resourceLink: true })
     return processor.processSync(markdown).toString()
   }
 
@@ -413,7 +418,7 @@ exports.NuggetCatalog = class NuggetCatalog {
       '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
       component,
       Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
-      this.processMarkdown(body, entries._key),
+      this.#processMarkdown(body, entries._key, true),
       breadcrumbs,
       append
     )
