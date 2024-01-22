@@ -10,4 +10,4 @@ This is a test of including an image in a nugget:
 
 ---
 
-![bars](/f5123db4-fcef-4468-a3ef-4fb422b7dffa)
+![bars](/f5123db4-fcef-4468-a3ef-4fb422b7dffa) ![atoms](/a3859945-49ca-41de-add3-94ebab6dab5e)

@@ -49,7 +49,8 @@ const config = {
               maxWidth: 650
             }
           },
-          'gatsby-plugin-sharp'
+          'gatsby-plugin-sharp',
+          'gatsby-remark-gifs'
         ]
       }
     },

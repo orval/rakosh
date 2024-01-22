@@ -4,11 +4,13 @@ const { readFileSync } = require('node:fs')
 exports.Media = class Media {
   static MARKDOWN = 'text/markdown; charset=UTF-8'
   static PNG = 'image/png'
+  static GIF = 'image/gif'
   static JPEG = 'image/jpeg'
 
   static Types = [
     Media.MARKDOWN,
     Media.PNG,
+    Media.GIF,
     Media.JPEG
   ]
 
