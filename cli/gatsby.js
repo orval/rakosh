@@ -1,7 +1,7 @@
 'use strict'
 const { execFileSync } = require('node:child_process')
 const { statSync, writeFileSync, readFileSync, copyFileSync } = require('node:fs')
-const { join, extname } = require('node:path')
+const { join, extname, dirname } = require('node:path')
 const util = require('util')
 
 const { Database } = require('arangojs')
@@ -150,7 +150,7 @@ async function extractNuggets (db, dir, catalog) {
     writeFileSync(join(contentDir, `${nugget._key}.mdx`), mdx)
 
     if ('__media' in nugget) {
-      const source = nugget.__media.path
+      const source = join(dirname(nugget.fspath), nugget.__media.path)
 
       // copy media file into the content directory using _key as the basename
       const ext = extname(source)
