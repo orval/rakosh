@@ -5,7 +5,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@mdx-js/react": "^2.3",
+    "@mdx-js/react": "^3.0",
     "formik": "^2.4.5",
     "gatsby": "^5.13",
     "gatsby-plugin-layout": "^4.13",
