@@ -1,9 +1,10 @@
 'use strict'
 const { Database } = require('arangojs')
-const { confluencePages } = require('./extract/confluence/pages')
-const { include } = require('./lib/option_include')
-const { exclude } = require('./lib/option_exclude')
 const log = require('loglevel')
+
+const { confluencePages } = require('./extract/confluence/pages')
+const { exclude } = require('./lib/option_exclude')
+const { include } = require('./lib/option_include')
 
 log.setLevel('WARN')
 

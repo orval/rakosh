@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react'
-import PropTypes from 'prop-types'
 import { navigate } from 'gatsby'
+import PropTypes from 'prop-types'
+import React, { useState, useEffect, useRef } from 'react'
 import { Tree } from 'react-arborist'
 import { IoCaretDown, IoCaretForward } from 'react-icons/io5'
+
 import minemapJson from '../../content/minemap.json'
 import slugLookup from '../../content/slug_lookup.json'
+
 import * as styles from './minemap.module.css'
 
 let rem = 14

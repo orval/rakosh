@@ -1,8 +1,9 @@
-import React from 'react'
-import PropTypes from 'prop-types'
 import { MDXProvider } from '@mdx-js/react'
-import { components } from '../components/shortcodes'
+import PropTypes from 'prop-types'
+import React from 'react'
 import Admonition from 'react-admonitions'
+
+import { components } from '../components/shortcodes'
 
 export default function NuggetTemplate ({ children }) {
   const combinedComponents = { Admonition, ...components }

@@ -1,6 +1,6 @@
 ---
 _key: adit
-fs_layout: '1.1'
+fs_layout: '1.2'
 ---
 
 # My Mine

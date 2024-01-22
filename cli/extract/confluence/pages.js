@@ -1,15 +1,22 @@
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
-const log = require('loglevel')
-const { NuggetCatalog } = require('../lib/nugget_catalog')
-const md2c = require('@shogobg/markdown2confluence')
 const assert = require('assert')
+
+const { FormData } = require('formdata-node')
+const { fileFromPathSync } = require('formdata-node/file-from-path')
+const log = require('loglevel')
+const md2c = require('@shogobg/markdown2confluence')
+
+const { NuggetCatalog } = require('../lib/nugget_catalog')
 
 class Confluence {
   constructor (argv) {
     this.spacekey = argv.spacekey
     this.startpageid = argv.startpageid
+    this.authHeaders = {
+      Authorization: `Basic ${Buffer.from(argv.ccauth).toString('base64')}`
+    }
     this.headers = {
-      Authorization: `Basic ${Buffer.from(argv.ccauth).toString('base64')}`,
+      ...this.authHeaders,
       Accept: 'application/json',
       'Content-Type': 'application/json'
     }
@@ -173,7 +180,7 @@ class Confluence {
       .catch(error => log.error('updatePage', error))
   }
 
-  async deletePage (pageId) {
+  deletePage (pageId) {
     return fetch(`${this.wiki}/api/v2/pages/${encodeURIComponent(pageId)}`, {
       method: 'DELETE',
       headers: this.headers
@@ -187,21 +194,61 @@ class Confluence {
       .catch(error => log.error('deletePage', error))
   }
 
-  async addOrReplacePage (parentId, title, markdown) {
+  attach (pageId, uuidName, media) {
+    const file = fileFromPathSync(media.relpath, uuidName, { type: media.type })
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('minorEdit', 'true')
+    // TODO formData.append('comment', <alt text or title>)
+
+    return fetch(
+      `${this.wiki}/rest/api/content/${pageId}/child/attachment`,
+      {
+        method: 'PUT',
+        headers: { 'X-Atlassian-Token': 'nocheck', ...this.authHeaders },
+        body: formData
+      }
+    )
+      .then(response => {
+        if (response.status !== 200) {
+          throw new Error(`${response.status} ${response.statusText}`)
+        }
+        return response.json()
+      })
+      .then(data => data.results[0])
+      .catch(error => log.error('attach', error))
+  }
+
+  async addOrReplacePage (catalog, parentId, node) {
     this.initCheck()
     assert.ok(parentId)
+    const nugget = catalog.fromNode(node)
+    const markdown = nugget.chunks.join('\n')
 
-    const page = await this.getPageByTitle(title)
+    const page = await this.getPageByTitle(nugget.title)
     if (page) {
-      const updatedPage = await this.updatePage(page.id, page.version.number + 1, title, markdown)
-      log.info(`updated page ${updatedPage.id} "${title}"`)
+      const updatedPage = await this.updatePage(
+        page.id,
+        page.version.number + 1,
+        nugget.title,
+        markdown
+      )
+
+      log.info(`updated page ${updatedPage.id} "${nugget.title}"`)
+
+      for (const [uuidName, media] of Object.entries(nugget.refs)) {
+        await this.attach(updatedPage.id, uuidName, media)
+        log.info(`attached ${uuidName} to page ${updatedPage.id}`)
+      }
+
       return updatedPage
     } else {
-      const newPage = await this.addPage(parentId, title, markdown)
+      const newPage = await this.addPage(parentId, nugget.title, markdown)
       if (newPage) {
-        log.info(`added page ${newPage.id} "${title}"`)
+        log.info(`added page ${newPage.id} "${nugget.title}"`)
       } else {
-        log.error(`failed to add "${title}"`)
+        log.error(`failed to add "${nugget.title}"`)
       }
       return newPage
     }
@@ -232,29 +279,30 @@ exports.confluencePages = async function (db, argv) {
 
   // append confluence children macro to pages with children
   root.walk((n) => {
-    if (n.hasChildren()) n.model.chunks.push('\n----\n\n{children}')
+    const nugget = catalog.fromNode(n)
+    if (n.hasChildren()) nugget.chunks.push('\n----\n\n{children}')
 
     // also create a path-like title, which will prevent duplicate titles
-    const title = n.getPath().map(p => p.model.label).slice(1).join(' / ')
-    n.model.title = title || n.model.label
+    const title = n.getPath().map(p => catalog.fromNode(p).label).slice(1).join(' / ')
+    nugget.title = title || nugget.label
     return true
   })
 
-  function doPage (parentId, node) {
-    return confluence.addOrReplacePage(parentId, node.model.title, node.model.chunks.join('\n'))
+  function doPage (catalog, parentId, node) {
+    return confluence.addOrReplacePage(catalog, parentId, node)
       .then((pageData) => {
         return pageData
       })
   }
 
-  async function processNodes (nodes) {
+  async function processNodes (catalog, nodes) {
     if (nodes.length === 0) return
 
     // reduce() ensures pages are added in order
     const children = []
     await nodes.reduce((prev, ent) => {
       return prev
-        .then(() => doPage(ent.parent, ent.node))
+        .then(() => doPage(catalog, ent.parent, ent.node))
         .then((pageData) => {
           return ent.node
             // find all children of this node
@@ -266,8 +314,8 @@ exports.confluencePages = async function (db, argv) {
         })
     }, Promise.resolve())
 
-    await processNodes(children)
+    await processNodes(catalog, children)
   }
 
-  await processNodes([{ parent: confluence.startpageid, node: root }])
+  await processNodes(catalog, [{ parent: confluence.startpageid, node: root }])
 }

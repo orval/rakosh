@@ -1,9 +1,10 @@
 'use strict'
 const { Database } = require('arangojs')
-const { generatePdf } = require('./extract/pdf/genpdf')
-const { include } = require('./lib/option_include')
-const { exclude } = require('./lib/option_exclude')
 const log = require('loglevel')
+
+const { generatePdf } = require('./extract/pdf/genpdf')
+const { exclude } = require('./lib/option_exclude')
+const { include } = require('./lib/option_include')
 
 log.setLevel('WARN')
 

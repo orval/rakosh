@@ -1,11 +1,13 @@
 'use strict'
-const log = require('loglevel')
-const { mkdtempSync, writeFileSync } = require('node:fs')
-const { tmpdir } = require('node:os')
+const { mkdtempSync, writeFileSync, copyFileSync } = require('node:fs')
 const { join, dirname } = require('node:path')
-const { NuggetCatalog } = require('../lib/nugget_catalog')
-const mdpdf = require('mdpdf')
+const { tmpdir } = require('node:os')
+
+const log = require('loglevel')
 const toc = require('markdown-toc')
+const mdpdf = require('mdpdf')
+
+const { NuggetCatalog } = require('../lib/nugget_catalog')
 
 exports.generatePdf = async function (db, argv) {
   log.info('generating pdf')
@@ -14,7 +16,7 @@ exports.generatePdf = async function (db, argv) {
   await catalog.init()
 
   // this gets a chunk of markdown for each seam then for any remaining nuggets
-  const mdChunks = await catalog.getSeamNuggetMarkdown()
+  const [mdChunks, refs] = await catalog.getSeamNuggetMarkdown()
 
   // create a TOC
   const allMd = mdChunks.join('\n')
@@ -29,6 +31,11 @@ exports.generatePdf = async function (db, argv) {
   log.info(`writing temporary files to ${tmpDir}`)
   const mdFile = join(tmpDir, 'all.md')
   writeFileSync(mdFile, tocMd + '\n\n' + allMd)
+
+  // copy all media files to temp dir
+  for (const [uuidName, media] of Object.entries(refs)) {
+    copyFileSync(media.relpath, join(tmpDir, uuidName))
+  }
 
   // create the PDF
   const options = {

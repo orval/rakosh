@@ -1,6 +1,7 @@
+import { navigate } from 'gatsby'
 import * as React from 'react'
 import { useLocation } from '@reach/router'
-import { navigate } from 'gatsby'
+
 import slugLookup from '../../content/slug_lookup.json'
 
 function stripPathPrefix (path) {

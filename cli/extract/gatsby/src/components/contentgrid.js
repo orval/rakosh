@@ -1,5 +1,6 @@
-import React from 'react'
 import PropTypes from 'prop-types'
+import React from 'react'
+
 import * as styles from './contentgrid.module.css'
 
 const ContentGrid = ({ children }) => {

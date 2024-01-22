@@ -1,9 +1,11 @@
 const { format } = require('node:util')
 const { readFileSync } = require('node:fs')
-const markdownlint = require('markdownlint')
+
 const fm = require('front-matter')
+const markdownlint = require('markdownlint')
 const yaml = require('js-yaml')
-const processMarkdown = require('./process_markdown')
+
+const { Media } = require('./media')
 
 const lintConf = {
   'line-length': false,
@@ -26,6 +28,7 @@ exports.Nugget = class Nugget {
     }
 
     if (!this._key) throw new Error('no _key attribute in Nugget')
+    if (!this.fspath) throw new Error('no fspath attribute in Nugget')
     if (this._key === 'adit') this.passage = '.'
 
     if (body) this.body = body
@@ -39,6 +42,13 @@ exports.Nugget = class Nugget {
     if (!Nugget.Types.includes(this.type)) {
       throw new Error(`Unknown Nugget type ${this.type}`)
     }
+
+    if ('__media' in attributes) {
+      this.__media = new Media(this.fspath, attributes.__media)
+    }
+
+    this.chunks = []
+    this.refs = {}
   }
 
   // if there's no label attribute get it from the body, falling back to '_key'
@@ -54,13 +64,15 @@ exports.Nugget = class Nugget {
     return (label.length > 25) ? label.slice(0, 24).concat('…') : label
   }
 
-  static fromMdFile (mdFile) {
-    const content = readFileSync(mdFile, { encoding: 'utf-8' })
+  static fromMdFile (relativePath, depth) {
+    const content = readFileSync(relativePath, { encoding: 'utf-8' })
     const errors = markdownlint.sync({ strings: { content }, config: lintConf })
     if (errors.content.length > 0) {
-      throw new Error(`Markdown issue in [${mdFile}]:` + errors.toString())
+      throw new Error(`Markdown issue in [${relativePath}]:` + errors.toString())
     }
     const markdown = fm(content)
+    markdown.attributes.depth = depth
+    markdown.attributes.fspath = relativePath
     return new Nugget(markdown.attributes, markdown.body)
   }
 
@@ -72,9 +84,13 @@ exports.Nugget = class Nugget {
     return a.label.localeCompare(b.label)
   }
 
+  // a document is a representation for use in ArangoDB
   get document () {
-    // for now all entries go into the ArangoDB Document
-    return this
+    // remove items that do not need to be stored
+    const obj = Object.assign({}, this)
+    delete obj.refs
+    delete obj.chunks
+    return obj
   }
 
   // generate YAML front matter for MDX file
@@ -84,7 +100,7 @@ exports.Nugget = class Nugget {
     return format('---\n%s---\n', yaml.dump(entries))
   }
 
-  #getBreadcrumbs () {
+  getBreadcrumbs () {
     if (this.breadcrumbs.length === 0) return ''
     const bcrumbs = ['<Breadcrumbs>']
 
@@ -95,34 +111,5 @@ exports.Nugget = class Nugget {
     }
     bcrumbs.push('</Breadcrumbs>')
     return bcrumbs.join('\n')
-  }
-
-  // generate an MDX component named after the type
-  getMdx (additions = {}, append = '') {
-    const component = ('nuggets' in this) ? 'Seam' : this.type.charAt(0).toUpperCase() + this.type.slice(1)
-    const entries = Object.assign(additions, this.document)
-    delete entries.body
-    delete entries.breadcrumbs
-
-    if (!entries.slug) {
-      entries.slug = (entries.paths.length > 0) ? entries.paths[0] : '/'
-    }
-
-    // it is decreed that breadcrumbs are not required in outbound vertices
-    const breadcrumbs = (entries.direction === 'outbound' || entries.inseam)
-      ? ''
-      : this.#getBreadcrumbs()
-
-    const mostOfTheMdx = format(
-      '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
-      component,
-      Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
-      ('body' in this) ? processMarkdown(this.body) : '### ' + this.label,
-      breadcrumbs,
-      append
-    )
-
-    // mostly pointless tidying up of the MDX
-    return format('%s\n</%s>\n', mostOfTheMdx.trimEnd(), component)
   }
 }

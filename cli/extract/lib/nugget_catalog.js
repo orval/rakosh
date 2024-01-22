@@ -1,33 +1,62 @@
 'use strict'
 const assert = require('assert')
+const { format } = require('node:util')
+
 const { aql, join } = require('arangojs/aql')
-const { Nugget } = require('../../lib/nugget')
+const remarkDirective = require('fix-esm').require('remark-directive').default
+const remarkParse = require('fix-esm').require('remark-parse').default
+const remarkStringify = require('fix-esm').require('remark-stringify').default
+const slugify = require('slugify')
 const TreeModel = require('tree-model')
+const { unified } = require('fix-esm').require('unified')
+
+const { Nugget } = require('../../lib/nugget')
+
+const { directiveToReactAdmon } = require('./admonition')
+const { rewriteGatsbyLink } = require('./rewrite_gatsby_link')
+const { rewriteImageLink } = require('./rewrite_image_link')
 
 exports.NuggetCatalog = class NuggetCatalog {
   static HEADING_RE = /^(#+)\s+(.+)$/gm
 
   constructor (db, includes = [], excludes = [], minLength) {
     this.db = db
-    this.includes = includes
-    this.excludes = excludes
     this.minLength = minLength
     this.allNuggets = {}
     this.seamNuggetChunks = {}
     this.initialised = false
+    this.slugLookup = {}
 
     this.filters = []
-    this.includes.forEach(inc => this.filters.push(
-      aql`FILTER v.${inc.key} == ${inc.value}`
-    ))
-    this.excludes.forEach(exc => this.filters.push(
-      aql`FILTER v.${exc.key} != ${exc.value}`
-    ))
+
+    if (includes.length > 0) {
+      this.filters.push(join(
+        includes.map((i, index) => (index === 0)
+          ? aql`FILTER v.${i.key} == ${i.value}`
+          : aql`v.${i.key} == ${i.value}`)
+        , ' OR '))
+    }
+
+    if (excludes.length > 0) {
+      this.filters.push(join(
+        excludes.map((e, index) => (index === 0)
+          ? aql`FILTER v.${e.key} != ${e.value}`
+          : aql`v.${e.key} != ${e.value}`)
+        , ' AND '))
+    }
   }
 
   // return the aql-joined filters
   getFilters () {
     return join(this.filters)
+  }
+
+  // get a nugget using a TreeModel node
+  fromNode (node) {
+    assert.ok(node.model)
+    const nugget = this.allNuggets[node.model._key]
+    assert.ok(nugget)
+    return nugget
   }
 
   async init () {
@@ -54,18 +83,28 @@ exports.NuggetCatalog = class NuggetCatalog {
     const orderedChunks = []
 
     treeRoot.walk((node) => {
+      const nugget = this.fromNode(node)
+
       // empty passage leaf nodes are skipped
-      if (!node.model.body && !node.hasChildren() && node.model._id.startsWith('passage')) {
+      if (!nugget.body && !node.hasChildren() && nugget._id.startsWith('passage')) {
         return true
       }
 
-      const md = this.#mdForExtract(node.model._key, node.model.depth)
+      const md = this.#mdForExtract(nugget._key, nugget.depth)
       if (md && this.#allowExtract(md)) {
-        orderedChunks.push(this.rewriteHeadings(md, node.model.depth))
+        orderedChunks.push(this.#rewriteHeadings(md, nugget.depth))
       }
       return true
     })
-    return orderedChunks
+
+    // gather all processed refs
+    const refs = {}
+    treeRoot.walk((node) => {
+      const nugget = this.fromNode(node)
+      Object.assign(refs, nugget.refs)
+    })
+
+    return [orderedChunks, refs]
   }
 
   // collate markdown chunks into pages based on passage
@@ -76,14 +115,16 @@ exports.NuggetCatalog = class NuggetCatalog {
 
     // walk to generate chunks
     treeRoot.walk((node) => {
+      const nugget = this.fromNode(node)
+
       // skip empty leaf nodes
-      if (!node.hasChildren() && !('body' in node.model)) {
+      if (!node.hasChildren() && !('body' in nugget)) {
         toDrop.push(node)
         return true
       }
-      const md = this.#mdForExtract(node.model._key, node.model.depth)
+      const md = this.#mdForExtract(nugget._key, nugget.depth)
       if (md && this.#allowExtract(md)) {
-        node.model.chunks.push(md)
+        nugget.chunks.push(md)
       }
       return true
     })
@@ -92,14 +133,17 @@ exports.NuggetCatalog = class NuggetCatalog {
 
     // collate nuggets up to their passage to make pages
     treeRoot.walk((node) => {
+      const nugget = this.fromNode(node)
+
       if (node.parent) {
-        const pMod = node.parent.model
-        if (pMod.type === 'passage' &&
-          !pMod.nuggets &&
-          node.model.type === 'nugget' &&
-          node.model.chunks.length > 0) {
-          pMod.chunks.push(...node.model.chunks)
-          node.model.chunks = []
+        const pNug = this.fromNode(node.parent)
+        if (pNug.type === 'passage' &&
+          !pNug.nuggets &&
+          nugget.type === 'nugget' &&
+          nugget.chunks.length > 0) {
+          pNug.chunks.push(...nugget.chunks)
+          Object.assign(pNug.refs, nugget.refs)
+          nugget.chunks = []
         }
       }
       return true
@@ -108,7 +152,10 @@ exports.NuggetCatalog = class NuggetCatalog {
     // remove empty leaf nodes
     let len
     do {
-      const emptyLeaves = treeRoot.all(n => !n.hasChildren() && n.model.chunks.length === 0)
+      const emptyLeaves = treeRoot.all(n => {
+        const nugget = this.fromNode(n)
+        return !n.hasChildren() && nugget.chunks.length === 0
+      })
       len = emptyLeaves.length
       emptyLeaves.forEach(n => n.drop())
     } while (len)
@@ -153,18 +200,15 @@ exports.NuggetCatalog = class NuggetCatalog {
 
   #mdForExtract (key, depth) {
     const nug = this.allNuggets[key]
-    if (!nug) return undefined // has been filtered out
-
     let retMd
 
     if (key in this.seamNuggetChunks) {
-      retMd = this.seamNuggetChunks[key]
+      retMd = this.#processMarkdown(this.seamNuggetChunks[key], key)
     } else if (nug._id.startsWith('passage')) {
       if (nug.body) {
-        retMd = nug.body
+        retMd = this.#processMarkdown(nug.body, nug._key)
       } else {
         // create a heading when there's no nugget body
-        // TODO remove elipses
         retMd = `${'#'.repeat(depth)} ${nug.label}\n`
       }
     }
@@ -186,7 +230,7 @@ exports.NuggetCatalog = class NuggetCatalog {
 
   // heading depths/levels are taken from the graph depth and overwritten in the output
   // markdown, which ensures the TOC is well ordered
-  rewriteHeadings (markdown, depth) {
+  #rewriteHeadings (markdown, depth) {
     const MAX = 6
     depth = (depth > MAX) ? MAX : depth
 
@@ -236,7 +280,7 @@ exports.NuggetCatalog = class NuggetCatalog {
     if (!(key in this.allNuggets)) return acc
 
     const parts = [acc]
-    parts.push(this.allNuggets[key].body)
+    parts.push(this.#processMarkdown(this.allNuggets[key].body, key))
     return parts.join('\n')
   }
 
@@ -246,17 +290,16 @@ exports.NuggetCatalog = class NuggetCatalog {
     // TODO dedupe of secondary edges
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND 'passage/adit' GRAPH 'primary'
-        ${join(this.filters)}
+        ${this.getFilters()}
         RETURN { keys: CONCAT_SEPARATOR("|", p.vertices[*]._key), nug: LAST(p.vertices[*]) }
     `)
 
     // TreeModel will sort in the same way as a Nugget list
     const tree = new TreeModel({ modelComparatorFn: Nugget.compare })
-    const root = tree.parse({ depth: 0, chunks: [], ...this.allNuggets.adit })
+    const root = tree.parse({ _key: 'adit', order: 0, label: this.allNuggets.adit.label })
 
     for await (const c of cursor) {
       let current = root
-      let depth = 1
 
       // go over keys in path adding any child nodes that do not exist yet
       for (const key of c.keys.split('|')) {
@@ -266,17 +309,220 @@ exports.NuggetCatalog = class NuggetCatalog {
         } else {
           const nugget = this.allNuggets[key]
           assert.ok(nugget)
-          current = current.addChild(tree.parse({ depth, chunks: [], ...nugget }))
+          current = current.addChild(tree.parse({
+            _key: nugget._key,
+            label: nugget.label,
+            order: nugget.order
+          }))
         }
-        depth++
       }
     }
     return root
   }
 
-  getChunk (key, depth) {
-    const md = this.#mdForExtract(key, depth)
-    if (!md) return
-    return this.rewriteHeadings(md, depth)
+  // generate breadcrumb data for each nugget in the catalog
+  async #generateBreadcrumbs (treeRoot) {
+    this.slugLookup = {}
+    const promises = []
+
+    treeRoot.walk(node => {
+      const nugget = this.fromNode(node)
+
+      // query the paths from the given vertex back to the adit
+      promises.push(this.db.query(aql`
+        FOR v, e, p IN 1..100 INBOUND ${nugget._id} GRAPH 'primary'
+        FILTER v._id == 'passage/adit'
+        RETURN REVERSE(
+          FOR vertex IN p.vertices[*]
+          RETURN { _id: vertex._id, label: vertex.label, shortlabel: vertex.shortlabel, _key: vertex._key }
+        )
+      `)
+        .then(cursor => {
+          const breadcrumbs = []
+          const paths = []
+
+          cursor.forEach(c => {
+            // generate URL path for this nugget using slugified labels
+            paths.push('/' + c.filter(b => b._id !== 'passage/adit')
+              .map(b => slugify(b.shortlabel || b.label).toLowerCase())
+              .join('/')
+            )
+
+            // filter out the adit and self then push non-zero length paths into list
+            const crumb = c.filter(b => b._id !== 'passage/adit' && b._id !== nugget._id)
+              .map(({ _id, ...rest }) => rest)
+
+            if (crumb.length > 0) breadcrumbs.push(crumb)
+          }).then(() => {
+            nugget.breadcrumbs = breadcrumbs
+            nugget.paths = paths
+
+            // have paths and keys map to the primary slug
+            if (paths.length > 1) {
+              paths.slice(1).forEach(e => { this.slugLookup[e] = paths[0] })
+            }
+            if (paths.length > 0) {
+              this.slugLookup['/' + nugget._key] = paths[0]
+            }
+          })
+        })
+        .catch(error => {
+          console.error(error)
+          throw error
+        })
+      )
+    })
+
+    await Promise.all(promises)
+  }
+
+  // markdown is parsed into an AST so that markdown directives can be replaced
+  // with JSX for react-admonitions, then compiled back into markdown
+  #processMarkdown (markdown, key, gatsby = false) { // TODO maybe refactor this to just take key and get markdown from nugget
+    const processor = unified()
+      .use(remarkParse)
+      .use(remarkDirective)
+      .use(rewriteImageLink, { allNuggets: this.allNuggets, key })
+      .use(directiveToReactAdmon)
+
+    if (gatsby) {
+      processor.use(rewriteGatsbyLink, { allNuggets: this.allNuggets, key })
+    }
+
+    processor.use(remarkStringify, { resourceLink: true })
+    return processor.processSync(markdown).toString()
+  }
+
+  // generate an MDX component named after the type
+  getMdx (nugget, additions = {}, append = '') {
+    const component = ('nuggets' in nugget) ? 'Seam' : nugget.type.charAt(0).toUpperCase() + nugget.type.slice(1)
+    const entries = Object.assign(additions, nugget.document)
+    delete entries.body
+    delete entries.breadcrumbs
+    delete entries.chunks
+
+    if (!entries.slug) {
+      entries.slug = (entries.paths.length > 0) ? entries.paths[0] : '/'
+    }
+
+    // it is decreed that breadcrumbs are not required in outbound vertices
+    const breadcrumbs = (entries.direction === 'outbound' || entries.inseam)
+      ? ''
+      : nugget.getBreadcrumbs()
+
+    const body = ('__media' in entries)
+      ? `![${entries.label}](${entries._key})`
+      : (('body' in nugget) ? nugget.body : '### ' + nugget.label)
+
+    const mostOfTheMdx = format(
+      '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
+      component,
+      Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
+      this.#processMarkdown(body, entries._key, true),
+      breadcrumbs,
+      append
+    )
+
+    // mostly pointless tidying up of the MDX
+    return format('%s\n</%s>\n', mostOfTheMdx.trimEnd(), component)
+  }
+
+  // generate MDX pages and a lookup table of slugs/paths
+  async getAllMdx () {
+    const treeRoot = await this.getTree()
+    this.#generateBreadcrumbs(treeRoot)
+
+    function notInTree (key) {
+      const node = treeRoot.first(n => { return n.model._key === key })
+      return (typeof node === 'undefined')
+    }
+
+    const mdxNuggets = []
+    const promises = []
+
+    treeRoot.walk(async (node) => {
+      const promise = (async () => {
+        const nugget = this.fromNode(node)
+
+        // get all adjacent vertices for each nugget and write them to the page
+        const cursor = await this.db.query(aql`
+          FOR v, e IN 1..1 ANY ${nugget._id} GRAPH 'primary'
+          RETURN { v, e }
+        `)
+        // RETURN { from: e._from, to: e._to }
+
+        const nuggetsOutbound = []
+        const passagesOutbound = []
+        const nuggetsInbound = []
+        const passagesInbound = []
+
+        const processAdjacent = (id, isOutbound) => {
+          const [type, key] = id.split('/')
+          const nug = this.allNuggets[key]
+
+          // ignore the vertex if it is not in the tree
+          if (notInTree(key)) return
+
+          // skip if it is a hidden nugget
+          if (nug.__hidden) return
+
+          if (type === 'passage') {
+            isOutbound ? passagesOutbound.push(nug) : passagesInbound.push(nug)
+          } else {
+            isOutbound ? nuggetsOutbound.push(nug) : nuggetsInbound.push(nug)
+          }
+        }
+
+        for await (const c of cursor) {
+          if (c.e._from === nugget._id) {
+            processAdjacent(c.e._to, true)
+          } else if (c.e._to === nugget._id) {
+            processAdjacent(c.e._from, false)
+          }
+        }
+
+        nuggetsOutbound.sort(Nugget.compare)
+        passagesOutbound.sort(Nugget.compare)
+        nuggetsInbound.sort(Nugget.compare)
+        passagesInbound.sort(Nugget.compare)
+
+        // collect up Nugget MDX to append to Seam component
+        let append = ''
+        if ('nuggets' in nugget) {
+          append = nugget.nuggets
+            .filter(n => !notInTree(n))
+            .map(n => this.getMdx(this.allNuggets[n], { inseam: true }))
+            .join('\n')
+        }
+
+        const slug = (nugget.paths.length > 0) ? nugget.paths[0] : '/'
+
+        const mdx = [
+          nugget.getFrontMatter({ slug }),
+          '<NuggetArea>',
+          this.getMdx(nugget, { slug }, append),
+          '<NuggetsInbound>',
+          ...nuggetsInbound.map(v => this.getMdx(v, { direction: 'inbound' })),
+          '</NuggetsInbound>',
+          '<NuggetsOutbound>',
+          ...nuggetsOutbound.map(v => this.getMdx(v, { direction: 'outbound' })),
+          '</NuggetsOutbound>',
+          '</NuggetArea>',
+          '<PassagesInbound>',
+          ...passagesInbound.map(v => this.getMdx(v, { direction: 'inbound' })),
+          '</PassagesInbound>',
+          '<PassagesOutbound>',
+          ...passagesOutbound.map(v => this.getMdx(v, { direction: 'outbound' })),
+          '</PassagesOutbound>'
+        ]
+
+        mdxNuggets.push([nugget, mdx.join('\n')])
+      })()
+
+      promises.push(promise)
+    })
+
+    await Promise.all(promises)
+    return mdxNuggets
   }
 }

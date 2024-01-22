@@ -7,7 +7,7 @@ order: 3
 
 The `deposit` command iterates over files and directories to build the structure of a rakosh mine in ArangoDB.
 
-The files and directories are required to be in a particular layout. The layout is versioned to allow for later changes. See [FS Layout](./8e03a31c-4624-4c1c-bf7c-fb6d9ddbcbae).
+The files and directories are required to be in a particular layout. The layout is versioned to allow for later changes. See [FS Layout](/8e03a31c-4624-4c1c-bf7c-fb6d9ddbcbae).
 
 #### Help Text
 

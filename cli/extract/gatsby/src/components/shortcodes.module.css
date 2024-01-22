@@ -62,6 +62,7 @@
   margin: 0.2rem;
   max-height: 100%;
   max-width: 100%;
+  overflow: hidden;
 }
 
 .main {

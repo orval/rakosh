@@ -1,18 +1,20 @@
 'use strict'
-const _ = require('lodash')
-const { v4: uuidv4 } = require('uuid')
 const { statSync, readdirSync, writeFileSync, mkdirSync } = require('node:fs')
-const { basename, join, resolve, extname } = require('node:path')
-const TreeModel = require('tree-model')
-const { Nugget } = require('./nugget')
+const { basename, join, extname } = require('node:path')
+
+const yaml = require('js-yaml')
+const _ = require('lodash')
 const log = require('loglevel')
 const { marked } = require('marked')
 const TerminalRenderer = require('marked-terminal')
-const yaml = require('js-yaml')
 const prompts = require('prompts')
 const ss = require('simple-statistics')
+const TreeModel = require('tree-model')
+const { v4: uuidv4 } = require('uuid')
 
-const RAKOSH_FS_LAYOUT_VERSION = '1.1'
+const { Nugget } = require('./nugget')
+
+const RAKOSH_FS_LAYOUT_VERSION = '1.2'
 
 const STANDARD_TAGS = _.zipObject([
   'type',
@@ -24,7 +26,8 @@ const STANDARD_TAGS = _.zipObject([
   'shortlabel',
   'fspath',
   'children',
-  'nuggets'
+  'nuggets',
+  '__media'
 ])
 
 marked.setOptions({
@@ -142,11 +145,10 @@ exports.FsLayout = class FsLayout {
 
   #buildTree (parent, dir, depth) {
     const dirContents = readdirSync(dir, { withFileTypes: true })
-    const mdFiles = dirContents.filter(e => e.isFile() && extname(e.name) === '.md')
-    const dirs = dirContents.filter(e => e.isDirectory())
     const passageNuggets = {}
 
     // process markdown files
+    const mdFiles = dirContents.filter(e => e.isFile() && extname(e.name) === '.md')
     for (const mdFile of mdFiles) {
       const base = basename(mdFile.name, '.md')
       const fsPath = join(dir, mdFile.name)
@@ -155,12 +157,9 @@ exports.FsLayout = class FsLayout {
       if (mdFile.name.endsWith('.md')) {
         let nugget
         try {
-          nugget = Nugget.fromMdFile(resolve(fsPath))
-          nugget.fspath = fsPath
-          nugget.depth = depth
-          // delete nugget.body
+          nugget = Nugget.fromMdFile(fsPath, depth)
         } catch (error) {
-          log.warn(`WARNING: ${mdFile.name} does not appear to be a rakosh nugget file [${error}]`)
+          log.warn(`WARNING: ${mdFile.name} is not a valid rakosh nugget file [${error}]`)
           continue
         }
 
@@ -172,6 +171,7 @@ exports.FsLayout = class FsLayout {
             log.error(`ERROR: unknown 'fs_layout' ${nugget.fs_layout}, tool knows ${RAKOSH_FS_LAYOUT_VERSION}`)
           }
           // update the adit vertex with a document from this file
+          nugget.type = Nugget.PASSAGE
           nugget.depth = 0
           this.root.model = nugget.document
           continue
@@ -186,6 +186,22 @@ exports.FsLayout = class FsLayout {
       }
     }
 
+    // create nodes to represent links
+    const linkFiles = dirContents.filter(e => e.isSymbolicLink() && extname(e.name) === '.md')
+    for (const lnFile of linkFiles) {
+      const fsPath = join(dir, lnFile.name)
+      let nugget
+      try {
+        nugget = Nugget.fromMdFile(fsPath, depth)
+        nugget.link = `${nugget.type}/${nugget._key}`
+      } catch (error) {
+        log.warn(`WARNING: ${lnFile.name} is not a valid rakosh nugget file [${error}]`)
+        continue
+      }
+      parent.addChild(this.tree.parse(nugget.document))
+    }
+
+    const dirs = dirContents.filter(e => e.isDirectory())
     for (const d of dirs) {
       let passageNode
 
@@ -194,6 +210,7 @@ exports.FsLayout = class FsLayout {
         delete passageNuggets[d.name]
       } else {
         const node = this.tree.parse({
+          type: Nugget.PASSAGE,
           depth,
           label: d.name,
           passage: d.name,
@@ -207,7 +224,7 @@ exports.FsLayout = class FsLayout {
     }
 
     if (Object.keys(passageNuggets).length > 0) {
-      log.warn(`WARNING: saved nugget passage(s) not added to collection [${JSON.stringify(passageNuggets)}]`)
+      log.warn(`WARNING: passage nugget(s) found without an associated directory [${JSON.stringify(passageNuggets)}]`)
     }
   }
 
