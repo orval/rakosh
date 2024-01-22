@@ -410,7 +410,7 @@ exports.NuggetCatalog = class NuggetCatalog {
       ? ''
       : nugget.getBreadcrumbs()
 
-    const body = ('__media' in entries && entries.__media.type === 'image/png')
+    const body = ('__media' in entries)
       ? `![${entries.label}](${entries._key})`
       : (('body' in nugget) ? nugget.body : '### ' + nugget.label)
 
