@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "markdown-toc": "^1.2.0",
     "markdownlint": "^0.27.0",
     "marked-terminal": "^5.2.0",
-    "mdpdf": "^3.0.1",
+    "mdpdf": "3.0.1",
     "mustache": "^4.2.0",
     "ncp": "^2.0.0",
     "node-fetch": "^3.3.1",
