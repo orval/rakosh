@@ -14,9 +14,12 @@ exports.rewriteImageLink = function ({ allNuggets, key }) {
 
       const mediaObj = allNuggets[uuid].__media
       if (mediaObj) {
-        // rewrite the required UUID URL to include the media file extension
-        node.url = node.url + extname(mediaObj.path)
-        allNuggets[key].refs[uuid] = mediaObj
+        // rewrite the required UUID URL to include the media file extension and remove the leading slash
+        const url = node.url + extname(mediaObj.path)
+        node.url = url.startsWith('/') ? url.slice(1) : url
+
+        const uuidName = uuid + extname(mediaObj.path)
+        allNuggets[key].refs[uuidName] = mediaObj
       }
     })
   }

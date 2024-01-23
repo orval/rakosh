@@ -237,6 +237,7 @@ class Confluence {
 
       log.info(`updated page ${updatedPage.id} "${nugget.title}"`)
 
+      // TODO do this for `add` as well
       for (const [uuidName, media] of Object.entries(nugget.refs)) {
         await this.attach(updatedPage.id, uuidName, media)
         log.info(`attached ${uuidName} to page ${updatedPage.id}`)
