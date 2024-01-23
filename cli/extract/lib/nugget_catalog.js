@@ -142,9 +142,10 @@ exports.NuggetCatalog = class NuggetCatalog {
           nugget.type === 'nugget' &&
           nugget.chunks.length > 0) {
           pNug.chunks.push(...nugget.chunks)
-          Object.assign(pNug.refs, nugget.refs)
           nugget.chunks = []
         }
+        // always push refs
+        Object.assign(pNug.refs, nugget.refs)
       }
       return true
     })
