@@ -5,13 +5,11 @@ order: 5
 
 ### TODO
 
-* embedded images
 * BUG: slug lookup sometimes lists secondary slug first
+* reduce how much is rendered in non-main nuggets
 * BUG: apostrophe in label
 * better styling of content in gatsby, e.g. blockquote
 * better PDF styling, including title at top
-* prevent inbound or outbound passages from rendering wide when they contain code blocks
-* reduce how much is rendered in non-main nuggets
 * buttons for breadcrumb & metadata, plus persistence of button state
 * better search results presentation
 * CLI command to simplify creation of new FS nuggets
