@@ -19,7 +19,7 @@ const { rewriteImageLink } = require('./rewrite_image_link')
 exports.NuggetCatalog = class NuggetCatalog {
   static HEADING_RE = /^(#+)\s+(.+)$/gm
 
-  constructor (db, includes = [], excludes = [], minLength) {
+  constructor (db, includes = [], excludes = [], minLength = 0) {
     this.db = db
     this.minLength = minLength
     this.allNuggets = {}
