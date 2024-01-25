@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@shogobg/markdown2confluence": "^0.1.8",
-    "arangojs": "^8.1.0",
+    "arangojs": "^8",
     "fix-esm": "^1.0.1",
     "formdata-node": "^6.0.3",
     "front-matter": "^4.0.2",

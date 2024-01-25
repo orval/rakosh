@@ -493,7 +493,7 @@ ansicolors@~0.3.2:
   resolved "https://registry.yarnpkg.com/ansicolors/-/ansicolors-0.3.2.tgz#665597de86a9ffe3aa9bfbe6cae5c6ea426b4979"
   integrity sha512-QXu7BPrP29VllRxH8GwB7x5iX5qWKAAMLqKQGWTeLWVlNHNOpVMJ91dsxQAIWXpjuW5wqvxu3Jd/nRjrJ+0pqg==
 
-arangojs@^8.1.0:
+arangojs@^8:
   version "8.6.0"
   resolved "https://registry.yarnpkg.com/arangojs/-/arangojs-8.6.0.tgz#bd3ae5a3cccbdd973d25d46a12f25aa5c5721225"
   integrity sha512-w5pNwYBmzFuOEt6Z1/D7frWpcuq/35UJ2Vpx7pQM2ERAQx44nd/OADfKfR09+hE7onC4czJiFSefd4Rup6ldJQ==
