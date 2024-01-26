@@ -1,12 +1,12 @@
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
-const assert = require('assert')
+import assert from 'assert'
 
-const { FormData } = require('formdata-node')
-const { fileFromPathSync } = require('formdata-node/file-from-path')
-const log = require('loglevel')
-const md2c = require('@shogobg/markdown2confluence')
+import { FormData } from 'formdata-node'
+import { fileFromPathSync } from 'formdata-node/file-from-path'
+import log from 'loglevel'
+import md2c from '@shogobg/markdown2confluence'
+import fetch from 'node-fetch'
 
-const { NuggetCatalog } = require('../lib/nugget_catalog')
+import { NuggetCatalog } from '../lib/nugget_catalog.js'
 
 class Confluence {
   constructor (argv) {
@@ -264,7 +264,7 @@ class Confluence {
   }
 }
 
-exports.confluencePages = async function (db, argv) {
+export async function confluencePages (db, argv) {
   const confluence = new Confluence(argv)
   await confluence.init()
 

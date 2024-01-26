@@ -1,9 +1,9 @@
-const { visitParents } = require('unist-util-visit-parents')
+import { visitParents } from 'unist-util-visit-parents'
 
-const { Nugget } = require('../../lib/nugget')
+import { Nugget } from '../../lib/nugget.js'
 
 // rewrite links that are like [text](./<uuid>) to use the Gatsby Link API
-exports.rewriteGatsbyLink = function ({ allNuggets, key }) {
+export default function rewriteGatsbyLink ({ allNuggets, key }) {
   return (tree) => {
     visitParents(tree, 'link', (node, ancestors) => {
       const uuid = node.url.slice(1)

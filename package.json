@@ -4,6 +4,7 @@
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
+  "type": "module",
   "bin": "./cli/main.js",
   "engines": {
     "node": ">=16"
@@ -21,7 +22,6 @@
   "dependencies": {
     "@shogobg/markdown2confluence": "^0",
     "arangojs": "^8",
-    "fix-esm": "^1.0.1",
     "formdata-node": "^6.0.3",
     "front-matter": "^4.0.2",
     "lodash": "^4.17.21",

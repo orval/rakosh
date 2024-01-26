@@ -1,7 +1,7 @@
-const { join, dirname } = require('node:path')
-const { readFileSync } = require('node:fs')
+import { join, dirname } from 'node:path'
+import { readFileSync } from 'node:fs'
 
-exports.Media = class Media {
+export class Media {
   static MARKDOWN = 'text/markdown; charset=UTF-8'
   static PNG = 'image/png'
   static GIF = 'image/gif'

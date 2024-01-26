@@ -1,6 +1,6 @@
-const { Nugget } = require('../../lib/nugget')
+import { Nugget } from '../../lib/nugget.js'
 
-exports.MineMap = class MineMap {
+export class MineMap {
   constructor (openTo = 2) {
     this.minemap = {}
     this.openTo = openTo

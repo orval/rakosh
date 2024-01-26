@@ -1,16 +1,24 @@
 #!/usr/bin/env node
 'use strict'
-const yargs = require('yargs/yargs')
-const { hideBin } = require('yargs/helpers')
+import yargs from 'yargs/yargs'
+import { hideBin } from 'yargs/helpers'
+
+import fs from './fs.js'
+import uuid from './uuid.js'
+
+const importCommand = async (moduleName) => {
+  const module = await import(`./${moduleName}.js`)
+  return module.default
+}
 
 yargs(hideBin(process.argv))
-  .command(require('./deposit'))
-  .command(require('./gatsby'))
-  .command(require('./html'))
-  .command(require('./pdf'))
-  .command(require('./confluence'))
-  .command(require('./uuid'))
-  .command(require('./fs'))
+  .command(await importCommand('deposit'))
+  .command(await importCommand('gatsby'))
+  .command(await importCommand('html'))
+  .command(await importCommand('pdf'))
+  .command(await importCommand('confluence'))
+  .command(fs)
+  .command(uuid)
   .demandCommand(1)
   .option('verbose', {
     alias: 'v',

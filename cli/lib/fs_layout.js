@@ -1,18 +1,18 @@
 'use strict'
-const { statSync, readdirSync, writeFileSync, mkdirSync } = require('node:fs')
-const { basename, join, extname } = require('node:path')
+import { statSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs'
+import { basename, join, extname } from 'node:path'
 
-const yaml = require('js-yaml')
-const _ = require('lodash')
-const log = require('loglevel')
-const { marked } = require('marked')
-const TerminalRenderer = require('marked-terminal')
-const prompts = require('prompts')
-const ss = require('simple-statistics')
-const TreeModel = require('tree-model')
-const { v4: uuidv4 } = require('uuid')
+import yaml from 'js-yaml'
+import _ from 'lodash'
+import log from 'loglevel'
+import { marked } from 'marked'
+import TerminalRenderer from 'marked-terminal'
+import prompts from 'prompts'
+import ss from 'simple-statistics'
+import TreeModel from 'tree-model'
+import { v4 as uuidv4 } from 'uuid'
 
-const { Nugget } = require('./nugget')
+import { Nugget } from './nugget.js'
 
 const RAKOSH_FS_LAYOUT_VERSION = '1.2'
 
@@ -34,7 +34,7 @@ marked.setOptions({
   renderer: new TerminalRenderer()
 })
 
-exports.FsLayout = class FsLayout {
+export class FsLayout {
   constructor (dir) {
     this.tree = new TreeModel({ modelComparatorFn: Nugget.compare })
     this.dir = dir

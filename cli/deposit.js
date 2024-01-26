@@ -1,11 +1,11 @@
 'use strict'
-const { statSync } = require('node:fs')
-const { basename } = require('node:path')
+import { statSync } from 'node:fs'
+import { basename } from 'node:path'
 
-const { Database } = require('arangojs')
-const log = require('loglevel')
+import { Database } from 'arangojs'
+import log from 'loglevel'
 
-const { FsLayout } = require('./lib/fs_layout')
+import { FsLayout } from './lib/fs_layout.js'
 
 log.setLevel('WARN')
 
@@ -17,64 +17,65 @@ const EDGES = 'edges'
 const NUGGET = 'nugget'
 const ADIT = 'passage/adit'
 
-exports.command = 'deposit <directory> [options]'
+export default {
+  command: 'deposit <directory> [options]',
+  describe: 'Deposit content from the filesystem into a mine',
 
-exports.describe = 'Deposit content from the filesystem into a mine'
-
-exports.builder = (yargs) => {
-  return yargs
-    .positional('directory', {
-      describe: 'Directory containing a rakosh mine layout',
-      string: true,
-      normalize: true,
-      coerce: d => {
-        try {
-          if (!statSync(d).isDirectory()) throw new Error()
-        } catch {
-          throw new Error(`${d} is not a directory`)
+  builder: (yargs) => {
+    return yargs
+      .positional('directory', {
+        describe: 'Directory containing a rakosh mine layout',
+        string: true,
+        normalize: true,
+        coerce: d => {
+          try {
+            if (!statSync(d).isDirectory()) throw new Error()
+          } catch {
+            throw new Error(`${d} is not a directory`)
+          }
+          return d
         }
-        return d
+      })
+      .option('replace', {
+        alias: 'r',
+        describe: 'Replace the existing mine if it exists',
+        type: 'boolean',
+        default: false
+      })
+  },
+
+  handler: async (argv) => {
+    try {
+      if (argv.verbose) log.setLevel('INFO')
+
+      log.info(`creating mine deposit from directory ${argv.directory}`)
+      const fsLayout = new FsLayout(argv.directory)
+
+      const dbName = basename(argv.directory)
+      log.info(`mine is ${dbName}`)
+
+      const conf = (process.env.ARANGO_URL) ? { url: process.env.ARANGO_URL } : {}
+      const systemDb = new Database(conf)
+      const databaseNames = await systemDb.listDatabases()
+
+      if (databaseNames.includes(dbName)) {
+        if (argv.replace) {
+          log.info(`removing mine ${dbName}`)
+          systemDb.dropDatabase(dbName)
+        } else {
+          log.error(`ERROR: mine ${dbName} already exists`)
+          process.exit(1)
+        }
       }
-    })
-    .option('replace', {
-      alias: 'r',
-      describe: 'Replace the existing mine if it exists',
-      type: 'boolean',
-      default: false
-    })
-}
 
-exports.handler = async function (argv) {
-  try {
-    if (argv.verbose) log.setLevel('INFO')
+      log.info(`creating mine ${dbName}`)
+      const db = await systemDb.createDatabase(dbName)
 
-    log.info(`creating mine deposit from directory ${argv.directory}`)
-    const fsLayout = new FsLayout(argv.directory)
-
-    const dbName = basename(argv.directory)
-    log.info(`mine is ${dbName}`)
-
-    const conf = (process.env.ARANGO_URL) ? { url: process.env.ARANGO_URL } : {}
-    const systemDb = new Database(conf)
-    const databaseNames = await systemDb.listDatabases()
-
-    if (databaseNames.includes(dbName)) {
-      if (argv.replace) {
-        log.info(`removing mine ${dbName}`)
-        systemDb.dropDatabase(dbName)
-      } else {
-        log.error(`ERROR: mine ${dbName} already exists`)
-        process.exit(1)
-      }
+      await createGraph(db, fsLayout)
+    } catch (err) {
+      log.error(`ERROR: ${err}`)
+      process.exit(1)
     }
-
-    log.info(`creating mine ${dbName}`)
-    const db = await systemDb.createDatabase(dbName)
-
-    await createGraph(db, fsLayout)
-  } catch (err) {
-    log.error(`ERROR: ${err}`)
-    process.exit(1)
   }
 }
 

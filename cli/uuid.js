@@ -1,14 +1,13 @@
 'use strict'
-const { v4: uuidv4 } = require('uuid')
+import { v4 as uuidv4 } from 'uuid'
 
-exports.command = 'uuid'
-
-exports.describe = 'Generate a UUID'
-
-exports.builder = (yargs) => {
-  return yargs
-}
-
-exports.handler = function (argv) {
-  console.log(uuidv4())
+export default {
+  command: 'uuid',
+  describe: 'Generate a UUID',
+  builder: (yargs) => {
+    return yargs
+  },
+  handler: (argv) => {
+    console.log(uuidv4())
+  }
 }

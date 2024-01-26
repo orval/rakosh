@@ -1,18 +1,18 @@
-const { format } = require('node:util')
-const { readFileSync } = require('node:fs')
+import { format } from 'node:util'
+import { readFileSync } from 'node:fs'
 
-const fm = require('front-matter')
-const markdownlint = require('markdownlint')
-const yaml = require('js-yaml')
+import fm from 'front-matter'
+import markdownlint from 'markdownlint'
+import yaml from 'js-yaml'
 
-const { Media } = require('./media')
+import { Media } from './media.js'
 
 const lintConf = {
   'line-length': false,
   'first-line-heading': false
 }
 
-exports.Nugget = class Nugget {
+export class Nugget {
   static PASSAGE = 'passage'
   static NUGGET = 'nugget'
   static Types = [Nugget.PASSAGE, Nugget.NUGGET]

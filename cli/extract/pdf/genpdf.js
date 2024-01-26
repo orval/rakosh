@@ -1,15 +1,16 @@
 'use strict'
-const { mkdtempSync, writeFileSync, copyFileSync } = require('node:fs')
-const { join, dirname } = require('node:path')
-const { tmpdir } = require('node:os')
+import { mkdtempSync, writeFileSync, copyFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { tmpdir } from 'node:os'
+import { fileURLToPath } from 'url'
 
-const log = require('loglevel')
-const toc = require('markdown-toc')
-const mdpdf = require('mdpdf')
+import log from 'loglevel'
+import toc from 'markdown-toc'
+import { convert } from 'mdpdf'
 
-const { NuggetCatalog } = require('../lib/nugget_catalog')
+import { NuggetCatalog } from '../lib/nugget_catalog.js'
 
-exports.generatePdf = async function (db, argv) {
+export async function generatePdf (db, argv) {
   log.info('generating pdf')
 
   const catalog = new NuggetCatalog(db, argv.include, argv.exclude, argv.minlength)
@@ -41,7 +42,7 @@ exports.generatePdf = async function (db, argv) {
   const options = {
     source: mdFile,
     destination: argv.output,
-    styles: join(dirname(__filename), 'pdf.css'),
+    styles: join(dirname(fileURLToPath(import.meta.url)), 'pdf.css'),
     debug: join(tmpDir, 'debug.html'),
     pdf: {
       format: 'A4',
@@ -50,7 +51,7 @@ exports.generatePdf = async function (db, argv) {
     }
   }
 
-  mdpdf.convert(options).then((pdfPath) => {
+  convert(options).then((pdfPath) => {
     log.info(`${pdfPath} written`)
   }).catch((err) => {
     log.error(err)

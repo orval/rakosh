@@ -1,8 +1,8 @@
-const { visitParents } = require('unist-util-visit-parents')
+import { visitParents } from 'unist-util-visit-parents'
 
 // remarkDirective deals with directives in the markdown and this function
 // converts those to React Admonition elements
-exports.directiveToReactAdmon = function () {
+export default function directiveToReactAdmon () {
   return (tree) => {
     visitParents(tree, 'containerDirective', (node, ancestors) => {
       if (node.type === 'containerDirective') {

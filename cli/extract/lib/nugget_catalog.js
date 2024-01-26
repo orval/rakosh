@@ -1,22 +1,22 @@
 'use strict'
-const assert = require('assert')
-const { format } = require('node:util')
+import assert from 'assert'
+import { format } from 'node:util'
 
-const { aql, join } = require('arangojs/aql')
-const remarkDirective = require('fix-esm').require('remark-directive').default
-const remarkParse = require('fix-esm').require('remark-parse').default
-const remarkStringify = require('fix-esm').require('remark-stringify').default
-const slugify = require('slugify')
-const TreeModel = require('tree-model')
-const { unified } = require('fix-esm').require('unified')
+import { aql, join } from 'arangojs/aql.js'
+import slugify from 'slugify'
+import TreeModel from 'tree-model'
+import remarkDirective from 'remark-directive'
+import remarkParse from 'remark-parse'
+import remarkStringify from 'remark-stringify'
+import { unified } from 'unified'
 
-const { Nugget } = require('../../lib/nugget')
+import { Nugget } from '../../lib/nugget.js'
 
-const { directiveToReactAdmon } = require('./admonition')
-const { rewriteGatsbyLink } = require('./rewrite_gatsby_link')
-const { rewriteImageLink } = require('./rewrite_image_link')
+import directiveToReactAdmon from './admonition.js'
+import rewriteGatsbyLink from './rewrite_gatsby_link.js'
+import rewriteImageLink from './rewrite_image_link.js'
 
-exports.NuggetCatalog = class NuggetCatalog {
+export class NuggetCatalog {
   static HEADING_RE = /^(#+)\s+(.+)$/gm
 
   constructor (db, includes = [], excludes = [], minLength = 0) {

@@ -1,19 +1,19 @@
 'use strict'
-const { writeFileSync, copyFileSync } = require('node:fs')
-const { join } = require('node:path')
+import { writeFileSync, copyFileSync } from 'node:fs'
+import { join } from 'node:path'
 
-const slugify = require('slugify')
-const rehypeSanitize = require('fix-esm').require('rehype-sanitize').default
-const rehypeStringify = require('fix-esm').require('rehype-stringify').default
-const remarkParse = require('fix-esm').require('remark-parse').default
-const remarkRehype = require('fix-esm').require('remark-rehype').default
-const { unified } = require('fix-esm').require('unified')
-const log = require('loglevel')
-const toc = require('markdown-toc')
+import slugify from 'slugify'
+import log from 'loglevel'
+import toc from 'markdown-toc'
+import rehypeSanitize from 'rehype-sanitize'
+import rehypeStringify from 'rehype-stringify'
+import remarkParse from 'remark-parse'
+import remarkRehype from 'remark-rehype'
+import { unified } from 'unified'
 
-const { NuggetCatalog } = require('../lib/nugget_catalog')
+import { NuggetCatalog } from '../lib/nugget_catalog.js'
 
-exports.generateHtml = async function (db, argv) {
+export async function generateHtml (db, argv) {
   log.info('generating html')
 
   const catalog = new NuggetCatalog(db, argv.include, argv.exclude)
