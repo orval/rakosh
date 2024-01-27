@@ -8,7 +8,7 @@ import log from 'loglevel'
 import { marked } from 'marked'
 import TerminalRenderer from 'marked-terminal'
 import prompts from 'prompts'
-import ss from 'simple-statistics'
+import { median } from 'simple-statistics'
 import TreeModel from 'tree-model'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -140,7 +140,7 @@ export class FsLayout {
     }, [])
 
     if (levels.length === 0) return '###' // arbitrarily use 3 levels when unknown
-    return '#'.repeat(ss.median(levels))
+    return '#'.repeat(median(levels))
   }
 
   #buildTree (parent, dir, depth) {
