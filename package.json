@@ -10,6 +10,9 @@
     "node": ">=16"
   },
   "devDependencies": {
+    "c8": "^9.1.0",
+    "chai": ">= 2.1.2 < 5",
+    "chai-as-promised": "^7",
     "eslint": "^8",
     "eslint-config-standard": "^17",
     "eslint-plugin-import": "^2",
@@ -17,7 +20,9 @@
     "eslint-plugin-n": "^16",
     "eslint-plugin-promise": "^6",
     "eslint-plugin-react": "^7",
-    "react": "^18.2.0"
+    "mocha": "^10.2.0",
+    "react": "^18.2.0",
+    "testdouble": "^3.20.1"
   },
   "dependencies": {
     "@shogobg/markdown2confluence": "^0",
@@ -63,6 +68,8 @@
     "doccon": "./cli/main.js confluence docs orval2 rakosh 131293 -v",
     "devcon": "./cli/main.js confluence my-mine orval2 test 917514 -v --exclude poodle:wibble",
     "fsadd": "./cli/main.js fs -v add",
-    "fslint": "./cli/main.js fs -v lint"
+    "fslint": "./cli/main.js fs -v lint",
+    "test": "NODE_NO_WARNINGS=1 mocha --loader=testdouble",
+    "test:cov": "c8 mocha --loader=testdouble"
   }
 }
