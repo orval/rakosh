@@ -2,8 +2,62 @@
 
 body {
   font-family: 'Figtree', sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  background-color: #1e1e1e;
+  color: #ccc;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: #ccc;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+h4, h5, h6 {
+  color: #fff;
+}
+
+h4 {
+  font-size: 1.4em;
+  margin-bottom: 10px;
+}
+
+h5 {
+  font-size: 1.2em;
+  margin-bottom: 5px;
+}
+
+h6 {
+  font-size: 1.1em;
+  margin-bottom: 3px;
+}
+
+p {
+  margin-bottom: 10px;
+}
+
+a {
+  color: #4fa9ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 img {
   width: 300px;
+}
+
+.container {
+  width: 80%;
+  margin: auto;
+  overflow: hidden;
+  padding: 20px;
+  background: #2a2a2a;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }

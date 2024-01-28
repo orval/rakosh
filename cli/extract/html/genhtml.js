@@ -1,6 +1,7 @@
 'use strict'
-import { writeFileSync, copyFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { writeFileSync, copyFileSync, readFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'url'
 
 import slugify from 'slugify'
 import log from 'loglevel'
@@ -23,7 +24,8 @@ export async function generateHtml (db, argv) {
   // this gets a chunk of markdown for each seam then for any remaining nuggets
   const [mdChunks, refs] = await catalog.getSeamNuggetMarkdown()
 
-  const allMd = mdChunks.join('\n')
+  const allMd = mdChunks.map(c => c + '\n---\n').join('\n')
+
   const tocMd = toc(allMd).content
   const htmlFile = join(argv.directory, slugify(argv.mine) + '.html')
 
@@ -34,8 +36,24 @@ export async function generateHtml (db, argv) {
     .use(rehypeSlug)
     .use(rehypeStringify)
 
-  const html = processor.processSync(tocMd + '\n\n' + allMd).toString()
-  writeFileSync(htmlFile, html)
+  const body = processor.processSync(tocMd + '\n\n' + allMd).toString()
+
+  const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'genhtml.css'))
+
+  const html = [
+    '<head>',
+    `<title>${catalog.allNuggets.adit.label}</title>`,
+    `<style>${css}</style>`,
+    '</head>',
+    '<body>',
+    '<div class="container">',
+    body,
+    '</div>',
+    '</body>',
+    '</html>'
+  ]
+
+  writeFileSync(htmlFile, html.join('\n'))
 
   // copy all media files to directory
   log.info(`copying media files to ${argv.directory}`)
