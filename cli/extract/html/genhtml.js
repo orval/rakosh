@@ -34,7 +34,7 @@ export async function generateHtml (db, argv) {
     .use(rehypeSlug)
     .use(rehypeStringify)
 
-  const html = processor.processSync(tocMd + allMd).toString()
+  const html = processor.processSync(tocMd + '\n\n' + allMd).toString()
   writeFileSync(htmlFile, html)
 
   // copy all media files to directory

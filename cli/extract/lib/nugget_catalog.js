@@ -90,9 +90,10 @@ export class NuggetCatalog {
         return true
       }
 
-      const md = this.#mdForExtract(nugget._key, nugget.depth)
+      const depth = node.getPath().length
+      const md = this.#mdForExtract(nugget._key, depth)
       if (md && this.#allowExtract(md)) {
-        orderedChunks.push(this.#rewriteHeadings(md, nugget.depth))
+        orderedChunks.push(this.#rewriteHeadings(md, depth))
       }
       return true
     })
@@ -122,7 +123,7 @@ export class NuggetCatalog {
         toDrop.push(node)
         return true
       }
-      const md = this.#mdForExtract(nugget._key, nugget.depth)
+      const md = this.#mdForExtract(nugget._key, node.getPath().length)
       if (md && this.#allowExtract(md)) {
         nugget.chunks.push(md)
       }

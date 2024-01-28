@@ -18,7 +18,6 @@ const RAKOSH_FS_LAYOUT_VERSION = '1.2'
 
 const STANDARD_TAGS = _.zipObject([
   'type',
-  'depth',
   '_key',
   'passage',
   'body',
@@ -143,7 +142,7 @@ export class FsLayout {
     return '#'.repeat(median(levels))
   }
 
-  #buildTree (parent, dir, depth) {
+  #buildTree (parent, dir) {
     const dirContents = readdirSync(dir, { withFileTypes: true })
     const passageNuggets = {}
 
@@ -157,7 +156,7 @@ export class FsLayout {
       if (mdFile.name.endsWith('.md')) {
         let nugget
         try {
-          nugget = Nugget.fromMdFile(fsPath, depth)
+          nugget = Nugget.fromMdFile(fsPath)
         } catch (error) {
           log.warn(`WARNING: ${mdFile.name} is not a valid rakosh nugget file [${error}]`)
           continue
@@ -172,7 +171,6 @@ export class FsLayout {
           }
           // update the adit vertex with a document from this file
           nugget.type = Nugget.PASSAGE
-          nugget.depth = 0
           this.root.model = nugget.document
           continue
         }
@@ -192,7 +190,7 @@ export class FsLayout {
       const fsPath = join(dir, lnFile.name)
       let nugget
       try {
-        nugget = Nugget.fromMdFile(fsPath, depth)
+        nugget = Nugget.fromMdFile(fsPath)
         nugget.link = `${nugget.type}/${nugget._key}`
       } catch (error) {
         log.warn(`WARNING: ${lnFile.name} is not a valid rakosh nugget file [${error}]`)
@@ -211,7 +209,6 @@ export class FsLayout {
       } else {
         const node = this.tree.parse({
           type: Nugget.PASSAGE,
-          depth,
           label: d.name,
           passage: d.name,
           fspath: join(dir, d.name)
@@ -220,7 +217,7 @@ export class FsLayout {
       }
 
       // recurse down the directory tree
-      this.#buildTree(passageNode, join(dir, d.name), depth++)
+      this.#buildTree(passageNode, join(dir, d.name))
     }
 
     if (Object.keys(passageNuggets).length > 0) {
@@ -261,10 +258,7 @@ export class FsLayout {
       })
       // choices.push({ title: 'Add nugget', value: '__newnug__' })
       // choices.push({ title: 'Add passage', value: '__newpass__' })
-      if (node.model.depth > 0) {
-        choices.unshift({ title: '⬆️', value: '..', short: ' ' })
-      }
-
+      choices.unshift({ title: '⬆️', value: '..', short: ' ' })
       choices.push({ title: 'Exit', value: '__exit__' })
 
       const response = await prompts({

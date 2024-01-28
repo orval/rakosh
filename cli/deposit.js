@@ -9,7 +9,7 @@ import { FsLayout } from './lib/fs_layout.js'
 
 log.setLevel('WARN')
 
-const RAKOSH_SCHEMA_VERSION = '1.0'
+const RAKOSH_SCHEMA_VERSION = '1.1'
 
 const PRIMARY = 'primary'
 const PASSAGE = 'passage'

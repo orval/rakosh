@@ -64,14 +64,13 @@ export class Nugget {
     return (label.length > 25) ? label.slice(0, 24).concat('…') : label
   }
 
-  static fromMdFile (relativePath, depth) {
+  static fromMdFile (relativePath) {
     const content = readFileSync(relativePath, { encoding: 'utf-8' })
     const errors = markdownlint.sync({ strings: { content }, config: lintConf })
     if (errors.content.length > 0) {
       throw new Error(`Markdown issue in [${relativePath}]:` + errors.toString())
     }
     const markdown = fm(content)
-    markdown.attributes.depth = depth
     markdown.attributes.fspath = relativePath
     return new Nugget(markdown.attributes, markdown.body)
   }
