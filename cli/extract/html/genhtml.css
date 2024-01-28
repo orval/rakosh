@@ -53,6 +53,11 @@ img {
   width: 300px;
 }
 
+del {
+  text-decoration: line-through; /* Ensure it's strikethrough */
+  text-decoration-thickness: 2px; /* Thickness of the strikethrough line */
+}
+
 .container {
   width: 80%;
   margin: auto;

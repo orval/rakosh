@@ -7,6 +7,7 @@ import slugify from 'slugify'
 import log from 'loglevel'
 import toc from 'markdown-toc'
 import rehypeSanitize from 'rehype-sanitize'
+import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
@@ -31,6 +32,7 @@ export async function generateHtml (db, argv) {
 
   const processor = unified()
     .use(remarkParse)
+    .use(remarkGfm)
     .use(remarkRehype)
     .use(rehypeSanitize)
     .use(rehypeSlug)
