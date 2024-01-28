@@ -54,8 +54,8 @@ img {
 }
 
 del {
-  text-decoration: line-through; /* Ensure it's strikethrough */
-  text-decoration-thickness: 2px; /* Thickness of the strikethrough line */
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
 }
 
 .container {
