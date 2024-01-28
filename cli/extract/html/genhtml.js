@@ -8,6 +8,7 @@ import log from 'loglevel'
 import toc from 'markdown-toc'
 import rehypeSanitize from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
 import rehypeSlug from 'rehype-slug'
 import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
@@ -35,6 +36,7 @@ export async function generateHtml (db, argv) {
     .use(remarkGfm)
     .use(remarkRehype)
     .use(rehypeSanitize)
+    .use(rehypeHighlight)
     .use(rehypeSlug)
     .use(rehypeStringify)
 
@@ -43,9 +45,11 @@ export async function generateHtml (db, argv) {
   const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'genhtml.css'))
 
   const html = [
+    '<!DOCTYPE html>',
     '<head>',
     `<title>${catalog.allNuggets.adit.label}</title>`,
     `<style>${css}</style>`,
+    '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dark.min.css">',
     '</head>',
     '<body>',
     '<div class="container">',
