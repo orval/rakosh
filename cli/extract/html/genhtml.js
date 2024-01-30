@@ -6,9 +6,11 @@ import { fileURLToPath } from 'url'
 import slugify from 'slugify'
 import log from 'loglevel'
 import toc from 'markdown-toc'
-import rehypeSanitize from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
+import rehypeDocument from 'rehype-document'
+import rehypeFormat from 'rehype-format'
 import rehypeHighlight from 'rehype-highlight'
+import rehypeRaw from 'rehype-raw'
 import rehypeSlug from 'rehype-slug'
 import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
@@ -29,37 +31,28 @@ export async function generateHtml (db, argv) {
   const allMd = mdChunks.map(c => c + '\n---\n').join('\n')
 
   const tocMd = toc(allMd).content
-  const htmlFile = join(argv.directory, slugify(argv.mine) + '.html')
+  const wrapped = `\n<div class="container">\n\n${tocMd}\n\n${allMd}\n\n</div>\n`
 
-  const processor = unified()
+  const htmlFile = join(argv.directory, slugify(argv.mine) + '.html')
+  const style = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'genhtml.css'))
+
+  const output = await unified()
     .use(remarkParse)
     .use(remarkGfm)
-    .use(remarkRehype)
-    .use(rehypeSanitize)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeRaw)
     .use(rehypeHighlight)
     .use(rehypeSlug)
+    .use(rehypeDocument, {
+      title: catalog.allNuggets.adit.label,
+      css: 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css',
+      style: String(style)
+    })
+    .use(rehypeFormat)
     .use(rehypeStringify)
+    .process(wrapped)
 
-  const body = processor.processSync(tocMd + '\n\n' + allMd).toString()
-
-  const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'genhtml.css'))
-
-  const html = [
-    '<!DOCTYPE html>',
-    '<head>',
-    `<title>${catalog.allNuggets.adit.label}</title>`,
-    `<style>${css}</style>`,
-    '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">',
-    '</head>',
-    '<body>',
-    '<div class="container">',
-    body,
-    '</div>',
-    '</body>',
-    '</html>'
-  ]
-
-  writeFileSync(htmlFile, html.join('\n'))
+  writeFileSync(htmlFile, String(output))
 
   // copy all media files to directory
   log.info(`copying media files to ${argv.directory}`)
