@@ -88,7 +88,7 @@ export default {
         throw new Error(`mine ${argv.mine} does not exist`)
       }
 
-      const catalog = new NuggetCatalog(db, argv.include, argv.exclude, 0)
+      const catalog = new NuggetCatalog(db, argv.include, argv.exclude)
       await catalog.init()
 
       log.info(`extracting to ${argv.directory}`)

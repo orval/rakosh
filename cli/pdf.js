@@ -39,16 +39,6 @@ export default {
           throw new Error(`tocdepth value [${m}] is not valid`)
         }
       })
-      .option('minlength', {
-        type: 'number',
-        default: 0,
-        description: 'Markdown body content below this length will not be extracted',
-        alias: 'm',
-        coerce: m => {
-          if (Number.isInteger(m) && m >= 0) return m
-          throw new Error(`minlength value [${m}] is not valid`)
-        }
-      })
       .option('include', include)
       .option('exclude', exclude)
   },

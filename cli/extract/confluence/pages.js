@@ -273,7 +273,7 @@ export async function confluencePages (db, argv) {
     return
   }
 
-  const catalog = new NuggetCatalog(db, argv.include, argv.exclude, 0)
+  const catalog = new NuggetCatalog(db, argv.include, argv.exclude)
   await catalog.init()
 
   const root = await catalog.getSeamNuggetTree()

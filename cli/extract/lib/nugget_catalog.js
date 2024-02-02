@@ -19,9 +19,8 @@ import rewriteImageLink from './rewrite_image_link.js'
 export class NuggetCatalog {
   static HEADING_RE = /^(#+)\s+(.+)$/gm
 
-  constructor (db, includes = [], excludes = [], minLength = 0) {
+  constructor (db, includes = [], excludes = []) {
     this.db = db
-    this.minLength = minLength
     this.allNuggets = {}
     this.seamNuggetChunks = {}
     this.initialised = false
@@ -92,7 +91,7 @@ export class NuggetCatalog {
 
       const depth = node.getPath().length
       const md = this.#mdForExtract(nugget._key, depth)
-      if (md && this.#allowExtract(md)) {
+      if (md) {
         orderedChunks.push(this.#rewriteHeadings(md, depth))
       }
       return true
@@ -124,7 +123,7 @@ export class NuggetCatalog {
         return true
       }
       const md = this.#mdForExtract(nugget._key, node.getPath().length)
-      if (md && this.#allowExtract(md)) {
+      if (md) {
         nugget.chunks.push(md)
       }
       return true
@@ -224,10 +223,6 @@ export class NuggetCatalog {
     }
 
     return undefined
-  }
-
-  #allowExtract (markdown) {
-    return markdown.replace(NuggetCatalog.HEADING_RE, '').length > this.minLength
   }
 
   // heading depths/levels are taken from the graph depth and overwritten in the output

@@ -13,7 +13,7 @@ import { NuggetCatalog } from '../lib/nugget_catalog.js'
 export async function generatePdf (db, argv) {
   log.info('generating pdf')
 
-  const catalog = new NuggetCatalog(db, argv.include, argv.exclude, argv.minlength)
+  const catalog = new NuggetCatalog(db, argv.include, argv.exclude)
   await catalog.init()
 
   // this gets a chunk of markdown for each seam then for any remaining nuggets
