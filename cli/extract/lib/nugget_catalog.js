@@ -282,7 +282,7 @@ export class NuggetCatalog {
     if (!(key in this.allNuggets)) return acc
 
     const parts = [acc]
-    parts.push(this.#processMarkdown(this.allNuggets[key].body, key))
+    parts.push(this.allNuggets[key].body)
     return parts.join('\n')
   }
 
