@@ -15,16 +15,18 @@ import { Nugget } from '../../lib/nugget.js'
 import directiveToReactAdmon from './admonition.js'
 import rewriteGatsbyLink from './rewrite_gatsby_link.js'
 import rewriteImageLink from './rewrite_image_link.js'
+import rewriteLink from './rewrite_link.js'
 
 export class NuggetCatalog {
   static HEADING_RE = /^(#+)\s+(.+)$/gm
 
-  constructor (db, includes = [], excludes = []) {
+  constructor (db, includes = [], excludes = [], withHtml = false) {
     this.db = db
     this.allNuggets = {}
     this.seamNuggetChunks = {}
     this.initialised = false
     this.slugLookup = {}
+    this.withHtml = withHtml
 
     this.filters = []
 
@@ -183,7 +185,7 @@ export class NuggetCatalog {
     // create a markdown chunk for each nugget not already written
     for (const nugget of Object.values(this.allNuggets).filter(n => !(n._key in writtenNugs))) {
       if (!nugget.body) continue
-      this.seamNuggetChunks[nugget._key] = nugget.body
+      this.seamNuggetChunks[nugget._key] = this.getMd('', nugget._key)
     }
   }
 
@@ -277,7 +279,11 @@ export class NuggetCatalog {
     if (!(key in this.allNuggets)) return acc
 
     const parts = [acc]
+    if (this.withHtml) parts.push(`\n<div id="${key}">\n`)
+
     parts.push(this.allNuggets[key].body)
+    if (this.withHtml) parts.push('\n</div>\n')
+
     return parts.join('\n')
   }
 
@@ -384,6 +390,8 @@ export class NuggetCatalog {
 
     if (gatsby) {
       processor.use(rewriteGatsbyLink, { allNuggets: this.allNuggets, key })
+    } else {
+      processor.use(rewriteLink, { allNuggets: this.allNuggets })
     }
 
     processor.use(remarkStringify, { resourceLink: true })
