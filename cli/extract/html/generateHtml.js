@@ -42,11 +42,15 @@ export async function generateHtml (catalog, dir, base, style, cssLink) {
     .use(rehypeStringify)
     .process(wrapped)
 
-  writeFileSync(htmlFile, String(output))
+  const htmlAsString = String(output)
+
+  writeFileSync(htmlFile, htmlAsString)
 
   // copy all media files to directory
   log.info(`copying media files to ${dir}`)
   for (const [uuidName, media] of Object.entries(refs)) {
     copyFileSync(media.relpath, join(dir, uuidName))
   }
+
+  return htmlAsString
 }

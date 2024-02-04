@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'url'
 
-import slugify from 'slugify'
 import log from 'loglevel'
+import slugify from 'slugify'
 
 import { NuggetCatalog } from '../lib/nugget_catalog.js'
 

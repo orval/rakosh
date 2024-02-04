@@ -2,8 +2,58 @@
 
 body {
   font-family: 'Figtree', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: #ccc;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+h4 {
+  font-size: 1.4em;
+  margin-bottom: 10px;
+}
+
+h5 {
+  font-size: 1.2em;
+  margin-bottom: 5px;
+}
+
+h6 {
+  font-size: 1.1em;
+  margin-bottom: 3px;
+}
+
+p {
+  margin-bottom: 10px;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 img {
   width: 300px;
 }
+
+del {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.container {
+  width: 95%;
+  margin: auto;
+  overflow: hidden;
+  padding: 20px;
+}
+

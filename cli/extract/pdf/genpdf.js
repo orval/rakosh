@@ -1,65 +1,52 @@
 'use strict'
-import { mkdtempSync, writeFileSync, copyFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'url'
 
 import log from 'loglevel'
-import toc from 'markdown-toc'
-import { convert } from 'mdpdf'
+import puppeteer from 'puppeteer'
+import slugify from 'slugify'
 
 import { NuggetCatalog } from '../lib/nugget_catalog.js'
+import { generateHtml } from '../html/generateHtml.js'
 
 export async function generatePdf (db, argv) {
-  log.info('generating pdf')
-
-  const catalog = new NuggetCatalog(db, argv.include, argv.exclude)
+  log.info('extracting data')
+  const catalog = new NuggetCatalog(db, argv.include, argv.exclude, true)
   await catalog.init()
 
-  // this gets a chunk of markdown for each seam then for any remaining nuggets
-  const [mdChunks, refs] = await catalog.getSeamNuggetMarkdown()
-
-  // create a TOC
-  const allMd = mdChunks.join('\n')
-  const tocMd = fixToc(toc(allMd, {
-    firsth1: argv.toch1,
-    maxdepth: argv.tocdepth,
-    bullets: '*'
-  }).content)
-
-  // write markdown to file for use by mdpdf
+  // use a temporary directory for html and related files
   const tmpDir = mkdtempSync(join(tmpdir(), 'rakosh-genpdf-'))
-  log.info(`writing temporary files to ${tmpDir}`)
-  const mdFile = join(tmpDir, 'all.md')
-  writeFileSync(mdFile, tocMd + '\n\n' + allMd)
 
-  // copy all media files to temp dir
-  for (const [uuidName, media] of Object.entries(refs)) {
-    copyFileSync(media.relpath, join(tmpDir, uuidName))
-  }
+  log.info('generating html')
+  const foo = await generateHtml(
+    catalog,
+    tmpDir,
+    slugify(argv.mine),
+    String(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'pdf.css'))),
+    'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css'
+  )
 
-  // create the PDF
-  const options = {
-    source: mdFile,
-    destination: argv.output,
-    styles: join(dirname(fileURLToPath(import.meta.url)), 'pdf.css'),
-    debug: join(tmpDir, 'debug.html'),
-    pdf: {
-      format: 'A4',
-      orientation: 'portrait',
-      border: { top: '2cm', left: '1cm', right: '1cm', bottom: '1.5cm' }
-    }
-  }
+  log.info('converting html to pdf')
 
-  convert(options).then((pdfPath) => {
-    log.info(`${pdfPath} written`)
-  }).catch((err) => {
-    log.error(err)
+  htmlToPdf(foo, argv.output)
+    .then(() => console.log('PDF successfully generated.'))
+    .catch(err => console.error('Failed to generate PDF:', err))
+}
+
+async function htmlToPdf (html, pdfPath) {
+  const browser = await puppeteer.launch({ headless: 'new' })
+  const page = await browser.newPage()
+  await page.setContent(html, {
+    waitUntil: 'networkidle0'
   })
-
-  // although MD007 requires two spaces in nested lists, some
-  // parsers require four
-  function fixToc (md) {
-    return md.replace(/ {2}/g, '    ')
-  }
+  const contentHeight = await page.evaluate(() => document.documentElement.offsetHeight) + 100
+  await page.pdf({
+    path: pdfPath,
+    width: '210mm',
+    height: `${contentHeight}px`,
+    printBackground: true
+  })
+  await browser.close()
 }
