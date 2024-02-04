@@ -4,7 +4,7 @@ import { statSync, existsSync, mkdirSync } from 'node:fs'
 import { Database } from 'arangojs'
 import log from 'loglevel'
 
-import { generateHtml } from './extract/html/genhtml.js'
+import { genHtml } from './extract/html/genhtml.js'
 import exclude from './lib/option_exclude.js'
 import include from './lib/option_include.js'
 
@@ -52,7 +52,7 @@ export default {
         throw new Error(`mine ${argv.mine} does not exist`)
       }
 
-      generateHtml(db, argv)
+      genHtml(db, argv)
     } catch (err) {
       log.error(`ERROR: ${err}`)
       process.exit(1)
