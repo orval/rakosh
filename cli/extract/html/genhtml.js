@@ -5,7 +5,6 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'url'
 
 import log from 'loglevel'
-import slugify from 'slugify'
 
 import { NuggetCatalog } from '../lib/nugget_catalog.js'
 
@@ -19,8 +18,7 @@ export async function genHtml (db, argv) {
   log.info('generating html')
   await generateHtml(
     catalog,
-    argv.directory,
-    slugify(argv.mine),
+    argv.output,
     String(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'genhtml.css'))),
     'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
   )

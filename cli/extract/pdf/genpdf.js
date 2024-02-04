@@ -1,12 +1,10 @@
 'use strict'
-import { mkdtempSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
-import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'url'
 
 import log from 'loglevel'
 import puppeteer from 'puppeteer'
-import slugify from 'slugify'
 
 import { NuggetCatalog } from '../lib/nugget_catalog.js'
 import { generateHtml } from '../html/generateHtml.js'
@@ -16,14 +14,10 @@ export async function generatePdf (db, argv) {
   const catalog = new NuggetCatalog(db, argv.include, argv.exclude, true)
   await catalog.init()
 
-  // use a temporary directory for html and related files
-  const tmpDir = mkdtempSync(join(tmpdir(), 'rakosh-genpdf-'))
-
   log.info('generating html')
   const foo = await generateHtml(
     catalog,
-    tmpDir,
-    slugify(argv.mine),
+    argv.output,
     String(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'pdf.css'))),
     'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css'
   )

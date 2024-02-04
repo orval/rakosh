@@ -27,6 +27,7 @@ export class NuggetCatalog {
     this.initialised = false
     this.slugLookup = {}
     this.withHtml = withHtml
+    this.embedImages = false
 
     this.filters = []
 
@@ -191,6 +192,7 @@ export class NuggetCatalog {
 
   // pull just the markdown from the ordered chunks
   async getSeamNuggetMarkdown () {
+    this.embedImages = true // PDF and HTML use embedded images
     this.populateChunks()
     return await this.getOrdered()
   }
@@ -385,7 +387,7 @@ export class NuggetCatalog {
     const processor = unified()
       .use(remarkParse)
       .use(remarkDirective)
-      .use(rewriteImageLink, { allNuggets: this.allNuggets, key })
+      .use(rewriteImageLink, { allNuggets: this.allNuggets, key, embed: this.embedImages })
       .use(directiveToReactAdmon)
 
     if (gatsby) {

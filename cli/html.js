@@ -1,6 +1,4 @@
 'use strict'
-import { statSync, existsSync, mkdirSync } from 'node:fs'
-
 import { Database } from 'arangojs'
 import log from 'loglevel'
 
@@ -20,24 +18,13 @@ export default {
         describe: 'The name of the mine to extract',
         string: true
       })
-      .positional('directory', {
-        describe: 'Target directory into which to extract the HTML and media',
-        default: 'output',
-        string: true,
-        normalize: true,
-        coerce: d => {
-          if (!existsSync(d)) {
-            mkdirSync(d)
-          }
-          checkDir(d)
-          return d
-        }
+      .option('output', {
+        description: 'The name of the output HTML file',
+        alias: 'o',
+        default: 'output.html'
       })
       .option('include', include)
       .option('exclude', exclude)
-      .check((argv) => {
-        return checkDir(argv.directory)
-      })
   },
 
   handler: async (argv) => {
@@ -58,13 +45,4 @@ export default {
       process.exit(1)
     }
   }
-}
-
-function checkDir (d) {
-  try {
-    if (!statSync(d).isDirectory()) throw new Error()
-  } catch {
-    throw new Error(`${d} is not a directory`)
-  }
-  return 1
 }
