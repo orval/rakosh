@@ -29,10 +29,7 @@ export async function generatePdf (db, argv) {
   )
 
   log.info('converting html to pdf')
-
-  htmlToPdf(foo, argv.output)
-    .then(() => console.log('PDF successfully generated.'))
-    .catch(err => console.error('Failed to generate PDF:', err))
+  await htmlToPdf(foo, argv.output)
 }
 
 async function htmlToPdf (html, pdfPath) {
