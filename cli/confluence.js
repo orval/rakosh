@@ -62,6 +62,11 @@ export default {
         boolean: true,
         hidden: true
       })
+      .option('lookup', {
+        type: 'boolean',
+        default: false,
+        description: 'Generate a lookup of Nugget key versus URL path'
+      })
   },
 
   handler: async (argv) => {

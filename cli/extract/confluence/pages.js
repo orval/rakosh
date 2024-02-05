@@ -22,6 +22,7 @@ class Confluence {
     }
     this.wiki = `https://${argv.domain}.atlassian.net/wiki`
     this.initialised = false
+    this.lookup = new Map()
   }
 
   async init () {
@@ -33,6 +34,24 @@ class Confluence {
     if (!this.initialised) {
       throw new Error('must call init() first')
     }
+  }
+
+  addLookupUrl (key, url) {
+    if (!this.lookup.has(key)) {
+      this.lookup.set(key, [])
+    }
+    const urls = this.lookup.get(key)
+    if (!urls.includes(url)) {
+      urls.push(url)
+    }
+  }
+
+  getLookup () {
+    const obj = {}
+    for (const [key, value] of this.lookup) {
+      obj[key] = value
+    }
+    return JSON.stringify(obj, null, 2)
   }
 
   async getSpaceId () {
@@ -109,7 +128,7 @@ class Confluence {
   getPageByTitle (title) {
     const queryString = new URLSearchParams({
       spaceKey: this.spacekey,
-      expand: 'body.storage,version',
+      expand: 'body.view,version',
       title
     }).toString()
 
@@ -290,6 +309,15 @@ export async function confluencePages (db, argv) {
   })
 
   function doPage (catalog, parentId, node) {
+    // this read-only version populates the Nugget key versus URL lookup
+    if (argv.lookup) {
+      const nugget = catalog.fromNode(node)
+      return confluence.getPageByTitle(nugget.title).then(pageData => {
+        confluence.addLookupUrl(nugget._key, pageData._links.webui)
+        return pageData
+      })
+    }
+
     return confluence.addOrReplacePage(catalog, parentId, node)
       .then((pageData) => {
         return pageData
@@ -319,4 +347,8 @@ export async function confluencePages (db, argv) {
   }
 
   await processNodes(catalog, [{ parent: confluence.startpageid, node: root }])
+
+  if (argv.lookup) {
+    console.log(confluence.getLookup())
+  }
 }
