@@ -308,30 +308,27 @@ export async function confluencePages (db, argv) {
     return true
   })
 
-  function doPage (catalog, parentId, node) {
+  function getPageInfo (catalog, _, node) {
     // this read-only version populates the Nugget key versus URL lookup
-    if (argv.lookup) {
-      const nugget = catalog.fromNode(node)
-      return confluence.getPageByTitle(nugget.title).then(pageData => {
-        confluence.addLookupUrl(nugget._key, pageData._links.webui)
-        return pageData
-      })
-    }
-
-    return confluence.addOrReplacePage(catalog, parentId, node)
-      .then((pageData) => {
-        return pageData
-      })
+    const nugget = catalog.fromNode(node)
+    return confluence.getPageByTitle(nugget.title).then(pageData => {
+      confluence.addLookupUrl(nugget._key, pageData._links.webui)
+      return pageData
+    })
   }
 
-  async function processNodes (catalog, nodes) {
+  function doPage (catalog, parentId, node) {
+    return confluence.addOrReplacePage(catalog, parentId, node)
+  }
+
+  async function processNodes (catalog, nodes, processFn) {
     if (nodes.length === 0) return
 
     // reduce() ensures pages are added in order
     const children = []
     await nodes.reduce((prev, ent) => {
       return prev
-        .then(() => doPage(catalog, ent.parent, ent.node))
+        .then(() => processFn(catalog, ent.parent, ent.node))
         .then((pageData) => {
           return ent.node
             // find all children of this node
@@ -343,12 +340,15 @@ export async function confluencePages (db, argv) {
         })
     }, Promise.resolve())
 
-    await processNodes(catalog, children)
+    await processNodes(catalog, children, processFn)
   }
 
-  await processNodes(catalog, [{ parent: confluence.startpageid, node: root }])
+  const start = [{ parent: confluence.startpageid, node: root }]
+  await processNodes(catalog, start, getPageInfo)
 
   if (argv.lookup) {
     console.log(confluence.getLookup())
+  } else {
+    await processNodes(catalog, start, doPage)
   }
 }
