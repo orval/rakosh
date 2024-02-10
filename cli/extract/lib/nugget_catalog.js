@@ -23,7 +23,7 @@ export class NuggetCatalog {
   constructor (db, includes = [], excludes = [], withHtml = false) {
     this.db = db
     this.allNuggets = {}
-    this.seamNuggetChunks = {}
+    this.chunks = {}
     this.initialised = false
     this.slugLookup = {}
     this.withHtml = withHtml
@@ -167,6 +167,17 @@ export class NuggetCatalog {
     return treeRoot
   }
 
+  Chunk = class {
+    constructor (nuggets) {
+      assert(Array.isArray(nuggets))
+      this.nuggets = nuggets
+    }
+  }
+
+  #chunkMd (chunk) {
+    return chunk.nuggets.reduce((acc, key) => this.getMd(acc, key), '')
+  }
+
   // get markdown chunks for seams then any non-seam nuggets
   populateChunks () {
     this.initCheck()
@@ -175,8 +186,7 @@ export class NuggetCatalog {
 
     // create a markdown chunk for each seam
     for (const seam of Object.values(this.allNuggets).filter(s => s.nuggets)) {
-      const seamBody = this.getMd('', seam._key)
-      this.seamNuggetChunks[seam._key] = seam.nuggets.reduce((acc, key) => this.getMd(acc, key), seamBody)
+      this.chunks[seam._key] = new this.Chunk([seam._key, ...seam.nuggets])
       nugList.push(seam._key, ...seam.nuggets)
     }
 
@@ -186,7 +196,7 @@ export class NuggetCatalog {
     // create a markdown chunk for each nugget not already written
     for (const nugget of Object.values(this.allNuggets).filter(n => !(n._key in writtenNugs))) {
       if (!nugget.body) continue
-      this.seamNuggetChunks[nugget._key] = this.getMd('', nugget._key)
+      this.chunks[nugget._key] = new this.Chunk([nugget._key])
     }
   }
 
@@ -207,8 +217,8 @@ export class NuggetCatalog {
     const nug = this.allNuggets[key]
     let retMd
 
-    if (key in this.seamNuggetChunks) {
-      retMd = this.#processMarkdown(this.seamNuggetChunks[key], key)
+    if (key in this.chunks) {
+      retMd = this.#processMarkdown(this.#chunkMd(this.chunks[key]), key)
     } else if (nug._id.startsWith('passage')) {
       if (nug.body) {
         retMd = this.#processMarkdown(nug.body, nug._key)
