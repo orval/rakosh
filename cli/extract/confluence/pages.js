@@ -312,7 +312,9 @@ export async function confluencePages (db, argv) {
     // this read-only version populates the Nugget key versus URL lookup
     const nugget = catalog.fromNode(node)
     return confluence.getPageByTitle(nugget.title).then(pageData => {
-      confluence.addLookupUrl(nugget._key, pageData._links.webui)
+      if (pageData) {
+        confluence.addLookupUrl(nugget._key, pageData._links.webui)
+      }
       return pageData
     })
   }
