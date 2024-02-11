@@ -47,7 +47,7 @@ export class Nugget {
       this.__media = new Media(this.fspath, attributes.__media)
     }
 
-    this.chunks = []
+    this.chunk = []
     this.refs = {}
   }
 
@@ -88,7 +88,7 @@ export class Nugget {
     // remove items that do not need to be stored
     const obj = Object.assign({}, this)
     delete obj.refs
-    delete obj.chunks
+    delete obj.chunk
     return obj
   }
 

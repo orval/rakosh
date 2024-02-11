@@ -127,7 +127,7 @@ export class NuggetCatalog {
       }
       const md = this.#mdForExtract(nugget._key, node.getPath().length)
       if (md) {
-        nugget.chunks.push(md)
+        nugget.chunk.push(md)
       }
       return true
     })
@@ -143,9 +143,9 @@ export class NuggetCatalog {
         if (pNug.type === 'passage' &&
           !pNug.nuggets &&
           nugget.type === 'nugget' &&
-          nugget.chunks.length > 0) {
-          pNug.chunks.push(...nugget.chunks)
-          nugget.chunks = []
+          nugget.chunk.length > 0) {
+          pNug.chunk.push(...nugget.chunk)
+          nugget.chunk = []
         }
         // always push refs
         Object.assign(pNug.refs, nugget.refs)
@@ -158,7 +158,7 @@ export class NuggetCatalog {
     do {
       const emptyLeaves = treeRoot.all(n => {
         const nugget = this.fromNode(n)
-        return !n.hasChildren() && nugget.chunks.length === 0
+        return !n.hasChildren() && nugget.chunk.length === 0
       })
       len = emptyLeaves.length
       emptyLeaves.forEach(n => n.drop())
@@ -416,7 +416,7 @@ export class NuggetCatalog {
     const entries = Object.assign(additions, nugget.document)
     delete entries.body
     delete entries.breadcrumbs
-    delete entries.chunks
+    delete entries.chunk
 
     if (!entries.slug) {
       entries.slug = (entries.paths.length > 0) ? entries.paths[0] : '/'

@@ -243,7 +243,7 @@ class Confluence {
     this.initCheck()
     assert.ok(parentId)
     const nugget = catalog.fromNode(node)
-    const markdown = nugget.chunks.join('\n')
+    const markdown = nugget.chunk.join('\n')
 
     const page = await this.getPageByTitle(nugget.title)
     if (page) {
@@ -300,7 +300,7 @@ export async function confluencePages (db, argv) {
   // append confluence children macro to pages with children
   root.walk((n) => {
     const nugget = catalog.fromNode(n)
-    if (n.hasChildren()) nugget.chunks.push('\n----\n\n{children}')
+    if (n.hasChildren()) nugget.chunk.push('\n----\n\n{children}')
 
     // also create a path-like title, which will prevent duplicate titles
     const title = n.getPath().map(p => catalog.fromNode(p).label).slice(1).join(' / ')
