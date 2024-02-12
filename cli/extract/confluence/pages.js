@@ -308,6 +308,12 @@ export async function confluencePages (db, argv) {
     return true
   })
 
+  if (argv.treedebug) {
+    // hidden option for just printing the tree
+    root.walk((n) => console.log(catalog.fromNode(n)))
+    return
+  }
+
   function getPageInfo (catalog, _, node) {
     // this read-only version populates the Nugget key versus URL lookup
     const nugget = catalog.fromNode(node)

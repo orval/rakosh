@@ -62,6 +62,10 @@ export default {
         boolean: true,
         hidden: true
       })
+      .option('treedebug', {
+        boolean: true,
+        hidden: true
+      })
       .option('lookup', {
         type: 'boolean',
         default: false,
