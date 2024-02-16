@@ -16,11 +16,12 @@ import { unified } from 'unified'
 export async function generateHtml (catalog, output, style, cssLink) {
   // this gets a chunk of markdown for each seam then for any remaining nuggets
   const [mdChunks] = await catalog.getSeamNuggetMarkdown()
+  const adit = mdChunks.shift()
 
   const allMd = mdChunks.map(c => c + '\n---\n').join('\n')
 
   const tocMd = toc(allMd).content
-  const wrapped = `\n<div class="container">\n\n${tocMd}\n\n${allMd}\n\n</div>\n`
+  const wrapped = ['<div class="container">', adit, '---', tocMd, allMd, '</div>']
 
   const html = await unified()
     .use(remarkParse)
@@ -36,7 +37,7 @@ export async function generateHtml (catalog, output, style, cssLink) {
     })
     .use(rehypeFormat)
     .use(rehypeStringify)
-    .process(wrapped)
+    .process(wrapped.join('\n\n'))
 
   const htmlAsString = String(html)
   writeFileSync(output, htmlAsString)
