@@ -243,7 +243,7 @@ class Confluence {
     this.initCheck()
     assert.ok(parentId)
     const nugget = catalog.fromNode(node)
-    const markdown = nugget.chunk.join('\n')
+    const markdown = nugget.page
 
     const page = await this.getPageByTitle(nugget.title)
     if (page) {
@@ -276,7 +276,7 @@ class Confluence {
 
   async deleteAllUnderStartPageId () {
     const pages = await this.getPages()
-    for (const p of pages.results.filter(d => d.parentId === this.startpageid)) {
+    for (const p of pages.results.filter(d => Number(d.parentId) === this.startpageid)) {
       log.info(`deleting page ${p.id}`)
       await this.deletePage(p.id)
     }
@@ -300,7 +300,7 @@ export async function confluencePages (db, argv) {
   // append confluence children macro to pages with children
   root.walk((n) => {
     const nugget = catalog.fromNode(n)
-    if (n.hasChildren()) nugget.chunk.push('\n----\n\n{children}')
+    if (n.hasChildren()) nugget.page += '\n----\n\n{children}'
 
     // also create a path-like title, which will prevent duplicate titles
     const title = n.getPath().map(p => catalog.fromNode(p).label).slice(1).join(' / ')
@@ -342,7 +342,9 @@ export async function confluencePages (db, argv) {
             // find all children of this node
             .all(n => n.parent && n.parent.model._key === ent.node.model._key)
             .map(d => {
-              children.push({ parent: pageData.id, node: d })
+              if (pageData) {
+                children.push({ parent: pageData.id, node: d })
+              }
               return d.model._key
             })
         })
