@@ -23,7 +23,6 @@ export class NuggetCatalog {
   constructor (db, includes = [], excludes = [], withHtml = false) {
     this.db = db
     this.allNuggets = {}
-    this.chunks = {}
     this.initialised = false
     this.slugLookup = {}
     this.withHtml = withHtml
@@ -76,27 +75,28 @@ export class NuggetCatalog {
     this.initialised = true
   }
 
-  // get an ordered array of markdown chunks with metadata
-  async getOrdered () {
+  // link a nugget to its parent by appending to the parent's page
+  appendToPage (parentKey, childKey) {
+    const parent = this.allNuggets[parentKey]
+    const child = this.allNuggets[childKey]
+
+    if (parent.pageKeys.includes(childKey)) return
+
+    parent.pageKeys.push(childKey)
+    child.addPageRef(parentKey)
+  }
+
+  // get an ordered array of markdown pages with metadata
+  async #getPaginated () {
     // ordering is determined by walking the tree
-    const treeRoot = await this.getTree()
+    const treeRoot = await this.#getPaginatedTree()
 
     // put the files into the order defined by the tree
-    const orderedChunks = []
+    const orderedPages = []
 
     treeRoot.walk((node) => {
       const nugget = this.fromNode(node)
-
-      // empty passage leaf nodes are skipped
-      if (!nugget.body && !node.hasChildren() && nugget._id.startsWith('passage')) {
-        return true
-      }
-
-      const depth = node.getPath().length
-      const md = this.#mdForExtract(nugget._key, depth)
-      if (md) {
-        orderedChunks.push(this.#rewriteHeadings(md, depth))
-      }
+      if ('page' in nugget) orderedPages.push(nugget.page)
       return true
     })
 
@@ -107,136 +107,89 @@ export class NuggetCatalog {
       Object.assign(refs, nugget.refs)
     })
 
-    return [orderedChunks, refs]
+    return [orderedPages, refs]
   }
 
   // collate markdown chunks into pages based on passage
-  async getPaged () {
-    const treeRoot = await this.getTree()
+  async #getPaginatedTree () {
+    const treeRoot = await this.#getTree()
 
-    const toDrop = []
-
-    // walk to generate chunks
+    // collate nuggets up to seams to make page
     treeRoot.walk((node) => {
-      const nugget = this.fromNode(node)
+      const seam = this.fromNode(node)
+      if (seam.nuggets) {
+        this.appendToPage(seam._key, seam._key)
+        seam.nuggets.forEach(n => this.appendToPage(seam._key, n))
 
-      // skip empty leaf nodes
-      if (!node.hasChildren() && !('body' in nugget)) {
-        toDrop.push(node)
-        return true
-      }
-      const md = this.#mdForExtract(nugget._key, node.getPath().length)
-      if (md) {
-        nugget.chunk.push(md)
+        // record in each nugget that they are part of a page
+        seam.nuggets.forEach(n => {
+          Object.assign(seam.refs, this.allNuggets[n].refs)
+        })
       }
       return true
     })
-
-    toDrop.forEach(d => d.drop())
 
     // collate nuggets up to their passage to make pages
     treeRoot.walk((node) => {
       const nugget = this.fromNode(node)
-
       if (node.parent) {
-        const pNug = this.fromNode(node.parent)
-        if (pNug.type === 'passage' &&
-          !pNug.nuggets &&
-          nugget.type === 'nugget' &&
-          nugget.chunk.length > 0) {
-          pNug.chunk.push(...nugget.chunk)
-          nugget.chunk = []
+        const parentNugget = this.fromNode(node.parent)
+
+        // nuggets within a non-seam passage are placed in the passage's page
+        if (parentNugget.type === 'passage' &&
+           !parentNugget.nuggets &&
+            nugget.type === 'nugget') {
+          this.appendToPage(parentNugget._key, parentNugget._key) // ensure self is in the page
+          this.appendToPage(parentNugget._key, nugget._key)
         }
+
         // always push refs
-        Object.assign(pNug.refs, nugget.refs)
+        Object.assign(parentNugget.refs, nugget.refs)
       }
       return true
     })
 
-    // remove empty leaf nodes
-    let len
-    do {
-      const emptyLeaves = treeRoot.all(n => {
-        const nugget = this.fromNode(n)
-        return !n.hasChildren() && nugget.chunk.length === 0
-      })
-      len = emptyLeaves.length
-      emptyLeaves.forEach(n => n.drop())
-    } while (len)
+    // create pages for nuggets not already collated
+    treeRoot.walk((node) => {
+      const nugget = this.fromNode(node)
+
+      // empty passage leaf nodes are skipped
+      if (!nugget.body && !node.hasChildren() && nugget._id.startsWith('passage')) {
+        return true
+      }
+
+      if (nugget.pageKeys.length === 0 && Object.keys(nugget.pageRefs).length === 0) {
+        this.appendToPage(nugget._key, nugget._key)
+      }
+
+      return true
+    })
+
+    // generate page
+    treeRoot.walk((node) => {
+      const nugget = this.fromNode(node)
+
+      if (typeof nugget.pageKeys === 'object' && nugget.pageKeys.length > 0) {
+        const accumulatedNuggets = nugget.pageKeys.reduce((acc, key) => this.#getMd(acc, key), '')
+        if (accumulatedNuggets.trim() === '') return true
+
+        const depth = node.getPath().length - 1
+        nugget.page = this.#rewriteHeadings(this.#processMarkdown(accumulatedNuggets, nugget._key), depth)
+      }
+    })
 
     return treeRoot
   }
 
-  Chunk = class {
-    constructor (nuggets) {
-      assert(Array.isArray(nuggets))
-      this.nuggets = nuggets
-    }
-  }
-
-  #chunkMd (chunk) {
-    return chunk.nuggets.reduce((acc, key) => this.getMd(acc, key), '')
-  }
-
-  // get markdown chunks for seams then any non-seam nuggets
-  populateChunks () {
-    this.initCheck()
-
-    const nugList = []
-
-    // create a markdown chunk for each seam
-    for (const seam of Object.values(this.allNuggets).filter(s => s.nuggets)) {
-      this.chunks[seam._key] = new this.Chunk([seam._key, ...seam.nuggets])
-      nugList.push(seam._key, ...seam.nuggets)
-    }
-
-    // create a lookup of all nuggets written so far
-    const writtenNugs = nugList.reduce((acc, cur) => { acc[cur] = 1; return acc }, {})
-
-    // create a markdown chunk for each nugget not already written
-    for (const nugget of Object.values(this.allNuggets).filter(n => !(n._key in writtenNugs))) {
-      if (!nugget.body) continue
-      this.chunks[nugget._key] = new this.Chunk([nugget._key])
-    }
-  }
-
-  // pull just the markdown from the ordered chunks
+  // pull just the markdown from the ordered pages
   async getSeamNuggetMarkdown () {
     this.embedImages = true // PDF and HTML use embedded images
-    this.populateChunks()
-    return await this.getOrdered()
+    return await this.#getPaginated()
   }
 
-  // pull ordered chunks with model metadata included
+  // pull ordered pages with model metadata included
   async getSeamNuggetTree () {
-    this.populateChunks()
-    return await this.getPaged()
-  }
-
-  #mdForExtract (key, depth) {
-    const nug = this.allNuggets[key]
-    let retMd
-
-    if (key in this.chunks) {
-      retMd = this.#processMarkdown(this.#chunkMd(this.chunks[key]), key)
-    } else if (nug._id.startsWith('passage')) {
-      if (nug.body) {
-        retMd = this.#processMarkdown(nug.body, nug._key)
-      } else {
-        // create a heading when there's no nugget body
-        retMd = `${'#'.repeat(depth)} ${nug.label}\n`
-      }
-    }
-
-    if (retMd) {
-      // create header if there wasn't one
-      if (!retMd.match(NuggetCatalog.HEADING_RE)) {
-        return `${'#'.repeat(depth)} ${nug.label}\n\n${retMd}`
-      }
-      return retMd
-    }
-
-    return undefined
+    return await this.#getPaginatedTree()
   }
 
   // heading depths/levels are taken from the graph depth and overwritten in the output
@@ -244,6 +197,7 @@ export class NuggetCatalog {
   #rewriteHeadings (markdown, depth) {
     const MAX = 6
     depth = (depth > MAX) ? MAX : depth
+    depth = (depth < 1) ? 1 : depth
 
     const matches = Array.from(markdown.matchAll(NuggetCatalog.HEADING_RE))
 
@@ -286,14 +240,18 @@ export class NuggetCatalog {
   }
 
   // get the markdown for the given nugget _key
-  getMd (acc, key) {
+  #getMd (acc, key) {
     // nuggets could be filtered out so just return the accumulator
     if (!(key in this.allNuggets)) return acc
+    const nugget = this.allNuggets[key]
+
+    // passages can have an empty body so insert a heading label
+    const body = ('body' in nugget) ? nugget.body : `# ${nugget.label}\n`
 
     const parts = [acc]
     if (this.withHtml) parts.push(`\n<div id="${key}">\n`)
 
-    parts.push(this.allNuggets[key].body)
+    parts.push(body)
     if (this.withHtml) parts.push('\n</div>\n')
 
     return parts.join('\n')
@@ -301,7 +259,7 @@ export class NuggetCatalog {
 
   // turn '|' separated path strings into a TreeModel, which will allow
   // operations like sorting on the tree later
-  async getTree () {
+  async #getTree () {
     // TODO dedupe of secondary edges
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND 'passage/adit' GRAPH 'primary'
@@ -416,7 +374,8 @@ export class NuggetCatalog {
     const entries = Object.assign(additions, nugget.document)
     delete entries.body
     delete entries.breadcrumbs
-    delete entries.chunk
+    delete entries.pageKeys
+    delete entries.pageRefs
 
     if (!entries.slug) {
       entries.slug = (entries.paths.length > 0) ? entries.paths[0] : '/'
@@ -446,7 +405,7 @@ export class NuggetCatalog {
 
   // generate MDX pages and a lookup table of slugs/paths
   async getAllMdx () {
-    const treeRoot = await this.getTree()
+    const treeRoot = await this.#getTree()
     this.#generateBreadcrumbs(treeRoot)
 
     function notInTree (key) {

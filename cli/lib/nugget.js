@@ -47,8 +47,9 @@ export class Nugget {
       this.__media = new Media(this.fspath, attributes.__media)
     }
 
-    this.chunk = []
+    this.pageKeys = []
     this.refs = {}
+    this.pageRefs = {}
   }
 
   // if there's no label attribute get it from the body, falling back to '_key'
@@ -88,7 +89,7 @@ export class Nugget {
     // remove items that do not need to be stored
     const obj = Object.assign({}, this)
     delete obj.refs
-    delete obj.chunk
+    delete obj.pageKeys
     return obj
   }
 
@@ -110,5 +111,13 @@ export class Nugget {
     }
     bcrumbs.push('</Breadcrumbs>')
     return bcrumbs.join('\n')
+  }
+
+  addPageRef (key) {
+    this.pageRefs[key] = 1
+  }
+
+  inChunk () {
+    return Object.keys(this.pageRefs).length > 0
   }
 }
