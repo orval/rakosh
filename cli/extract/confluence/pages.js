@@ -205,7 +205,7 @@ class Confluence {
       headers: this.headers
     })
       .then(response => {
-        if (response.status !== 200) {
+        if (response.status !== 200 && response.status !== 204) {
           throw new Error(`${response.status} ${response.statusText}`)
         }
         return response.text()
