@@ -60,6 +60,16 @@ export class NuggetCatalog {
     return nugget
   }
 
+  #hasChildren (node) {
+    if (node.hasChildren()) {
+      for (const child of node.children.map(n => this.fromNode(n))) {
+        if (child.isHidden()) continue
+        return true
+      }
+    }
+    return false
+  }
+
   async init () {
     const cursor = await this.db.query(aql`
       FOR v, e, p IN 0..10000 OUTBOUND "passage/adit" GRAPH "primary"
@@ -80,7 +90,7 @@ export class NuggetCatalog {
     const parent = this.allNuggets[parentKey]
     const child = this.allNuggets[childKey]
 
-    if (parent.pageKeys.includes(childKey)) return
+    if (child.isHidden() || parent.pageKeys.includes(childKey)) return
 
     parent.pageKeys.push(childKey)
     child.addPageRef(parentKey)
@@ -126,7 +136,6 @@ export class NuggetCatalog {
           Object.assign(seam.refs, this.allNuggets[n].refs)
         })
       }
-      return true
     })
 
     // collate nuggets up to their passage to make pages
@@ -138,7 +147,9 @@ export class NuggetCatalog {
         // nuggets within a non-seam passage are placed in the passage's page
         if (parentNugget.type === 'passage' &&
            !parentNugget.nuggets &&
-            nugget.type === 'nugget') {
+            nugget.type === 'nugget' &&
+            Object.keys(nugget.pageRefs).length === 0 &&
+            !nugget.isHidden()) {
           this.appendToPage(parentNugget._key, parentNugget._key) // ensure self is in the page
           this.appendToPage(parentNugget._key, nugget._key)
         }
@@ -146,7 +157,6 @@ export class NuggetCatalog {
         // always push refs
         Object.assign(parentNugget.refs, nugget.refs)
       }
-      return true
     })
 
     // create pages for nuggets not already collated
@@ -154,18 +164,16 @@ export class NuggetCatalog {
       const nugget = this.fromNode(node)
 
       // empty passage leaf nodes are skipped
-      if (!nugget.body && !node.hasChildren() && nugget._id.startsWith('passage')) {
+      if (!nugget.body && !this.#hasChildren(node) && nugget.type === 'passage') {
         return true
       }
 
       if (nugget.pageKeys.length === 0 && Object.keys(nugget.pageRefs).length === 0) {
         this.appendToPage(nugget._key, nugget._key)
       }
-
-      return true
     })
 
-    // generate page
+    // generate page markdown
     treeRoot.walk((node) => {
       const nugget = this.fromNode(node)
 
@@ -173,7 +181,7 @@ export class NuggetCatalog {
         const accumulatedNuggets = nugget.pageKeys.reduce((acc, key) => this.#getMd(acc, key), '')
         if (accumulatedNuggets.trim() === '') return true
 
-        const depth = node.getPath().length - 1
+        const depth = node.getPath().length - 1 // top level after adit is H1
         nugget.page = this.#rewriteHeadings(this.#processMarkdown(accumulatedNuggets, nugget._key), depth)
       }
     })
@@ -440,7 +448,7 @@ export class NuggetCatalog {
           if (notInTree(key)) return
 
           // skip if it is a hidden nugget
-          if (nug.__hidden) return
+          if (nug.isHidden()) return
 
           if (type === 'passage') {
             isOutbound ? passagesOutbound.push(nug) : passagesInbound.push(nug)
