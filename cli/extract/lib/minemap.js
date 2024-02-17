@@ -14,7 +14,7 @@ export class MineMap {
 
     vertices.forEach(vertex => {
       const nug = new Nugget(vertex, vertex.body)
-      if (nug.__hidden) return // do not show hidden nuggets in MineMap
+      if (nug.isHidden()) return // do not show hidden nuggets in MineMap
 
       longId = longId + '|' + nug._key
       if (!(longId in maplevel)) {
