@@ -60,7 +60,7 @@ export class NuggetCatalog {
     return nugget
   }
 
-  #hasChildren (node) {
+  hasChildren (node) {
     if (node.hasChildren()) {
       for (const child of node.children.map(n => this.fromNode(n))) {
         if (child.isHidden()) continue
@@ -164,7 +164,7 @@ export class NuggetCatalog {
       const nugget = this.fromNode(node)
 
       // empty passage leaf nodes are skipped
-      if (!nugget.body && !this.#hasChildren(node) && nugget.type === 'passage') {
+      if (!nugget.body && !this.hasChildren(node) && nugget.type === 'passage') {
         return true
       }
 
