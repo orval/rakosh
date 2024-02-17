@@ -244,17 +244,20 @@ class Confluence {
     assert.ok(parentId)
     const nugget = catalog.fromNode(node)
     const markdown = nugget.page
+    if (!markdown) return
 
-    const page = await this.getPageByTitle(nugget.title)
+    const title = getTitle(catalog, node)
+
+    const page = await this.getPageByTitle(title)
     if (page) {
       const updatedPage = await this.updatePage(
         page.id,
         page.version.number + 1,
-        nugget.title,
+        title,
         markdown
       )
 
-      log.info(`updated page ${updatedPage.id} "${nugget.title}"`)
+      log.info(`updated page ${updatedPage.id} "${title}"`)
 
       // TODO do this for `add` as well
       for (const [uuidName, media] of Object.entries(nugget.refs)) {
@@ -264,11 +267,11 @@ class Confluence {
 
       return updatedPage
     } else {
-      const newPage = await this.addPage(parentId, nugget.title, markdown)
+      const newPage = await this.addPage(parentId, title, markdown)
       if (newPage) {
-        log.info(`added page ${newPage.id} "${nugget.title}"`)
+        log.info(`added page ${newPage.id} "${title}"`)
       } else {
-        log.error(`failed to add "${nugget.title}"`)
+        log.error(`failed to add "${title}"`)
       }
       return newPage
     }
@@ -281,6 +284,12 @@ class Confluence {
       await this.deletePage(p.id)
     }
   }
+}
+
+function getTitle (catalog, node) {
+  const title = node.getPath().map(p => catalog.fromNode(p).label).slice(1).join(' / ')
+  if (title === '') return catalog.fromNode(node).label
+  return title
 }
 
 export async function confluencePages (db, argv) {
@@ -298,26 +307,25 @@ export async function confluencePages (db, argv) {
   const root = await catalog.getSeamNuggetTree()
 
   // append confluence children macro to pages with children
-  root.walk((n) => {
-    const nugget = catalog.fromNode(n)
-    if (n.hasChildren()) nugget.page += '\n----\n\n{children}'
+  for (const nug of Object.values(catalog.allNuggets)) {
+    if ('page' in nug) nug.page += '\n----\n\n{children}'
+  }
 
-    // also create a path-like title, which will prevent duplicate titles
-    const title = n.getPath().map(p => catalog.fromNode(p).label).slice(1).join(' / ')
-    nugget.title = title || nugget.label
-    return true
-  })
-
+  // hidden option for just printing the tree
   if (argv.treedebug) {
-    // hidden option for just printing the tree
-    root.walk((n) => console.log(catalog.fromNode(n)))
+    root.walk((n) => {
+      const nugget = catalog.fromNode(n)
+      const path = n.getPath().map(p => catalog.fromNode(p).label).slice(1).join('|')
+      console.log(`[${path}]`, nugget)
+    })
     return
   }
 
   function getPageInfo (catalog, _, node) {
     // this read-only version populates the Nugget key versus URL lookup
     const nugget = catalog.fromNode(node)
-    return confluence.getPageByTitle(nugget.title).then(pageData => {
+    const title = getTitle(catalog, node)
+    return confluence.getPageByTitle(title).then(pageData => {
       if (pageData) {
         confluence.addLookupUrl(nugget._key, pageData._links.webui)
       }
