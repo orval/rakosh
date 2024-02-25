@@ -5,8 +5,13 @@ import { fileFromPathSync } from 'formdata-node/file-from-path'
 import log from 'loglevel'
 import md2c from '@shogobg/markdown2confluence'
 import fetch from 'node-fetch'
+import remarkParse from 'remark-parse'
+import remarkStringify from 'remark-stringify'
+import { unified } from 'unified'
 
 import { NuggetCatalog } from '../lib/nugget_catalog.js'
+
+import { rewriteConfluenceLink } from './rewrite_conf_link.js'
 
 class Confluence {
   constructor (argv) {
@@ -46,12 +51,22 @@ class Confluence {
     }
   }
 
+  getLookupUrl (key) {
+    const urls = this.lookup.get(key)
+    if (urls && urls[0]) return urls[0]
+    return false
+  }
+
   getLookup () {
     const obj = {}
     for (const [key, value] of this.lookup) {
       obj[key] = value
     }
     return JSON.stringify(obj, null, 2)
+  }
+
+  inLookup (key) {
+    return this.lookup.has(key)
   }
 
   async getSpaceId () {
@@ -308,7 +323,7 @@ export async function confluencePages (db, argv) {
 
   // append confluence children macro to pages with children
   for (const nug of Object.values(catalog.allNuggets)) {
-    if ('page' in nug) nug.page += '\n----\n\n{children}'
+    if ('page' in nug) nug.page += '\n---\n\n{children}'
   }
 
   // hidden option for just printing the tree
@@ -327,7 +342,7 @@ export async function confluencePages (db, argv) {
     const title = getTitle(catalog, node)
     return confluence.getPageByTitle(title).then(pageData => {
       if (pageData) {
-        confluence.addLookupUrl(nugget._key, pageData._links.webui)
+        confluence.addLookupUrl(nugget._key, title) // pageData._links.webui)
       }
       return pageData
     })
@@ -364,9 +379,36 @@ export async function confluencePages (db, argv) {
   const start = [{ parent: confluence.startpageid, node: root }]
   await processNodes(catalog, start, getPageInfo)
 
+  // generate URLs for non-page nuggets
+  root.walk((n) => {
+    const nugget = catalog.fromNode(n)
+    if (!confluence.inLookup(nugget._key) && Object.keys(nugget.pageRefs).length > 0) {
+      for (const pageKey of Object.keys(nugget.pageRefs)) {
+        const url = confluence.getLookupUrl(pageKey)
+        if (url) confluence.addLookupUrl(nugget._key, `${url}#${nugget.label}`)
+      }
+    }
+  })
+
+  rewriteLinks(catalog, confluence)
+
   if (argv.lookup) {
     console.log(confluence.getLookup())
   } else {
     await processNodes(catalog, start, doPage)
+  }
+}
+
+function rewriteLinks (catalog, confluence) {
+  for (const nug of Object.values(catalog.allNuggets)) {
+    if ('page' in nug) {
+      const parsedPage = unified()
+        .use(remarkParse)
+        .use(rewriteConfluenceLink, { conf: confluence })
+        .use(remarkStringify, { resourceLink: true, rule: '-' })
+        .processSync(nug.page).toString().trim()
+
+      nug.page = parsedPage
+    }
   }
 }
