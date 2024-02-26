@@ -6,6 +6,7 @@ import { NuggetCatalog } from '../lib/nugget_catalog.js'
 
 import { Confluence } from './confluence.js'
 import { rewriteConfluenceLink } from './rewrite_conf_link.js'
+import { Titles } from './titles.js'
 
 export async function confluencePages (db, argv) {
   const confluence = new Confluence(argv)
@@ -36,9 +37,12 @@ export async function confluencePages (db, argv) {
     return
   }
 
+  // page titles are generated from Titles class
+  const titles = new Titles(root)
+
   // processNodes takes an array of child node so make a starting node
   const start = [{ parent: confluence.startpageid, node: root }]
-  await processNodes(confluence, catalog, start, getPageInfo)
+  await processNodes(confluence, catalog, titles, start, getPageInfo)
 
   // generate URLs for non-page nuggets
   root.walk((n) => {
@@ -56,14 +60,14 @@ export async function confluencePages (db, argv) {
   if (argv.lookup) {
     console.log(confluence.getLookup())
   } else {
-    await processNodes(confluence, catalog, start, upsertPage)
+    await processNodes(confluence, catalog, titles, start, upsertPage)
   }
 }
 
-function getPageInfo (confluence, catalog, _, node) {
+function getPageInfo (confluence, catalog, titles, _, node) {
   // this read-only version populates the Nugget key versus URL lookup
   const nugget = catalog.fromNode(node)
-  const title = getTitle(catalog, node)
+  const title = titles.getTitle(catalog, node)
   return confluence.getPageByTitle(title).then(pageData => {
     if (pageData) {
       confluence.addLookupUrl(nugget._key, title) // pageData._links.webui)
@@ -72,20 +76,20 @@ function getPageInfo (confluence, catalog, _, node) {
   })
 }
 
-function upsertPage (confluence, catalog, parentId, node) {
+function upsertPage (confluence, catalog, titles, parentId, node) {
   const nugget = catalog.fromNode(node)
-  const title = getTitle(catalog, node)
+  const title = titles.getTitle(catalog, node)
   return confluence.addOrReplacePage(parentId, nugget, title)
 }
 
-async function processNodes (confluence, catalog, nodes, processFn) {
+async function processNodes (confluence, catalog, titles, nodes, processFn) {
   if (nodes.length === 0) return
 
   // reduce() ensures pages are added in order
   const children = []
   await nodes.reduce((prev, ent) => {
     return prev
-      .then(() => processFn(confluence, catalog, ent.parent, ent.node))
+      .then(() => processFn(confluence, catalog, titles, ent.parent, ent.node))
       .then((pageData) => {
         return ent.node
           // find all children of this node
@@ -99,13 +103,7 @@ async function processNodes (confluence, catalog, nodes, processFn) {
       })
   }, Promise.resolve())
 
-  await processNodes(confluence, catalog, children, processFn)
-}
-
-function getTitle (catalog, node) {
-  const title = node.getPath().map(p => catalog.fromNode(p).label).slice(1).join(' / ')
-  if (title === '') return catalog.fromNode(node).label
-  return title
+  await processNodes(confluence, catalog, titles, children, processFn)
 }
 
 function rewriteLinks (confluence, catalog) {
