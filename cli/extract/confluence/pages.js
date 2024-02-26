@@ -64,10 +64,8 @@ export async function confluencePages (db, argv) {
   }
 }
 
-function getPageInfo (confluence, catalog, titles, _, node) {
+function getPageInfo (confluence, _, nugget, title) {
   // this read-only version populates the Nugget key versus URL lookup
-  const nugget = catalog.fromNode(node)
-  const title = titles.getTitle(catalog, node)
   return confluence.getPageByTitle(title).then(pageData => {
     if (pageData) {
       confluence.addLookupUrl(nugget._key, title) // pageData._links.webui)
@@ -76,9 +74,7 @@ function getPageInfo (confluence, catalog, titles, _, node) {
   })
 }
 
-function upsertPage (confluence, catalog, titles, parentId, node) {
-  const nugget = catalog.fromNode(node)
-  const title = titles.getTitle(catalog, node)
+function upsertPage (confluence, parentId, nugget, title) {
   return confluence.addOrReplacePage(parentId, nugget, title)
 }
 
@@ -89,7 +85,11 @@ async function processNodes (confluence, catalog, titles, nodes, processFn) {
   const children = []
   await nodes.reduce((prev, ent) => {
     return prev
-      .then(() => processFn(confluence, catalog, titles, ent.parent, ent.node))
+      .then(() => {
+        const nugget = catalog.fromNode(ent.node)
+        const title = titles.getTitle(catalog, ent.node)
+        return processFn(confluence, ent.parent, nugget, title)
+      })
       .then((pageData) => {
         return ent.node
           // find all children of this node
