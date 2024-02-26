@@ -38,7 +38,7 @@ export async function confluencePages (db, argv) {
   }
 
   // page titles are generated from Titles class
-  const titles = new Titles(root)
+  const titles = new Titles(catalog, root)
 
   // processNodes takes an array of child node so make a starting node
   const start = [{ parent: confluence.startpageid, node: root }]
@@ -87,7 +87,7 @@ async function processNodes (confluence, catalog, titles, nodes, processFn) {
     return prev
       .then(() => {
         const nugget = catalog.fromNode(ent.node)
-        const title = titles.getTitle(catalog, ent.node)
+        const title = titles.getTitle(ent.node)
         return processFn(confluence, ent.parent, nugget, title)
       })
       .then((pageData) => {
