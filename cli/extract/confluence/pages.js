@@ -4,14 +4,8 @@ import { unified } from 'unified'
 
 import { NuggetCatalog } from '../lib/nugget_catalog.js'
 
-import { rewriteConfluenceLink } from './rewrite_conf_link.js'
 import { Confluence } from './confluence.js'
-
-function getTitle (catalog, node) {
-  const title = node.getPath().map(p => catalog.fromNode(p).label).slice(1).join(' / ')
-  if (title === '') return catalog.fromNode(node).label
-  return title
-}
+import { rewriteConfluenceLink } from './rewrite_conf_link.js'
 
 export async function confluencePages (db, argv) {
   const confluence = new Confluence(argv)
@@ -42,50 +36,9 @@ export async function confluencePages (db, argv) {
     return
   }
 
-  function getPageInfo (catalog, _, node) {
-    // this read-only version populates the Nugget key versus URL lookup
-    const nugget = catalog.fromNode(node)
-    const title = getTitle(catalog, node)
-    return confluence.getPageByTitle(title).then(pageData => {
-      if (pageData) {
-        confluence.addLookupUrl(nugget._key, title) // pageData._links.webui)
-      }
-      return pageData
-    })
-  }
-
-  function doPage (catalog, parentId, node) {
-    const nugget = catalog.fromNode(node)
-    const title = getTitle(catalog, node)
-    return confluence.addOrReplacePage(parentId, nugget, title)
-  }
-
-  async function processNodes (catalog, nodes, processFn) {
-    if (nodes.length === 0) return
-
-    // reduce() ensures pages are added in order
-    const children = []
-    await nodes.reduce((prev, ent) => {
-      return prev
-        .then(() => processFn(catalog, ent.parent, ent.node))
-        .then((pageData) => {
-          return ent.node
-            // find all children of this node
-            .all(n => n.parent && n.parent.model._key === ent.node.model._key)
-            .map(d => {
-              if (pageData) {
-                children.push({ parent: pageData.id, node: d })
-              }
-              return d.model._key
-            })
-        })
-    }, Promise.resolve())
-
-    await processNodes(catalog, children, processFn)
-  }
-
+  // processNodes takes an array of child node so make a starting node
   const start = [{ parent: confluence.startpageid, node: root }]
-  await processNodes(catalog, start, getPageInfo)
+  await processNodes(confluence, catalog, start, getPageInfo)
 
   // generate URLs for non-page nuggets
   root.walk((n) => {
@@ -98,16 +51,64 @@ export async function confluencePages (db, argv) {
     }
   })
 
-  rewriteLinks(catalog, confluence)
+  rewriteLinks(confluence, catalog)
 
   if (argv.lookup) {
     console.log(confluence.getLookup())
   } else {
-    await processNodes(catalog, start, doPage)
+    await processNodes(confluence, catalog, start, upsertPage)
   }
 }
 
-function rewriteLinks (catalog, confluence) {
+function getPageInfo (confluence, catalog, _, node) {
+  // this read-only version populates the Nugget key versus URL lookup
+  const nugget = catalog.fromNode(node)
+  const title = getTitle(catalog, node)
+  return confluence.getPageByTitle(title).then(pageData => {
+    if (pageData) {
+      confluence.addLookupUrl(nugget._key, title) // pageData._links.webui)
+    }
+    return pageData
+  })
+}
+
+function upsertPage (confluence, catalog, parentId, node) {
+  const nugget = catalog.fromNode(node)
+  const title = getTitle(catalog, node)
+  return confluence.addOrReplacePage(parentId, nugget, title)
+}
+
+async function processNodes (confluence, catalog, nodes, processFn) {
+  if (nodes.length === 0) return
+
+  // reduce() ensures pages are added in order
+  const children = []
+  await nodes.reduce((prev, ent) => {
+    return prev
+      .then(() => processFn(confluence, catalog, ent.parent, ent.node))
+      .then((pageData) => {
+        return ent.node
+          // find all children of this node
+          .all(n => n.parent && n.parent.model._key === ent.node.model._key)
+          .map(d => {
+            if (pageData) {
+              children.push({ parent: pageData.id, node: d })
+            }
+            return d.model._key
+          })
+      })
+  }, Promise.resolve())
+
+  await processNodes(confluence, catalog, children, processFn)
+}
+
+function getTitle (catalog, node) {
+  const title = node.getPath().map(p => catalog.fromNode(p).label).slice(1).join(' / ')
+  if (title === '') return catalog.fromNode(node).label
+  return title
+}
+
+function rewriteLinks (confluence, catalog) {
   for (const nug of Object.values(catalog.allNuggets)) {
     if ('page' in nug) {
       const parsedPage = unified()
