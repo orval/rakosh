@@ -9,7 +9,8 @@ import { Media } from './media.js'
 
 const lintConf = {
   'line-length': false,
-  'first-line-heading': false
+  'first-line-heading': false,
+  MD054: { autolink: false }
 }
 
 export class Nugget {
