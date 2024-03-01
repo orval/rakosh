@@ -221,7 +221,8 @@ export class FsLayout {
     }
 
     if (Object.keys(passageNuggets).length > 0) {
-      log.warn(`WARNING: passage nugget(s) found without an associated directory [${JSON.stringify(passageNuggets)}]`)
+      log.warn(`WARNING: passage nugget(s) found without an associated directory [${JSON.stringify(Object.keys(passageNuggets))}]`)
+
     }
   }
 
