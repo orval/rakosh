@@ -87,8 +87,10 @@ async function processNodes (confluence, catalog, titles, nodes, processFn) {
     return prev
       .then(() => {
         const nugget = catalog.fromNode(ent.node)
-        const title = titles.getTitle(ent.node)
-        return processFn(confluence, ent.parent, nugget, title)
+        if ('page' in nugget) {
+          const title = titles.getTitle(ent.node)
+          return processFn(confluence, ent.parent, nugget, title)
+        }
       })
       .then((pageData) => {
         return ent.node
