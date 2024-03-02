@@ -6,7 +6,7 @@ import { NuggetCatalog } from '../lib/nugget_catalog.js'
 
 import { Confluence } from './confluence.js'
 import { rewriteConfluenceLink } from './rewrite_conf_link.js'
-import { Titles } from './titles.js'
+import addPageTitles from './add_page_titles.js'
 
 export async function confluencePages (db, argv) {
   const confluence = new Confluence(argv)
@@ -38,11 +38,11 @@ export async function confluencePages (db, argv) {
   }
 
   // page titles are generated from Titles class
-  const titles = new Titles(catalog, root)
+  addPageTitles(catalog, root)
 
   // processNodes takes an array of child node so make a starting node
   const start = [{ parent: confluence.startpageid, node: root }]
-  await processNodes(confluence, catalog, titles, start, getPageInfo)
+  await processNodes(confluence, catalog, start, getPageInfo)
 
   // generate URLs for non-page nuggets
   root.walk((n) => {
@@ -60,7 +60,7 @@ export async function confluencePages (db, argv) {
   if (argv.lookup) {
     console.log(confluence.getLookup())
   } else {
-    await processNodes(confluence, catalog, titles, start, upsertPage)
+    await processNodes(confluence, catalog, start, upsertPage)
   }
 }
 
@@ -78,7 +78,7 @@ function upsertPage (confluence, parentId, nugget, title) {
   return confluence.addOrReplacePage(parentId, nugget, title)
 }
 
-async function processNodes (confluence, catalog, titles, nodes, processFn) {
+async function processNodes (confluence, catalog, nodes, processFn) {
   if (nodes.length === 0) return
 
   // reduce() ensures pages are added in order
@@ -88,8 +88,7 @@ async function processNodes (confluence, catalog, titles, nodes, processFn) {
       .then(() => {
         const nugget = catalog.fromNode(ent.node)
         if ('page' in nugget) {
-          const title = titles.getTitle(ent.node)
-          return processFn(confluence, ent.parent, nugget, title)
+          return processFn(confluence, ent.parent, nugget, ent.node.model.title)
         }
       })
       .then((pageData) => {
@@ -105,7 +104,7 @@ async function processNodes (confluence, catalog, titles, nodes, processFn) {
       })
   }, Promise.resolve())
 
-  await processNodes(confluence, catalog, titles, children, processFn)
+  await processNodes(confluence, catalog, children, processFn)
 }
 
 function rewriteLinks (confluence, catalog) {
