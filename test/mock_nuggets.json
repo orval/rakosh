@@ -1,10 +1,41 @@
 [
   {
+    "_key": "adit",
+    "fspath": "path/to/mine.md",
+    "label": "Mine",
+    "page": "# Mine\n\nMine.\n",
+    "type": "passage",
+    "passage": "."
+  },
+  {
     "_key": "5c8ea934-0528-4b67-8e10-422c11ba8e11",
-    "fspath": "path/to/file1"
+    "fspath": "path/to/file1",
+    "label": "A",
+    "page": "aaaa"
   },
   {
     "_key": "7a9eb935-1234-4b67-8e10-422c11ba8e12",
-    "fspath": "path/to/file2"
+    "fspath": "path/to/file2",
+    "label": "B",
+    "page": "bbbb"
+  },
+  {
+    "_key": "0bdd94cc-bb6e-4ae0-a585-661032d23365",
+    "fspath": "path/to/file3",
+    "label": "C",
+    "page": "cccc"
+  },
+  {
+    "_key": "cb0ee6b2-1f85-45ab-a106-3369ddc22920",
+    "fspath": "path/to/file4",
+    "label": "D",
+    "body:": "# D\n\nblah\n"
+  },
+  {
+    "_key": 9838515,
+    "type": "passage",
+    "label": "E",
+    "passage": "E",
+    "fspath": "path/to/dirE"
   }
 ]

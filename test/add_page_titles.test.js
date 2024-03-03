@@ -1,43 +1,37 @@
 import { expect } from 'chai'
-import * as td from 'testdouble'
+// import * as td from 'testdouble'
 import TreeModel from 'tree-model'
 
 import addPageTitles from '../cli/extract/confluence/add_page_titles.js'
-import { NuggetCatalog } from '../cli/extract/lib/nugget_catalog.js'
+
+import { initializeNuggetCatalogWithMock } from './helpers.js'
 
 describe('addPageTitles', () => {
-  let rootMock, nodeMock, catalog, tree
-  let dbMock
+  let cat, tree, root
 
-  beforeEach(() => {
-    dbMock = td.object(['query'])
+  beforeEach(async () => {
+    const init = await initializeNuggetCatalogWithMock()
+    cat = init.catalog
+
     tree = new TreeModel()
-    // Mock db.query response if needed using td.when
-  })
+    root = tree.parse({ _key: 'adit', order: 0, label: cat.allNuggets.adit.label })
 
-  beforeEach(() => {
-    catalog = new NuggetCatalog(dbMock)
-    rootMock = { walk: td.function() }
-    nodeMock = { model: {} } // Adjust as needed
-
-    // Define default behavior of fromNode
-    // td.when(catalog.fromNode(td.matchers.anything())).thenReturn({ label: 'Page Label', _key: '5c8ea934-0528-4b67-8e10-422c11ba8e11', page: 'foo' })
+    const nodeA = root.addChild(tree.parse(cat.allNuggets['5c8ea934-0528-4b67-8e10-422c11ba8e11'].document))
+    const nodeB = nodeA.addChild(tree.parse(cat.allNuggets['7a9eb935-1234-4b67-8e10-422c11ba8e12'].document))
+    const nodeC = nodeB.addChild(tree.parse(cat.allNuggets['0bdd94cc-bb6e-4ae0-a585-661032d23365'].document))
+    const nodeD = nodeB.addChild(tree.parse(cat.allNuggets['cb0ee6b2-1f85-45ab-a106-3369ddc22920'].document))
+    const nodeE = nodeD.addChild(tree.parse(cat.allNuggets[9838515].document))
   })
 
   it('should set title on nodes with page property', () => {
-    // Setup root mock to simulate walking over nodes
-    const nodes = [{ model: { title: '' } }, { model: { title: '' } }] // Simulate two nodes
-    td.when(rootMock.walk(td.matchers.isA(Function))).thenDo((callback) => {
-      nodes.forEach((node) => callback(node))
-    })
-
-    // Execute the function under test
-    addPageTitles(catalog, rootMock)
+    addPageTitles(cat, root)
 
     // Verify the title was set on each node
-    nodes.forEach((node) => {
-      // eslint-disable-next-line no-unused-expressions
-      expect(node.model.title).to.be.a('string').and.to.not.be.empty
+    root.walk((node) => {
+      if ('page' in node.model) {
+        // eslint-disable-next-line no-unused-expressions
+        expect(node.model.title).to.be.a('string').and.to.not.be.empty
+      }
     })
   })
 })
