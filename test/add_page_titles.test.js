@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-// import * as td from 'testdouble'
 import TreeModel from 'tree-model'
 
 import addPageTitles from '../cli/extract/confluence/add_page_titles.js'
@@ -39,7 +38,7 @@ describe('addPageTitles', () => {
       }
     })
 
-    expect(titles).to.have.members(['A', 'A / B', 'A / B / C'])
+    expect(titles).to.have.members(['A', 'B', 'C'])
   })
 
   it('should deal with nuggets in multiple places', () => {
@@ -53,7 +52,7 @@ describe('addPageTitles', () => {
 
     addPageTitles(cat, root)
 
-    expect(getTitles(root)).to.have.members(['A', 'A / B', 'A / B / C', 'A / B / C / G', 'A / B / G'])
+    expect(getTitles(root)).to.have.members(['A', 'B', 'C', 'C | G', 'B | G'])
   })
 
   it('should deal with lots of the same nugget', () => {
@@ -65,7 +64,7 @@ describe('addPageTitles', () => {
 
     addPageTitles(cat, root)
 
-    expect(getTitles(root)).to.have.members(['A', 'A / A', 'A / A / A', 'A / A / A', 'A / A / A / A'])
+    expect(getTitles(root)).to.have.members(['A', 'A | A', 'A | A | A', 'A | A | A', 'A | A | A | A'])
   })
 
   it('should generate minimal length titles', () => {
@@ -86,7 +85,7 @@ describe('addPageTitles', () => {
     addPageTitles(cat, root)
 
     expect(getTitles(root)).to.have.members([
-      'A', 'A / C', 'A / C / H', 'A / B / C / H', 'A / G / C / H', 'A / B', 'A / B / C', 'A / G', 'A / G / C'
+      'A', 'A | C', 'A | C | H', 'B | C | H', 'G | C | H', 'B', 'B | C', 'G', 'G | C'
     ])
   })
 
@@ -100,7 +99,7 @@ describe('addPageTitles', () => {
 
     addPageTitles(cat, root)
 
-    expect(getTitles(root)).to.have.members(['F', 'F / G', 'F / G / A', 'F / G / A / A'])
+    expect(getTitles(root)).to.have.members(['F', 'G', 'G | A', 'A'])
   })
 })
 
