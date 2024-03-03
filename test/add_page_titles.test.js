@@ -96,6 +96,8 @@ describe('addPageTitles', () => {
     const FGA_ = FG__.addChild(parse('5c8ea934-0528-4b67-8e10-422c11ba8e11'))
     const FGAA = FGA_.addChild(parse('5c8ea934-0528-4b67-8e10-422c11ba8e11'))
 
+    expect(FGAA).to.have.property('model')
+
     addPageTitles(cat, root)
 
     expect(getTitles(root)).to.have.members(['F', 'F / G', 'F / G / A', 'F / G / A / A'])
