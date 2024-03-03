@@ -1,0 +1,10 @@
+[
+  {
+    "_key": "5c8ea934-0528-4b67-8e10-422c11ba8e11",
+    "fspath": "path/to/file1"
+  },
+  {
+    "_key": "7a9eb935-1234-4b67-8e10-422c11ba8e12",
+    "fspath": "path/to/file2"
+  }
+]

@@ -1,23 +1,27 @@
+import { readFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'url'
+
 import * as td from 'testdouble'
 
 import { NuggetCatalog } from '../cli/extract/lib/nugget_catalog.js'
 
+async function loadMockNuggets () {
+  const data = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'mock_nuggets.json'), 'utf8')
+  return JSON.parse(data)
+}
+
 export async function initializeNuggetCatalogWithMock () {
   const dbMock = td.object(['query'])
+  const mockNuggets = await loadMockNuggets()
+
   const cursor = {
     [Symbol.asyncIterator] () {
-      let count = 0
+      let index = 0
       return {
         next () {
-          if (count < 1) {
-            count++
-            return Promise.resolve({
-              done: false,
-              value: {
-                _key: '5c8ea934-0528-4b67-8e10-422c11ba8e11',
-                fspath: 'path/to/file'
-              }
-            })
+          if (index < mockNuggets.length) {
+            return Promise.resolve({ done: false, value: mockNuggets[index++] })
           } else {
             return Promise.resolve({ done: true })
           }
