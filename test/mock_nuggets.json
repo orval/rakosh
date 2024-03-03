@@ -37,5 +37,19 @@
     "label": "E",
     "passage": "E",
     "fspath": "path/to/dirE"
+  },
+  {
+    "_key": "bdf03897-78b4-4b97-a838-2ce76f0c3e92",
+    "fspath": "path/to/passageF.md",
+    "label": "F",
+    "page": "ffff",
+    "passage": "passageF",
+    "type": "passage"
+  },
+  {
+    "_key": "2cee041b-e28c-484f-80bf-fbcb9d10d859",
+    "fspath": "path/to/fileG.md",
+    "label": "G",
+    "page": "gggg"
   }
 ]

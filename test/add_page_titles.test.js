@@ -12,23 +12,25 @@ describe('addPageTitles', () => {
   beforeEach(async () => {
     const init = await initializeNuggetCatalogWithMock()
     cat = init.catalog
-
     tree = new TreeModel()
     root = tree.parse({ _key: 'adit', order: 0, label: cat.allNuggets.adit.label })
   })
 
+  function parse (key) {
+    return tree.parse(cat.allNuggets[key].document)
+  }
+
   it('should set title on nodes with page property', () => {
-    const nodeA = root.addChild(tree.parse(cat.allNuggets['5c8ea934-0528-4b67-8e10-422c11ba8e11'].document))
-    const nodeB = nodeA.addChild(tree.parse(cat.allNuggets['7a9eb935-1234-4b67-8e10-422c11ba8e12'].document))
-    const nodeD = nodeB.addChild(tree.parse(cat.allNuggets['cb0ee6b2-1f85-45ab-a106-3369ddc22920'].document))
-    nodeB.addChild(tree.parse(cat.allNuggets['0bdd94cc-bb6e-4ae0-a585-661032d23365'].document))
-    nodeD.addChild(tree.parse(cat.allNuggets[9838515].document))
+    const nodeA = root.addChild(parse('5c8ea934-0528-4b67-8e10-422c11ba8e11'))
+    const nodeB = nodeA.addChild(parse('7a9eb935-1234-4b67-8e10-422c11ba8e12'))
+    const nodeD = nodeB.addChild(parse('cb0ee6b2-1f85-45ab-a106-3369ddc22920'))
+    nodeB.addChild(parse('0bdd94cc-bb6e-4ae0-a585-661032d23365'))
+    nodeD.addChild(parse(9838515))
 
     addPageTitles(cat, root)
 
     const titles = []
 
-    // Verify the title was set on each node
     root.walk((node) => {
       if ('page' in node.model) {
         titles.push(node.model.title)
@@ -39,4 +41,28 @@ describe('addPageTitles', () => {
 
     expect(titles).to.have.members(['A', 'A / B', 'A / B / C'])
   })
+
+  it('should deal with nuggets in multiple places', () => {
+    const nodeA = root.addChild(parse('5c8ea934-0528-4b67-8e10-422c11ba8e11'))
+    const nodeB = nodeA.addChild(parse('7a9eb935-1234-4b67-8e10-422c11ba8e12'))
+    const nodeD = nodeB.addChild(parse('cb0ee6b2-1f85-45ab-a106-3369ddc22920'))
+    const nodeC = nodeB.addChild(parse('0bdd94cc-bb6e-4ae0-a585-661032d23365'))
+    nodeD.addChild(parse(9838515))
+    nodeB.addChild(parse('2cee041b-e28c-484f-80bf-fbcb9d10d859'))
+    nodeC.addChild(parse('2cee041b-e28c-484f-80bf-fbcb9d10d859'))
+
+    addPageTitles(cat, root)
+
+    expect(getTitles(root)).to.have.members(['A', 'A / B', 'A / B / C', 'A / B / C / G', 'A / B / G'])
+  })
 })
+
+function getTitles (root) {
+  const titles = []
+  root.walk((node) => {
+    if ('page' in node.model) {
+      titles.push(node.model.title)
+    }
+  })
+  return titles
+}
