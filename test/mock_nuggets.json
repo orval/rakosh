@@ -51,5 +51,11 @@
     "fspath": "path/to/fileG.md",
     "label": "G",
     "page": "gggg"
+  },
+  {
+    "_key": "7288ae86-3ef4-467d-881a-2e06cb9f7b0e",
+    "fspath": "path/to/fileH.md",
+    "label": "H",
+    "page": "hhhh"
   }
 ]
