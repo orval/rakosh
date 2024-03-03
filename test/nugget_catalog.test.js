@@ -3,6 +3,8 @@ import * as td from 'testdouble'
 
 import { NuggetCatalog } from '../cli/extract/lib/nugget_catalog.js'
 
+import { initializeNuggetCatalogWithMock } from './helpers.js'
+
 describe('NuggetCatalog class', function () {
   let dbMock
 
@@ -22,33 +24,7 @@ describe('NuggetCatalog class', function () {
   })
 
   it('init fetches data and populates allNuggets', async function () {
-    const cursor = {
-      // Simulate async iteration
-      [Symbol.asyncIterator] () {
-        let count = 0
-        return {
-          next () {
-            if (count < 1) {
-              count++
-              return Promise.resolve({
-                done: false,
-                value: {
-                  _key: '5c8ea934-0528-4b67-8e10-422c11ba8e11',
-                  fspath: 'path/to/file'
-                }
-              })
-            } else {
-              return Promise.resolve({ done: true })
-            }
-          }
-        }
-      }
-    }
-
-    td.when(dbMock.query(td.matchers.anything())).thenResolve(cursor)
-
-    const catalog = new NuggetCatalog(dbMock)
-    await catalog.init()
+    const { catalog } = await initializeNuggetCatalogWithMock()
 
     expect(catalog.allNuggets).to.have.property('5c8ea934-0528-4b67-8e10-422c11ba8e11')
     // eslint-disable-next-line no-unused-expressions
