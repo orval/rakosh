@@ -1,18 +1,19 @@
-const { format } = require('node:util')
-const { readFileSync } = require('node:fs')
+import { format } from 'node:util'
+import { readFileSync } from 'node:fs'
 
-const fm = require('front-matter')
-const markdownlint = require('markdownlint')
-const yaml = require('js-yaml')
+import fm from 'front-matter'
+import markdownlint from 'markdownlint'
+import yaml from 'js-yaml'
 
-const { Media } = require('./media')
+import { Media } from './media.js'
 
 const lintConf = {
   'line-length': false,
-  'first-line-heading': false
+  'first-line-heading': false,
+  MD054: { autolink: false }
 }
 
-exports.Nugget = class Nugget {
+export class Nugget {
   static PASSAGE = 'passage'
   static NUGGET = 'nugget'
   static Types = [Nugget.PASSAGE, Nugget.NUGGET]
@@ -47,8 +48,9 @@ exports.Nugget = class Nugget {
       this.__media = new Media(this.fspath, attributes.__media)
     }
 
-    this.chunks = []
+    this.pageKeys = []
     this.refs = {}
+    this.pageRefs = {}
   }
 
   // if there's no label attribute get it from the body, falling back to '_key'
@@ -64,14 +66,13 @@ exports.Nugget = class Nugget {
     return (label.length > 25) ? label.slice(0, 24).concat('…') : label
   }
 
-  static fromMdFile (relativePath, depth) {
+  static fromMdFile (relativePath) {
     const content = readFileSync(relativePath, { encoding: 'utf-8' })
     const errors = markdownlint.sync({ strings: { content }, config: lintConf })
     if (errors.content.length > 0) {
       throw new Error(`Markdown issue in [${relativePath}]:` + errors.toString())
     }
     const markdown = fm(content)
-    markdown.attributes.depth = depth
     markdown.attributes.fspath = relativePath
     return new Nugget(markdown.attributes, markdown.body)
   }
@@ -89,7 +90,7 @@ exports.Nugget = class Nugget {
     // remove items that do not need to be stored
     const obj = Object.assign({}, this)
     delete obj.refs
-    delete obj.chunks
+    delete obj.pageKeys
     return obj
   }
 
@@ -111,5 +112,17 @@ exports.Nugget = class Nugget {
     }
     bcrumbs.push('</Breadcrumbs>')
     return bcrumbs.join('\n')
+  }
+
+  addPageRef (key) {
+    this.pageRefs[key] = 1
+  }
+
+  inChunk () {
+    return Object.keys(this.pageRefs).length > 0
+  }
+
+  isHidden () {
+    return ('__hidden' in this && this.__hidden)
   }
 }

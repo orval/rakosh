@@ -1,24 +1,23 @@
 'use strict'
-const { statSync, readdirSync, writeFileSync, mkdirSync } = require('node:fs')
-const { basename, join, extname } = require('node:path')
+import { statSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs'
+import { basename, join, extname } from 'node:path'
 
-const yaml = require('js-yaml')
-const _ = require('lodash')
-const log = require('loglevel')
-const { marked } = require('marked')
-const TerminalRenderer = require('marked-terminal')
-const prompts = require('prompts')
-const ss = require('simple-statistics')
-const TreeModel = require('tree-model')
-const { v4: uuidv4 } = require('uuid')
+import yaml from 'js-yaml'
+import _ from 'lodash'
+import log from 'loglevel'
+import { marked } from 'marked'
+import TerminalRenderer from 'marked-terminal'
+import prompts from 'prompts'
+import { median } from 'simple-statistics'
+import TreeModel from 'tree-model'
+import { v4 as uuidv4 } from 'uuid'
 
-const { Nugget } = require('./nugget')
+import { Nugget } from './nugget.js'
 
 const RAKOSH_FS_LAYOUT_VERSION = '1.2'
 
 const STANDARD_TAGS = _.zipObject([
   'type',
-  'depth',
   '_key',
   'passage',
   'body',
@@ -34,7 +33,7 @@ marked.setOptions({
   renderer: new TerminalRenderer()
 })
 
-exports.FsLayout = class FsLayout {
+export class FsLayout {
   constructor (dir) {
     this.tree = new TreeModel({ modelComparatorFn: Nugget.compare })
     this.dir = dir
@@ -140,10 +139,10 @@ exports.FsLayout = class FsLayout {
     }, [])
 
     if (levels.length === 0) return '###' // arbitrarily use 3 levels when unknown
-    return '#'.repeat(ss.median(levels))
+    return '#'.repeat(median(levels))
   }
 
-  #buildTree (parent, dir, depth) {
+  #buildTree (parent, dir) {
     const dirContents = readdirSync(dir, { withFileTypes: true })
     const passageNuggets = {}
 
@@ -157,7 +156,7 @@ exports.FsLayout = class FsLayout {
       if (mdFile.name.endsWith('.md')) {
         let nugget
         try {
-          nugget = Nugget.fromMdFile(fsPath, depth)
+          nugget = Nugget.fromMdFile(fsPath)
         } catch (error) {
           log.warn(`WARNING: ${mdFile.name} is not a valid rakosh nugget file [${error}]`)
           continue
@@ -172,7 +171,6 @@ exports.FsLayout = class FsLayout {
           }
           // update the adit vertex with a document from this file
           nugget.type = Nugget.PASSAGE
-          nugget.depth = 0
           this.root.model = nugget.document
           continue
         }
@@ -192,7 +190,7 @@ exports.FsLayout = class FsLayout {
       const fsPath = join(dir, lnFile.name)
       let nugget
       try {
-        nugget = Nugget.fromMdFile(fsPath, depth)
+        nugget = Nugget.fromMdFile(fsPath)
         nugget.link = `${nugget.type}/${nugget._key}`
       } catch (error) {
         log.warn(`WARNING: ${lnFile.name} is not a valid rakosh nugget file [${error}]`)
@@ -211,7 +209,6 @@ exports.FsLayout = class FsLayout {
       } else {
         const node = this.tree.parse({
           type: Nugget.PASSAGE,
-          depth,
           label: d.name,
           passage: d.name,
           fspath: join(dir, d.name)
@@ -220,11 +217,11 @@ exports.FsLayout = class FsLayout {
       }
 
       // recurse down the directory tree
-      this.#buildTree(passageNode, join(dir, d.name), depth++)
+      this.#buildTree(passageNode, join(dir, d.name))
     }
 
     if (Object.keys(passageNuggets).length > 0) {
-      log.warn(`WARNING: passage nugget(s) found without an associated directory [${JSON.stringify(passageNuggets)}]`)
+      log.warn(`WARNING: passage nugget(s) found without an associated directory [${JSON.stringify(Object.keys(passageNuggets))}]`)
     }
   }
 
@@ -261,10 +258,7 @@ exports.FsLayout = class FsLayout {
       })
       // choices.push({ title: 'Add nugget', value: '__newnug__' })
       // choices.push({ title: 'Add passage', value: '__newpass__' })
-      if (node.model.depth > 0) {
-        choices.unshift({ title: '⬆️', value: '..', short: ' ' })
-      }
-
+      choices.unshift({ title: '⬆️', value: '..', short: ' ' })
       choices.push({ title: 'Exit', value: '__exit__' })
 
       const response = await prompts({

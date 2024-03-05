@@ -1,64 +1,43 @@
 'use strict'
-const { mkdtempSync, writeFileSync, copyFileSync } = require('node:fs')
-const { join, dirname } = require('node:path')
-const { tmpdir } = require('node:os')
+import { readFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'url'
 
-const log = require('loglevel')
-const toc = require('markdown-toc')
-const mdpdf = require('mdpdf')
+import log from 'loglevel'
+import puppeteer from 'puppeteer'
 
-const { NuggetCatalog } = require('../lib/nugget_catalog')
+import { NuggetCatalog } from '../lib/nugget_catalog.js'
+import { generateHtml } from '../html/generateHtml.js'
 
-exports.generatePdf = async function (db, argv) {
-  log.info('generating pdf')
-
-  const catalog = new NuggetCatalog(db, argv.include, argv.exclude, argv.minlength)
+export async function generatePdf (db, argv) {
+  log.info('extracting data')
+  const catalog = new NuggetCatalog(db, argv.include, argv.exclude, true)
   await catalog.init()
 
-  // this gets a chunk of markdown for each seam then for any remaining nuggets
-  const [mdChunks, refs] = await catalog.getSeamNuggetMarkdown()
+  log.info('generating html')
+  const foo = await generateHtml(
+    catalog,
+    argv.output,
+    String(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'pdf.css'))),
+    'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css'
+  )
 
-  // create a TOC
-  const allMd = mdChunks.join('\n')
-  const tocMd = fixToc(toc(allMd, {
-    firsth1: argv.toch1,
-    maxdepth: argv.tocdepth,
-    bullets: '*'
-  }).content)
+  log.info('converting html to pdf')
+  await htmlToPdf(foo, argv.output)
+}
 
-  // write markdown to file for use by mdpdf
-  const tmpDir = mkdtempSync(join(tmpdir(), 'rakosh-genpdf-'))
-  log.info(`writing temporary files to ${tmpDir}`)
-  const mdFile = join(tmpDir, 'all.md')
-  writeFileSync(mdFile, tocMd + '\n\n' + allMd)
-
-  // copy all media files to temp dir
-  for (const [uuidName, media] of Object.entries(refs)) {
-    copyFileSync(media.relpath, join(tmpDir, uuidName))
-  }
-
-  // create the PDF
-  const options = {
-    source: mdFile,
-    destination: argv.output,
-    styles: join(dirname(__filename), 'pdf.css'),
-    debug: join(tmpDir, 'debug.html'),
-    pdf: {
-      format: 'A4',
-      orientation: 'portrait',
-      border: { top: '2cm', left: '1cm', right: '1cm', bottom: '1.5cm' }
-    }
-  }
-
-  mdpdf.convert(options).then((pdfPath) => {
-    log.info(`${pdfPath} written`)
-  }).catch((err) => {
-    log.error(err)
+async function htmlToPdf (html, pdfPath) {
+  const browser = await puppeteer.launch({ headless: 'new' })
+  const page = await browser.newPage()
+  await page.setContent(html, {
+    waitUntil: 'networkidle0'
   })
-
-  // although MD007 requires two spaces in nested lists, some
-  // parsers require four
-  function fixToc (md) {
-    return md.replace(/ {2}/g, '    ')
-  }
+  const contentHeight = await page.evaluate(() => document.documentElement.offsetHeight) + 100
+  await page.pdf({
+    path: pdfPath,
+    width: '210mm',
+    height: `${contentHeight}px`,
+    printBackground: true
+  })
+  await browser.close()
 }

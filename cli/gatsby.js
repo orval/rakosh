@@ -1,105 +1,107 @@
 'use strict'
-const { execFileSync } = require('node:child_process')
-const { statSync, writeFileSync, readFileSync, copyFileSync } = require('node:fs')
-const { join, extname, dirname } = require('node:path')
-const util = require('util')
+import { execFileSync } from 'node:child_process'
+import { statSync, writeFileSync, readFileSync, copyFileSync } from 'node:fs'
+import { join, extname, dirname } from 'node:path'
+import { promisify } from 'util'
+import { fileURLToPath } from 'url'
 
-const { Database } = require('arangojs')
-const { aql } = require('arangojs/aql')
-const log = require('loglevel')
-const mustache = require('mustache')
-const ncp = require('ncp').ncp
-const ncpp = util.promisify(ncp)
+import { Database } from 'arangojs'
+import { aql } from 'arangojs/aql.js'
+import log from 'loglevel'
+import mustache from 'mustache'
+import ncp from 'ncp'
 
-const { MineMap } = require('./extract/lib/minemap')
-const { Nugget } = require('./lib/nugget')
-const { NuggetCatalog } = require('./extract/lib/nugget_catalog')
-const { exclude } = require('./lib/option_exclude')
-const { include } = require('./lib/option_include')
+import { MineMap } from './extract/lib/minemap.js'
+import { Nugget } from './lib/nugget.js'
+import { NuggetCatalog } from './extract/lib/nugget_catalog.js'
+import exclude from './lib/option_exclude.js'
+import include from './lib/option_include.js'
+
+const ncpp = promisify(ncp)
 
 log.setLevel('WARN')
 
-exports.command = 'gatsby <mine> <sitecustom> <directory>'
+export default {
+  command: 'gatsby <mine> <sitecustom> <directory>',
+  describe: 'Extract the data from a mine into a Gatsby.js site layout',
 
-exports.describe = 'Extract the data from a mine into a Gatsby.js site layout'
-
-exports.builder = (yargs) => {
-  return yargs
-    .positional('mine', {
-      describe: 'The name of the mine to extract',
-      string: true
-    })
-    .positional('sitecustom', {
-      describe: 'A JSON file for site customizations',
-      string: true,
-      normalize: true,
-      coerce: f => {
-        try {
-          if (!statSync(f).isFile()) throw new Error('not a file')
-          return JSON.parse(readFileSync(f, 'utf8'))
-        } catch (err) {
-          throw new Error(`${f} cannot be read [${err}]`)
+  builder: (yargs) => {
+    return yargs
+      .positional('mine', {
+        describe: 'The name of the mine to extract',
+        string: true
+      })
+      .positional('sitecustom', {
+        describe: 'A JSON file for site customizations',
+        string: true,
+        normalize: true,
+        coerce: f => {
+          try {
+            if (!statSync(f).isFile()) throw new Error('not a file')
+            return JSON.parse(readFileSync(f, 'utf8'))
+          } catch (err) {
+            throw new Error(`${f} cannot be read [${err}]`)
+          }
         }
-      }
-    })
-    .positional('directory', {
-      describe: 'Target directory into which to extract the data',
-      string: true,
-      normalize: true,
-      coerce: d => {
-        try {
-          if (!statSync(d).isDirectory()) throw new Error()
-        } catch {
-          throw new Error(`${d} is not a directory`)
+      })
+      .positional('directory', {
+        describe: 'Target directory into which to extract the data',
+        string: true,
+        normalize: true,
+        coerce: d => {
+          try {
+            if (!statSync(d).isDirectory()) throw new Error()
+          } catch {
+            throw new Error(`${d} is not a directory`)
+          }
+          return d
         }
-        return d
+      })
+      .option('build', {
+        type: 'boolean',
+        default: true,
+        description: 'Run the build (use --no-build to not)'
+      })
+      .option('mmap_open', {
+        type: 'number',
+        alias: 'm',
+        default: 2,
+        description: 'To what depth is the Mine Map open upon load',
+        coerce: m => {
+          if (Number.isInteger(m) && m >= 0) return m
+          throw new Error(`mmap_open value [${m}] is not valid`)
+        }
+      })
+      .option('include', include)
+      .option('exclude', exclude)
+  },
+
+  handler: async (argv) => {
+    try {
+      if (argv.verbose) log.setLevel('INFO')
+
+      const conf = { databaseName: argv.mine }
+      if (process.env.ARANGO_URL) conf.url = process.env.ARANGO_URL
+
+      const db = new Database(conf)
+      if (!await db.exists()) {
+        throw new Error(`mine ${argv.mine} does not exist`)
       }
-    })
-    .option('build', {
-      type: 'boolean',
-      default: true,
-      description: 'Run the build (use --no-build to not)'
-    })
-    .option('mmap_open', {
-      type: 'number',
-      alias: 'm',
-      default: 2,
-      description: 'To what depth is the Mine Map open upon load',
-      coerce: m => {
-        if (Number.isInteger(m) && m >= 0) return m
-        throw new Error(`mmap_open value [${m}] is not valid`)
-      }
-    })
-    .option('include', include)
-    .option('exclude', exclude)
-}
 
-exports.handler = async function (argv) {
-  try {
-    if (argv.verbose) log.setLevel('INFO')
+      const catalog = new NuggetCatalog(db, argv.include, argv.exclude)
+      await catalog.init()
 
-    const conf = { databaseName: argv.mine }
-    if (process.env.ARANGO_URL) conf.url = process.env.ARANGO_URL
+      log.info(`extracting to ${argv.directory}`)
 
-    const db = new Database(conf)
-    if (!await db.exists()) {
-      throw new Error(`mine ${argv.mine} does not exist`)
+      await copyTemplates(argv.directory, argv.sitecustom)
+      copyIcon(argv.directory, argv.sitecustom)
+      await extractNuggets(db, argv.directory, catalog)
+      await generateMineMap(db, argv.directory, argv.m, catalog.getFilters())
+      if (argv.build) buildSite(argv.directory)
+    } catch (err) {
+      log.error(`ERROR: ${err}`)
+      process.exit(1)
     }
-
-    const catalog = new NuggetCatalog(db, argv.include, argv.exclude, 0)
-    await catalog.init()
-
-    log.info(`extracting to ${argv.directory}`)
-
-    await copyTemplates(argv.directory, argv.sitecustom)
-    copyIcon(argv.directory, argv.sitecustom)
-    await extractNuggets(db, argv.directory, catalog)
-    await generateMineMap(db, argv.directory, argv.m, catalog.getFilters())
-    if (argv.build) buildSite(argv.directory)
-  } catch (err) {
-    log.error(`ERROR: ${err}`)
-    console.error(err.stack)
-    process.exit(1)
   }
 }
 
@@ -108,7 +110,7 @@ const extensionsToTransform = new Set(['.js', '.jsx', '.mjs', '.json', '.css'])
 async function copyTemplates (dir, customizations) {
   // copy and transform template layout to target directory
   log.info(`copy template files to target directory ${dir}`)
-  const templateDir = join(__dirname, 'extract', 'gatsby')
+  const templateDir = join(dirname(fileURLToPath(import.meta.url)), 'extract', 'gatsby')
 
   const options = {
     transform: function (read, write, file) {

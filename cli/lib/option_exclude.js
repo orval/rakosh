@@ -1,5 +1,5 @@
 'use strict'
-exports.exclude = {
+const exclude = {
   description: 'Exclude nuggets with these "[key:value]" pairs; only word chars are allowed',
   alias: 'e',
   string: true,
@@ -24,3 +24,5 @@ function getValue (str) {
   const num = Number(str)
   return isNaN(num) ? str : num
 }
+
+export default exclude

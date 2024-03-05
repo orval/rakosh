@@ -1,5 +1,5 @@
 'use strict'
-exports.include = {
+const include = {
   description: 'Only include nuggets with these "[key:value]" pairs; only word chars are allowed',
   alias: 'i',
   string: true,
@@ -24,3 +24,5 @@ function getValue (str) {
   const num = Number(str)
   return isNaN(num) ? str : num
 }
+
+export default include
