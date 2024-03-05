@@ -24,7 +24,7 @@ export default function addPageTitles (catalog, root) {
     ptMap.setUniqueTitles()
 
     const lastCount = untitledPageCount
-    untitledPageCount = countUntitledPages(root)
+    untitledPageCount = countUntitledPages(catalog, root)
 
     // when there are no more unique titles set remaining with duplicates
     if (lastCount === untitledPageCount) {
@@ -36,8 +36,10 @@ export default function addPageTitles (catalog, root) {
   } while (untitledPageCount > 0)
 }
 
-function countUntitledPages (root) {
-  return root.all(n => 'page' in n.model && !('title' in n.model)).length
+function countUntitledPages (catalog, root) {
+  return root.all(n => {
+    return 'page' in catalog.fromNode(n) && !('title' in n.model)
+  }).length
 }
 
 class PageTitlesMap {
