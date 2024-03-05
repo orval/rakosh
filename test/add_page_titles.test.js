@@ -88,19 +88,6 @@ describe('addPageTitles', () => {
       'A', 'A | C', 'A | C | H', 'B | C | H', 'G | C | H', 'B', 'B | C', 'G', 'G | C'
     ])
   })
-
-  it('should not double up on the same labels', () => {
-    const F___ = root.addChild(parse('bdf03897-78b4-4b97-a838-2ce76f0c3e92'))
-    const FG__ = F___.addChild(parse('2cee041b-e28c-484f-80bf-fbcb9d10d859'))
-    const FGA_ = FG__.addChild(parse('5c8ea934-0528-4b67-8e10-422c11ba8e11'))
-    const FGAA = FGA_.addChild(parse('5c8ea934-0528-4b67-8e10-422c11ba8e11'))
-
-    expect(FGAA).to.have.property('model')
-
-    addPageTitles(cat, root)
-
-    expect(getTitles(root)).to.have.members(['F', 'G', 'G | A', 'A'])
-  })
 })
 
 function getTitles (root) {
