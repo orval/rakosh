@@ -8,6 +8,8 @@ export default function addPageTitles (catalog, root) {
     // walk the tree adding candidate titles to the PageTitlesMap
     root.walk(node => {
       const nugget = catalog.fromNode(node)
+      if (node.model._key === 'adit') ptMap.add(node.model.label, node)
+
       if ('page' in nugget && !('title' in node.model)) {
         const labelPath = node.getPath().map(p => catalog.fromNode(p).label).slice(1)
         if (labelPath.length === 0) return
