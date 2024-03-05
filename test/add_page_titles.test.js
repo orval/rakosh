@@ -39,6 +39,8 @@ describe('addPageTitles', () => {
     })
 
     expect(titles).to.have.members(['A', 'B', 'C'])
+    expect(allPagesHaveTitles(root))
+    expect(root.model.title).to.equal('Mine')
   })
 
   it('should deal with nuggets in multiple places', () => {
@@ -53,6 +55,7 @@ describe('addPageTitles', () => {
     addPageTitles(cat, root)
 
     expect(getTitles(root)).to.have.members(['A', 'B', 'C', 'C | G', 'B | G'])
+    expect(allPagesHaveTitles(root))
   })
 
   it('should deal with lots of the same nugget', () => {
@@ -65,6 +68,7 @@ describe('addPageTitles', () => {
     addPageTitles(cat, root)
 
     expect(getTitles(root)).to.have.members(['A', 'A | A', 'A | A | A', 'A | A | A', 'A | A | A | A'])
+    expect(allPagesHaveTitles(root))
   })
 
   it('should generate minimal length titles', () => {
@@ -87,6 +91,8 @@ describe('addPageTitles', () => {
     expect(getTitles(root)).to.have.members([
       'A', 'A | C', 'A | C | H', 'B | C | H', 'G | C | H', 'B', 'B | C', 'G', 'G | C'
     ])
+
+    expect(allPagesHaveTitles(root))
   })
 })
 
@@ -98,4 +104,10 @@ function getTitles (root) {
     }
   })
   return titles
+}
+
+function allPagesHaveTitles (root) {
+  const untitled = root.first(n => 'page' in n.model && !('title' in n.model))
+  if (untitled) return false
+  return true
 }
