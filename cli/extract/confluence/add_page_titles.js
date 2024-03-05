@@ -1,25 +1,69 @@
 export default function addPageTitles (catalog, root) {
-  const foo = new Map()
-  // const labels = {}
+  let sliceSize = 1
+  let untitledPageCount
 
-  // fill object of paths
-  root.walk(n => {
-    const nugget = catalog.fromNode(n)
-    if ('page' in nugget) {
-      const pathArray = n.getPath().map(p => catalog.fromNode(p).label)
-      // throw instead   assert.ok(!(pathArray in foo)) // paths must be unique
-      foo.set(pathArray, nugget._key)
-      // if (nugget.label in labels) console.log('LABEL', nugget._key, nugget.label, this.getTitle(n))// labels[nugget.label])
-      // labels[nugget.label] = nugget._key
-      n.model.title = getTitle(catalog, n)
+  do {
+    const ptMap = new PageTitlesMap()
+
+    // walk the tree adding candidate titles to the PageTitlesMap
+    root.walk(node => {
+      const nugget = catalog.fromNode(node)
+      if ('page' in nugget && !('title' in node.model)) {
+        const labelPath = node.getPath().map(p => catalog.fromNode(p).label).slice(1)
+        if (labelPath.length === 0) return
+
+        // let last sliceSize elements of path
+        const candidateTitle = labelPath.slice(-sliceSize).join(' | ')
+        ptMap.add(candidateTitle, node)
+      }
+    })
+
+    // add titles for each page that has a single candidate title
+    ptMap.setUniqueTitles()
+
+    const lastCount = untitledPageCount
+    untitledPageCount = countUntitledPages(root)
+
+    // when there are no more unique titles set remaining with duplicates
+    if (lastCount === untitledPageCount) {
+      ptMap.setTitles()
+      break
     }
-  })
+
+    sliceSize++
+  } while (untitledPageCount > 0)
 }
 
-function getTitle (catalog, node) {
-  // const nugget = catalog.fromNode(node)
-  // assert.ok('page' in nugget)  throw instead
-  const title = node.getPath().map(p => catalog.fromNode(p).label).slice(1).join(' / ')
-  if (title === '') return catalog.fromNode(node).label
-  return title
+function countUntitledPages (root) {
+  return root.all(n => 'page' in n.model && !('title' in n.model)).length
+}
+
+class PageTitlesMap {
+  constructor () {
+    this.map = new Map()
+  }
+
+  add (label, node) {
+    if (!this.map.has(label)) {
+      this.map.set(label, [])
+    }
+    const nodes = this.map.get(label)
+    if (!nodes.includes(node)) {
+      nodes.push(node)
+    }
+  }
+
+  setUniqueTitles () {
+    this.map.forEach((nodes, label) => {
+      if (nodes.length === 1) {
+        nodes[0].model.title = label
+      }
+    })
+  }
+
+  setTitles () {
+    this.map.forEach((nodes, label) => {
+      nodes.forEach((node) => { node.model.title = label })
+    })
+  }
 }
