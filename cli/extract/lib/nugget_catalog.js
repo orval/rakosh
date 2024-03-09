@@ -145,9 +145,9 @@ export class NuggetCatalog {
         const parentNugget = this.fromNode(node.parent)
 
         // nuggets within a non-seam passage are placed in the passage's page
-        if (parentNugget.type === 'passage' &&
+        if (parentNugget.type === Nugget.PASSAGE &&
            !parentNugget.nuggets &&
-            nugget.type === 'nugget' &&
+            nugget.type === Nugget.NUGGET &&
             Object.keys(nugget.pageRefs).length === 0 &&
             !nugget.isHidden()) {
           this.appendToPage(parentNugget._key, parentNugget._key) // ensure self is in the page
@@ -164,7 +164,7 @@ export class NuggetCatalog {
       const nugget = this.fromNode(node)
 
       // empty passage leaf nodes are skipped
-      if (!nugget.body && !this.hasChildren(node) && nugget.type === 'passage') {
+      if (!nugget.body && !this.hasChildren(node) && nugget.type === Nugget.PASSAGE) {
         return true
       }
 
@@ -459,7 +459,7 @@ export class NuggetCatalog {
           // skip if it is a hidden nugget
           if (nug.isHidden()) return
 
-          if (type === 'passage') {
+          if (type === Nugget.PASSAGE) {
             isOutbound ? passagesOutbound.push(nug) : passagesInbound.push(nug)
           } else {
             isOutbound ? nuggetsOutbound.push(nug) : nuggetsInbound.push(nug)
