@@ -125,4 +125,8 @@ export class Nugget {
   isHidden () {
     return ('__hidden' in this && this.__hidden)
   }
+
+  hide () {
+    this.__hidden = true
+  }
 }
