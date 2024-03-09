@@ -96,7 +96,7 @@ export default {
       await copyTemplates(argv.directory, argv.sitecustom)
       copyIcon(argv.directory, argv.sitecustom)
       await extractNuggets(db, argv.directory, catalog)
-      await generateMineMap(db, argv.directory, argv.m, catalog.getFilters())
+      await generateMineMap(db, argv.directory, argv.m, catalog)
       if (argv.build) buildSite(argv.directory)
     } catch (err) {
       log.error(`ERROR: ${err}`)
@@ -165,13 +165,13 @@ async function extractNuggets (db, dir, catalog) {
   writeFileSync(join(contentDir, 'slug_lookup.json'), JSON.stringify(catalog.slugLookup, null, 2))
 }
 
-async function generateMineMap (db, dir, mmapOpen, filters) {
+async function generateMineMap (db, dir, mmapOpen, catalog) {
   const contentDir = join(dir, 'content')
   const mapFile = join(contentDir, 'minemap.json')
 
   const cursor = await db.query(aql`
     FOR v, e, p IN 1..100 OUTBOUND 'passage/adit' GRAPH 'primary'
-      ${filters}
+      ${catalog.getFilters()}
       LET vertices = (
           FOR vertex IN p.vertices
               LET order_value = vertex.order == null ? 10000 : vertex.order
@@ -181,7 +181,7 @@ async function generateMineMap (db, dir, mmapOpen, filters) {
       RETURN vertices
   `)
 
-  const mm = new MineMap(mmapOpen)
+  const mm = new MineMap(catalog, mmapOpen)
   for await (const path of cursor) {
     mm.addVerticies(processPassageSeams(path))
   }

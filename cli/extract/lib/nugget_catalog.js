@@ -298,6 +298,15 @@ export class NuggetCatalog {
         }
       }
     }
+
+    // hide passages with no children or all children hidden
+    root.walk(n => {
+      const nugget = this.fromNode(n)
+      if (nugget.type === Nugget.PASSAGE && !this.hasChildren(n)) {
+        nugget.hide()
+      }
+    })
+
     return root
   }
 
