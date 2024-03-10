@@ -9,12 +9,9 @@ order: 5
 * reduce how much is rendered in non-main nuggets
 * BUG: apostrophe in label
 * better styling of content in gatsby, e.g. blockquote
-* better PDF styling, including title at top
 * buttons for breadcrumb & metadata, plus persistence of button state
 * better search results presentation
-* CLI command to simplify creation of new FS nuggets
 * search box usage hints
 * finalize initial docs
 * "tags" for search (plus author)
 * dark mode
-* support `<link>` links in markdown?
