@@ -5,11 +5,13 @@ import fm from 'front-matter'
 import markdownlint from 'markdownlint'
 import yaml from 'js-yaml'
 
+import { headerRegression } from './custom_lint_rules.js'
 import { Media } from './media.js'
 
 const lintConf = {
   'line-length': false,
   'first-line-heading': false,
+  'heading-level-regression': true,
   MD054: { autolink: false }
 }
 
@@ -68,7 +70,12 @@ export class Nugget {
 
   static fromMdFile (relativePath) {
     const content = readFileSync(relativePath, { encoding: 'utf-8' })
-    const errors = markdownlint.sync({ strings: { content }, config: lintConf })
+    const errors = markdownlint.sync({
+      strings: { content },
+      config: lintConf,
+      customRules: [headerRegression]
+    })
+
     if (errors.content.length > 0) {
       throw new Error(`Markdown issue in [${relativePath}]:` + errors.toString())
     }
