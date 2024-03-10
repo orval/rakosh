@@ -51,3 +51,115 @@ del {
   background: #2a2a2a;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
+
+ .admonition {
+  margin-bottom: 1em;
+  padding: 15px 30px 15px 15px;
+}
+
+.admonition h5 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.admonition-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.2em;
+}
+
+.admonition-icon svg {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  stroke-width: 0;
+}
+
+.admonition-content > :last-child {
+  margin-bottom: 0;
+}
+
+.admonition-warning {
+  background-color: rgba(230, 126, 34, 0.5);
+  border-left: 8px solid #f2b988;
+}
+
+.admonition-warning h5 {
+  color: #f2b988;
+}
+
+.admonition-warning .admonition-icon svg {
+  stroke: #f2b988;
+  fill: #f2b988;
+}
+
+.admonition-tip {
+  background-color: rgba(46, 204, 113, 0.5);
+  border-left: 8px solid #abedc6;
+}
+
+.admonition-tip h5 {
+  color: #abedc6;
+}
+
+.admonition-tip .admonition-icon svg {
+  stroke: #abedc6;
+  fill: #abedc6;
+}
+
+.admonition-caution {
+  background-color: rgba(231, 76, 60, 0.5);
+  border-left: 8px solid #f4a89f;
+}
+
+.admonition-caution h5 {
+  color: #f4a89f;
+}
+
+.admonition-caution .admonition-icon svg {
+  stroke: #f4a89f;
+  fill: #f4a89f;
+}
+
+.admonition-important {
+  background-color: rgba(52, 152, 219, 0.5);
+  border-left: 8px solid #aed6f4;
+}
+
+.admonition-important h5 {
+  color: #aed6f4;
+}
+
+.admonition-important .admonition-icon svg {
+  stroke: #aed6f4;
+  fill: #aed6f4;
+}
+
+.admonition-note {
+  background-color: rgba(241, 196, 15, 0.5);
+  border-left: 8px solid #f8dd72;
+}
+
+.admonition-note h5 {
+  color: #f8dd72;
+}
+
+.admonition-note .admonition-icon svg {
+  stroke: #f8dd72;
+  fill: #f8dd72;
+}
+
+.admonition-question {
+  background-color: rgba(8, 61, 119, 0.5);
+  border-left: 8px solid #90C4F9;
+}
+
+.admonition-question h5 {
+  color: #90C4F9;
+}
+
+.admonition-question .admonition-icon svg {
+  stroke: #90C4F9;
+  fill: #90C4F9;
+}
