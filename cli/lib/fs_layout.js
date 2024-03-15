@@ -26,7 +26,8 @@ const STANDARD_TAGS = _.zipObject([
   'fspath',
   'children',
   'nuggets',
-  '__media'
+  '__media',
+  'pageRefs'
 ])
 
 marked.setOptions({
