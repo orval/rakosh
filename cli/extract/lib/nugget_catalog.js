@@ -368,7 +368,7 @@ export class NuggetCatalog {
 
   // markdown is parsed into an AST so that markdown directives can be replaced
   // with JSX for react-admonitions, then compiled back into markdown
-  #processMarkdown (markdown, key, gatsby = false) { // TODO maybe refactor this to just take key and get markdown from nugget
+  #processMarkdown (markdown, key, gatsby = false) {
     const processor = unified()
       .use(remarkParse)
       .use(remarkDirective)
@@ -398,6 +398,8 @@ export class NuggetCatalog {
       entries.slug = (entries.paths.length > 0) ? entries.paths[0] : '/'
     }
 
+    const hLevel = (entries.direction || entries.inseam) ? 2 : 1
+
     // it is decreed that breadcrumbs are not required in outbound vertices
     const breadcrumbs = (entries.direction === 'outbound' || entries.inseam)
       ? ''
@@ -411,7 +413,7 @@ export class NuggetCatalog {
       '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
       component,
       Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
-      this.#processMarkdown(body, entries._key, true),
+      this.#rewriteHeadings(this.#processMarkdown(body, entries._key, true), hLevel),
       breadcrumbs,
       append
     )
