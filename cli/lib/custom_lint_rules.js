@@ -7,7 +7,6 @@ export const headerRegression = {
     params.tokens.forEach(function (token) {
       if (token.type === 'heading_open') {
         const level = parseInt(token.tag.slice(1), 10)
-        console.log(token, level, lastLevel)
         if (level < lastLevel) {
           onError({
             lineNumber: token.lineNumber,
