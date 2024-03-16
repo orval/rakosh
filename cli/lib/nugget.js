@@ -5,7 +5,7 @@ import fm from 'front-matter'
 import markdownlint from 'markdownlint'
 import yaml from 'js-yaml'
 
-import { headerRegression } from './custom_lint_rules.js'
+import { headerRegression, noBracketsInHeaders } from './custom_lint_rules.js'
 import { Media } from './media.js'
 
 const lintConf = {
@@ -73,7 +73,7 @@ export class Nugget {
     const errors = markdownlint.sync({
       strings: { content },
       config: lintConf,
-      customRules: [headerRegression]
+      customRules: [headerRegression, noBracketsInHeaders]
     })
 
     if (errors.content.length > 0) {
