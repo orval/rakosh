@@ -301,10 +301,10 @@ export class NuggetCatalog {
       }
     }
 
-    // hide passages with no children or all children hidden
+    // hide empty passages with no children or all children hidden
     root.walk(n => {
       const nugget = this.fromNode(n)
-      if (nugget.type === Nugget.PASSAGE && !this.hasChildren(n)) {
+      if (!nugget.body && !this.hasChildren(n) && nugget.type === Nugget.PASSAGE) {
         nugget.hide()
       }
     })
