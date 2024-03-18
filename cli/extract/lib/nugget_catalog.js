@@ -3,11 +3,13 @@ import assert from 'assert'
 import { format } from 'node:util'
 
 import { aql, join } from 'arangojs/aql.js'
-import slugify from 'slugify'
-import TreeModel from 'tree-model'
+import markdownlint from 'markdownlint'
 import remarkDirective from 'remark-directive'
 import remarkParse from 'remark-parse'
 import remarkStringify from 'remark-stringify'
+import slugify from 'slugify'
+import TreeModel from 'tree-model'
+import truncateMarkdown from 'markdown-truncate'
 import { unified } from 'unified'
 
 import { Nugget } from '../../lib/nugget.js'
@@ -405,9 +407,7 @@ export class NuggetCatalog {
       ? ''
       : nugget.getBreadcrumbs()
 
-    const body = ('__media' in entries)
-      ? `![${entries.label}](${entries._key})`
-      : (('body' in nugget) ? nugget.body : '### ' + nugget.label)
+    const body = getBody(entries, nugget)
 
     const mostOfTheMdx = format(
       '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
@@ -520,4 +520,48 @@ export class NuggetCatalog {
     await Promise.all(promises)
     return mdxNuggets
   }
+}
+
+function getBody (entries, nugget) {
+  if ('__media' in entries) {
+    // for now media nuggets are represented by a markdown image link
+    return `![${entries.label}](${entries._key})`
+  }
+
+  if ('body' in nugget) {
+    // truncate markdown in inbound/outbound nuggets to save space
+    return entries.direction ? truncateMd(nugget.body) : nugget.body
+  }
+
+  // fall back to just the label as a heading
+  return '### ' + nugget.label
+}
+
+// keep truncating markdown until it's valid
+function truncateMd (markdown) {
+  let numErrors = 1
+  let truncationLength = 100
+
+  do {
+    const truncated = truncateMarkdown(markdown, {
+      limit: truncationLength,
+      ellipsis: true
+    })
+
+    const errors = markdownlint.sync({
+      strings: { truncated },
+      config: {
+        'line-length': false,
+        'first-line-heading': false,
+        MD047: false
+      }
+    })
+
+    numErrors = errors.truncated.length
+    if (numErrors === 0) return truncated
+
+    truncationLength--
+  } while (numErrors > 0 && truncationLength > 0)
+
+  throw new Error('Not able to truncate markdown: ' + markdown)
 }

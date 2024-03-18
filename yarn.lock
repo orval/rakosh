@@ -2601,6 +2601,10 @@ markdown-toc@^1.2.0:
     repeat-string "^1.6.1"
     strip-color "^0.1.0"
 
+"markdown-truncate@github:orval/markdown-truncate":
+  version "0.0.0-development"
+  resolved "https://codeload.github.com/orval/markdown-truncate/tar.gz/7d68117bba3effa56ea02e140856c357b2383e10"
+
 markdownlint-micromark@0.1.8:
   version "0.1.8"
   resolved "https://registry.yarnpkg.com/markdownlint-micromark/-/markdownlint-micromark-0.1.8.tgz#d39297e9988169a846cda1ca99df86f982ae69ba"
