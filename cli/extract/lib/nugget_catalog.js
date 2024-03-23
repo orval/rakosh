@@ -323,6 +323,7 @@ export class NuggetCatalog {
       // query the paths from the given vertex back to the adit
       promises.push(this.db.query(aql`
         FOR v, e, p IN 1..100 INBOUND ${nugget._id} GRAPH 'primary'
+        OPTIONS { order: "weighted", weightAttribute: "weight" }
         FILTER v._id == 'passage/adit'
         RETURN REVERSE(
           FOR vertex IN p.vertices[*]

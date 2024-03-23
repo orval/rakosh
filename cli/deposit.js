@@ -9,7 +9,7 @@ import { FsLayout } from './lib/fs_layout.js'
 
 log.setLevel('WARN')
 
-const RAKOSH_SCHEMA_VERSION = '1.1'
+const RAKOSH_SCHEMA_VERSION = '1.2'
 
 const PRIMARY = 'primary'
 const PASSAGE = 'passage'
@@ -123,10 +123,13 @@ async function deposit (graph, fsLayout) {
     const _from = (node.parent) ? node.parent.model._id : ADIT
     const _to = (node.model._id) ? node.model._id : node.model.link
 
+    // links are weighted heavier
+    const weight = (node.model.link) ? 50 : 10
+
     edges[`${_from}__${_to}`] = 1 // save a unique list of from__to edge strings
-    ePromises.push(graph.edgeCollection(EDGES).save({ _from, _to })
+    ePromises.push(graph.edgeCollection(EDGES).save({ _from, _to, weight })
       .then(() => {
-        log.info(`linked ${_from} to ${_to}`)
+        log.info(`linked ${_from} to ${_to} [${weight}]`)
       })
       .catch(error => {
         log.error(`failed to link ${_from} to ${_to}: ${error.message}`)
@@ -151,7 +154,8 @@ async function deposit (graph, fsLayout) {
         continue
       }
 
-      await graph.edgeCollection(EDGES).save({ _from, _to })
+      // seam edges have the heaviest weight
+      await graph.edgeCollection(EDGES).save({ _from, _to, weight: 100 })
         .then(() => {
           log.info(`seam linked ${_from} to ${_to}`)
           _from = _to
