@@ -4,6 +4,7 @@ import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 
 import fs from './fs.js'
+import gentest from './gentest.js'
 import uuid from './uuid.js'
 
 const importCommand = async (moduleName) => {
@@ -18,6 +19,7 @@ yargs(hideBin(process.argv))
   .command(await importCommand('pdf'))
   .command(await importCommand('confluence'))
   .command(fs)
+  .command(gentest)
   .command(uuid)
   .demandCommand(1)
   .option('verbose', {
