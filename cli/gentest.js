@@ -10,7 +10,7 @@ import { FsLayout } from './lib/fs_layout.js'
 
 const GENTEST_NAME = 'Rakosh Test'
 const DEPTH = 4
-const BREADTH = 10
+const BREADTH = 9
 const NUGS = 3
 
 const lorem = new LoremIpsum()
