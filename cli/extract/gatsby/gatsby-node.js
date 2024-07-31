@@ -51,4 +51,27 @@ exports.onCreateWebpackConfig = ({
       devtool: false
     })
   }
+
+  if (stage === 'build-javascript') {
+    actions.setWebpackConfig({
+      optimization: {
+        splitChunks: {
+          cacheGroups: {
+            mdx: {
+              test: module => {
+                return (module.resource && module.resource.endsWith('.mdx'))
+              },
+              name: 'mdx-chunks',
+              minSize: 0,
+              maxSize: 200000,
+              minChunks: 1,
+              priority: 5,
+              reuseExistingChunk: true,
+              enforce: true
+            }
+          }
+        }
+      }
+    })
+  }
 }
