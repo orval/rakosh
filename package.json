@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -40,7 +40,7 @@
     "ncp": "^2.0.0",
     "node-fetch": "^3",
     "prompts": "^2.4.2",
-    "puppeteer": "^21.11.0",
+    "puppeteer": "^22.15.0",
     "rehype-document": "^7.0.3",
     "rehype-format": "^5.0.0",
     "rehype-highlight": "^7.0.0",
