@@ -101,6 +101,22 @@ export class FsLayout {
     log.info(`new nugget "${title}" with _key ${tags._key} added at [${path}]`)
   }
 
+  createAdit (path, title) {
+    const tags = {
+      _key: 'adit',
+      fs_layout: RAKOSH_FS_LAYOUT_VERSION
+    }
+
+    writeFileSync(path, [
+      '---',
+      yaml.dump(tags).trim(),
+      '---',
+      `\n# ${title}\n`
+    ].join('\n'))
+
+    log.info(`adit created at [${path}]`)
+  }
+
   addPassage (path, title) {
     const mdFile = path + '.md'
     if (this.#fileDoesNotExist(mdFile)) {
