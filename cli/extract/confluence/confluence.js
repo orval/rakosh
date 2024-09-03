@@ -139,7 +139,7 @@ export class Confluence {
 
   static format (markdown) {
     const adfo = fnTranslate(markdown)
-    // console.log('adfoO', adfo.content)
+    // TODO tables not working
 
     const hasAdmonition = adfo.content.content.filter(c => this.isAdmonClose(c))
 
