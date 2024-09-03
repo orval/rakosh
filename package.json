@@ -37,6 +37,7 @@
     "markdownlint": "^0",
     "marked": "^5.0.0",
     "marked-terminal": "^5.2.0",
+    "md-to-adf-dailykos": "^0.1.1",
     "mustache": "^4.2.0",
     "ncp": "^2.0.0",
     "node-fetch": "^3",

@@ -3,10 +3,17 @@ import assert from 'assert'
 import { FormData } from 'formdata-node'
 import { fileFromPathSync } from 'formdata-node/file-from-path'
 import log from 'loglevel'
-import md2c from '@shogobg/markdown2confluence'
+// import md2c from '@shogobg/markdown2confluence'
+import fnTranslate from 'md-to-adf-dailykos'
 import fetch from 'node-fetch'
+import _ from 'lodash'
+// import { document, emoji, link } from 'adf-builder'
+import { Panel } from 'adf-builder'
 
 export class Confluence {
+  static ADMON_OPEN = '<Admonition '
+  static ADMON_CLOSE = '</Admonition>'
+
   constructor (argv) {
     this.spacekey = argv.spacekey
     this.startpageid = argv.startpageid
@@ -85,14 +92,93 @@ export class Confluence {
       .then(j => JSON.parse(j).results)
   }
 
+  // static getAdmon (node) {
+  //   const content = node.content
+  //   // if (content && content.type === 'paragraph' && content.content[0].constructor.name === 'Emoji') console.log('FFFF', content.content.length)
+  //   if (content &&
+  //     content.type === 'paragraph' &&
+  //     content.content[0].constructor.name === 'Text' &&
+  //     content.content[0].text === this.ADMON_CLOSE) {
+  //     // content.content[0].attrs.shortName === ':') {
+  //     return content.content
+  //   }
+  //   return undefined
+  // }
+
+  static isAdmonOpen (node) {
+    // const admon = this.getAdmon(node)
+    // return (admon && admon.length > 1)
+    return (node.content &&
+      node.content.type === 'paragraph' &&
+      node.content.content[0].constructor.name === 'Text' &&
+      node.content.content[0].text.startsWith(this.ADMON_OPEN))
+  }
+
+  static isAdmonClose (node) {
+    // const admon = this.getAdmon(node)
+    // return (admon && admon.length === 1)
+    return (node.content &&
+      node.content.type === 'paragraph' &&
+      node.content.content[0].constructor.name === 'Text' &&
+      node.content.content[0].text === this.ADMON_CLOSE)
+  }
+
+  // static isAdmonOpen (node) {
+  //   return (node.content &&
+  //     node.type === 'paragraph' &&
+  //     node.content[0].type === 'text' &&
+  //     node.content[0].text.startsWith(this.ADMON_OPEN))
+  // }
+
+  // static isAdmonClose (node) {
+  //   if (node.content && node.type === 'paragraph' && node.content[0].type === 'text') console.log('FFFF', node.content[0])
+  //   return (node.type === 'paragraph' &&
+  //     node.content[0].type === 'text' &&
+  //     node.content[0].text === this.ADMON_CLOSE)
+  // }
+
   static format (markdown) {
-    return md2c(markdown, {
-      codeBlock: {
-        options: {
-          title: '' // prevent 'none' title on all the code blocks
+    const adfo = fnTranslate(markdown)
+    // console.log('adfoO', adfo.content)
+
+    const hasAdmonition = adfo.content.content.filter(c => this.isAdmonClose(c))
+
+    console.log('adfoA', markdown, JSON.stringify(adfo.toJSON(), null, 2))
+    if (hasAdmonition.length > 0) {
+      let panel = new Panel('warning')
+      let inAdmon = false
+      let startIdx = 0
+      const removeIndexes = []
+      adfo.content.content.forEach((node, idx) => {
+        if (this.isAdmonOpen(node)) {
+          inAdmon = true
+          panel = new Panel('warning')
+          startIdx = idx
+        } else if (this.isAdmonClose(node) && inAdmon) {
+          // _.remove(admonNodes)
+          inAdmon = false
+          adfo.content.content[startIdx] = panel
+          removeIndexes.push(idx)
+        } else if (inAdmon) {
+          panel.content.add(node)
+          removeIndexes.push(idx)
         }
-      }
-    })
+      })
+
+      _.pullAt(adfo.content.content, removeIndexes)
+
+      console.log('adfoB', removeIndexes, JSON.stringify(adfo.toJSON(), null, 2))
+    }
+
+    return adfo
+
+    // return md2c(markdown, {
+    //   codeBlock: {
+    //     options: {
+    //       title: '' // prevent 'none' title on all the code blocks
+    //     }
+    //   }
+    // })
   }
 
   getPage (pageId) {
@@ -136,7 +222,8 @@ export class Confluence {
   getPageByTitle (title) {
     const queryString = new URLSearchParams({
       spaceKey: this.spacekey,
-      expand: 'body.view,version',
+      // expand: 'body.view,version',
+      expand: 'body.atlas_doc_format,version',
       title
     }).toString()
 
@@ -165,7 +252,7 @@ export class Confluence {
         title,
         parentId: pageId,
         body: {
-          representation: 'wiki',
+          representation: 'atlas_doc_format',
           value: formatted
         }
       })
@@ -181,22 +268,41 @@ export class Confluence {
 
   updatePage (pageId, version, title, markdown) {
     const formatted = Confluence.format(markdown)
+    const foo = JSON.stringify(formatted, null, 2)
+
+    const bod = JSON.stringify({
+      id: pageId,
+      spaceId: this.spaceId,
+      status: 'current',
+      title,
+      body: {
+        representation: 'atlas_doc_format',
+        value: String(foo)
+      },
+      version: {
+        number: version
+      }
+    })
+
+    console.log(foo)
+
     return fetch(`${this.wiki}/api/v2/pages/${encodeURIComponent(pageId)}`, {
       method: 'PUT',
       headers: this.headers,
-      body: JSON.stringify({
-        id: pageId,
-        spaceId: this.spaceId,
-        status: 'current',
-        title,
-        body: {
-          representation: 'wiki',
-          value: formatted
-        },
-        version: {
-          number: version
-        }
-      })
+      body: bod
+      // body: JSON.stringify({
+      //   id: pageId,
+      //   spaceId: this.spaceId,
+      //   status: 'current',
+      //   title,
+      //   body: {
+      //     representation: 'atlas_doc_format',
+      //     value: formatted
+      //   },
+      //   version: {
+      //     number: version
+      //   }
+      // })
     })
       .then(response => {
         if (response.status !== 200) {
