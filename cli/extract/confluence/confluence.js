@@ -4,7 +4,7 @@ import { FormData } from 'formdata-node'
 import { fileFromPathSync } from 'formdata-node/file-from-path'
 import log from 'loglevel'
 // import md2c from '@shogobg/markdown2confluence'
-import fnTranslate from 'md-to-adf-dailykos'
+import fnTranslate from 'md-to-adf-orval'
 import fetch from 'node-fetch'
 import _ from 'lodash'
 // import { document, emoji, link } from 'adf-builder'
@@ -137,13 +137,15 @@ export class Confluence {
   //     node.content[0].text === this.ADMON_CLOSE)
   // }
 
+  // orval/md-to-adf-orval github:orval/md-to-adf-orval 
+
   static format (markdown) {
     const adfo = fnTranslate(markdown)
     // TODO tables not working
 
     const hasAdmonition = adfo.content.content.filter(c => this.isAdmonClose(c))
 
-    console.log('adfoA', markdown, JSON.stringify(adfo.toJSON(), null, 2))
+    // console.log('adfoA', markdown, JSON.stringify(adfo.toJSON(), null, 2))
     if (hasAdmonition.length > 0) {
       let panel = new Panel('warning')
       let inAdmon = false
@@ -167,9 +169,29 @@ export class Confluence {
 
       _.pullAt(adfo.content.content, removeIndexes)
 
-      console.log('adfoB', removeIndexes, JSON.stringify(adfo.toJSON(), null, 2))
+      // console.log('adfoB', removeIndexes, JSON.stringify(adfo.toJSON(), null, 2))
     }
 
+    // {
+    //   "type": "paragraph",
+    //   "content": [
+    //     {
+    //       "type": "text",
+    //       "text": "| This | is a | table | | --- | --- | --- | | this | is a | row |"
+    //     }
+    //   ]
+    // },
+
+    adfo.content.content.forEach((node, idx) => {
+      if (node.content &&
+        node.content.type === 'paragraph' &&
+        node.content.content[0].constructor.name === 'Text' &&
+        node.content.content[0].text === '| This | is a | table | | --- | --- | --- | | this | is a | row |'
+      ) {
+        node.content.content[0].text = '<table><tr><td>This</td><td>is</td></tr></table>'
+      }
+    })
+    console.log('adfo', JSON.stringify(adfo.toJSON(), null, 2))
     return adfo
 
     // return md2c(markdown, {

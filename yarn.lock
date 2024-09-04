@@ -2727,6 +2727,13 @@ md-to-adf-dailykos@^0.1.1:
     adf-builder "^3.3.0"
     marked "^0.8.2"
 
+"md-to-adf-orval@github:orval/md-to-adf-orval":
+  version "0.1.1"
+  resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/f25c17a940b11c243b5b514d0253cd0c7d309d9f"
+  dependencies:
+    adf-builder "^3.3.0"
+    marked "^0.8.2"
+
 mdast-util-directive@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/mdast-util-directive/-/mdast-util-directive-3.0.0.tgz#3fb1764e705bbdf0afb0d3f889e4404c3e82561f"

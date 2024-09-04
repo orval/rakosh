@@ -38,6 +38,7 @@
     "marked": "^5.0.0",
     "marked-terminal": "^5.2.0",
     "md-to-adf-dailykos": "^0.1.1",
+    "md-to-adf-orval": "github:orval/md-to-adf-orval",
     "mustache": "^4.2.0",
     "ncp": "^2.0.0",
     "node-fetch": "^3",
@@ -63,8 +64,6 @@
     "yargs": "^17"
   },
   "scripts": {
-    "install:markdown-truncate": "cd node_modules/markdown-truncate && npm install && npm run build",
-    "postinstall": "npm run install:markdown-truncate",
     "lint": "eslint cli",
     "devdep": "./cli/main.js deposit examples/my-mine -r -v",
     "devext": "./cli/main.js gatsby my-mine examples/my-mine/cust-dev.json heap --no-build -v -m 3",
