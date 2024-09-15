@@ -3,11 +3,9 @@ import assert from 'assert'
 import { FormData } from 'formdata-node'
 import { fileFromPathSync } from 'formdata-node/file-from-path'
 import log from 'loglevel'
-// import md2c from '@shogobg/markdown2confluence'
 import fnTranslate from 'md-to-adf-orval'
 import fetch from 'node-fetch'
 import _ from 'lodash'
-// import { document, emoji, link } from 'adf-builder'
 import { Panel } from 'adf-builder'
 
 export class Confluence {
@@ -92,22 +90,7 @@ export class Confluence {
       .then(j => JSON.parse(j).results)
   }
 
-  // static getAdmon (node) {
-  //   const content = node.content
-  //   // if (content && content.type === 'paragraph' && content.content[0].constructor.name === 'Emoji') console.log('FFFF', content.content.length)
-  //   if (content &&
-  //     content.type === 'paragraph' &&
-  //     content.content[0].constructor.name === 'Text' &&
-  //     content.content[0].text === this.ADMON_CLOSE) {
-  //     // content.content[0].attrs.shortName === ':') {
-  //     return content.content
-  //   }
-  //   return undefined
-  // }
-
   static isAdmonOpen (node) {
-    // const admon = this.getAdmon(node)
-    // return (admon && admon.length > 1)
     return (node.content &&
       node.content.type === 'paragraph' &&
       node.content.content[0].constructor.name === 'Text' &&
@@ -115,37 +98,18 @@ export class Confluence {
   }
 
   static isAdmonClose (node) {
-    // const admon = this.getAdmon(node)
-    // return (admon && admon.length === 1)
     return (node.content &&
       node.content.type === 'paragraph' &&
       node.content.content[0].constructor.name === 'Text' &&
       node.content.content[0].text === this.ADMON_CLOSE)
   }
 
-  // static isAdmonOpen (node) {
-  //   return (node.content &&
-  //     node.type === 'paragraph' &&
-  //     node.content[0].type === 'text' &&
-  //     node.content[0].text.startsWith(this.ADMON_OPEN))
-  // }
-
-  // static isAdmonClose (node) {
-  //   if (node.content && node.type === 'paragraph' && node.content[0].type === 'text') console.log('FFFF', node.content[0])
-  //   return (node.type === 'paragraph' &&
-  //     node.content[0].type === 'text' &&
-  //     node.content[0].text === this.ADMON_CLOSE)
-  // }
-
-  // orval/md-to-adf-orval github:orval/md-to-adf-orval 
-
   static format (markdown) {
     const adfo = fnTranslate(markdown)
-    // TODO tables not working
 
     const hasAdmonition = adfo.content.content.filter(c => this.isAdmonClose(c))
 
-    // console.log('adfoA', markdown, JSON.stringify(adfo.toJSON(), null, 2))
+    // React Admonition elements are replaced by an ADF Panel
     if (hasAdmonition.length > 0) {
       let panel = new Panel('warning')
       let inAdmon = false
@@ -157,7 +121,6 @@ export class Confluence {
           panel = new Panel('warning')
           startIdx = idx
         } else if (this.isAdmonClose(node) && inAdmon) {
-          // _.remove(admonNodes)
           inAdmon = false
           adfo.content.content[startIdx] = panel
           removeIndexes.push(idx)
@@ -168,39 +131,9 @@ export class Confluence {
       })
 
       _.pullAt(adfo.content.content, removeIndexes)
-
-      // console.log('adfoB', removeIndexes, JSON.stringify(adfo.toJSON(), null, 2))
     }
 
-    // {
-    //   "type": "paragraph",
-    //   "content": [
-    //     {
-    //       "type": "text",
-    //       "text": "| This | is a | table | | --- | --- | --- | | this | is a | row |"
-    //     }
-    //   ]
-    // },
-
-    adfo.content.content.forEach((node, idx) => {
-      if (node.content &&
-        node.content.type === 'paragraph' &&
-        node.content.content[0].constructor.name === 'Text' &&
-        node.content.content[0].text === '| This | is a | table | | --- | --- | --- | | this | is a | row |'
-      ) {
-        node.content.content[0].text = '<table><tr><td>This</td><td>is</td></tr></table>'
-      }
-    })
-    console.log('adfo', JSON.stringify(adfo.toJSON(), null, 2))
-    return adfo
-
-    // return md2c(markdown, {
-    //   codeBlock: {
-    //     options: {
-    //       title: '' // prevent 'none' title on all the code blocks
-    //     }
-    //   }
-    // })
+    return adfo.toJSON()
   }
 
   getPage (pageId) {
@@ -244,7 +177,6 @@ export class Confluence {
   getPageByTitle (title) {
     const queryString = new URLSearchParams({
       spaceKey: this.spacekey,
-      // expand: 'body.view,version',
       expand: 'body.atlas_doc_format,version',
       title
     }).toString()
@@ -290,41 +222,25 @@ export class Confluence {
 
   updatePage (pageId, version, title, markdown) {
     const formatted = Confluence.format(markdown)
-    const foo = JSON.stringify(formatted, null, 2)
 
-    const bod = JSON.stringify({
+    const body = JSON.stringify({
       id: pageId,
       spaceId: this.spaceId,
       status: 'current',
       title,
       body: {
         representation: 'atlas_doc_format',
-        value: String(foo)
+        value: String(JSON.stringify(formatted, null, 2))
       },
       version: {
         number: version
       }
     })
 
-    console.log(foo)
-
     return fetch(`${this.wiki}/api/v2/pages/${encodeURIComponent(pageId)}`, {
       method: 'PUT',
       headers: this.headers,
-      body: bod
-      // body: JSON.stringify({
-      //   id: pageId,
-      //   spaceId: this.spaceId,
-      //   status: 'current',
-      //   title,
-      //   body: {
-      //     representation: 'atlas_doc_format',
-      //     value: formatted
-      //   },
-      //   version: {
-      //     number: version
-      //   }
-      // })
+      body
     })
       .then(response => {
         if (response.status !== 200) {
