@@ -254,10 +254,9 @@ acorn@^8.9.0:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.11.3.tgz#71e0b14e13a4ec160724b38fb7b0f233b1b81d7a"
   integrity sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==
 
-adf-builder@^3.3.0:
+"adf-builder@github:orval/adf-builder-javascript":
   version "3.3.0"
-  resolved "https://registry.yarnpkg.com/adf-builder/-/adf-builder-3.3.0.tgz#23d69266486b403727f130ae2217a262f7be78a5"
-  integrity sha512-zl5Sk2HtJk/E+gBnD0g51w5wIEEujaAbzsBhSsteO8Fnef7v+7pvas0FeQuLCAgOxrwy945HWAB1gQ4yjPI3/g==
+  resolved "https://codeload.github.com/orval/adf-builder-javascript/tar.gz/e45995372841dba8033aa9481da75c98b7441187"
 
 agent-base@^7.0.2, agent-base@^7.1.0:
   version "7.1.0"
@@ -2721,9 +2720,9 @@ math-random@^1.0.1:
 
 "md-to-adf-orval@github:orval/md-to-adf-orval":
   version "0.1.1"
-  resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/f25c17a940b11c243b5b514d0253cd0c7d309d9f"
+  resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/2a4ae41efe943823e636b52d628f1430f3dfc126"
   dependencies:
-    adf-builder "^3.3.0"
+    adf-builder "github:orval/adf-builder-javascript"
     marked "^0.8.2"
 
 mdast-util-directive@^3.0.0:
