@@ -3,11 +3,13 @@ import assert from 'assert'
 import { format } from 'node:util'
 
 import { aql, join } from 'arangojs/aql.js'
-import slugify from 'slugify'
-import TreeModel from 'tree-model'
+import markdownlint from 'markdownlint'
 import remarkDirective from 'remark-directive'
 import remarkParse from 'remark-parse'
 import remarkStringify from 'remark-stringify'
+import slugify from 'slugify'
+import TreeModel from 'tree-model'
+import truncateMarkdown from 'markdown-truncate'
 import { unified } from 'unified'
 
 import { Nugget } from '../../lib/nugget.js'
@@ -145,9 +147,9 @@ export class NuggetCatalog {
         const parentNugget = this.fromNode(node.parent)
 
         // nuggets within a non-seam passage are placed in the passage's page
-        if (parentNugget.type === 'passage' &&
+        if (parentNugget.type === Nugget.PASSAGE &&
            !parentNugget.nuggets &&
-            nugget.type === 'nugget' &&
+            nugget.type === Nugget.NUGGET &&
             Object.keys(nugget.pageRefs).length === 0 &&
             !nugget.isHidden()) {
           this.appendToPage(parentNugget._key, parentNugget._key) // ensure self is in the page
@@ -164,7 +166,7 @@ export class NuggetCatalog {
       const nugget = this.fromNode(node)
 
       // empty passage leaf nodes are skipped
-      if (!nugget.body && !this.hasChildren(node) && nugget.type === 'passage') {
+      if (!nugget.body && !this.hasChildren(node) && nugget.type === Nugget.PASSAGE) {
         return true
       }
 
@@ -298,6 +300,15 @@ export class NuggetCatalog {
         }
       }
     }
+
+    // hide empty passages with no children or all children hidden
+    root.walk(n => {
+      const nugget = this.fromNode(n)
+      if (!nugget.body && !this.hasChildren(n) && nugget.type === Nugget.PASSAGE) {
+        nugget.hide()
+      }
+    })
+
     return root
   }
 
@@ -312,6 +323,7 @@ export class NuggetCatalog {
       // query the paths from the given vertex back to the adit
       promises.push(this.db.query(aql`
         FOR v, e, p IN 1..100 INBOUND ${nugget._id} GRAPH 'primary'
+        OPTIONS { order: "weighted", weightAttribute: "weight" }
         FILTER v._id == 'passage/adit'
         RETURN REVERSE(
           FOR vertex IN p.vertices[*]
@@ -359,7 +371,7 @@ export class NuggetCatalog {
 
   // markdown is parsed into an AST so that markdown directives can be replaced
   // with JSX for react-admonitions, then compiled back into markdown
-  #processMarkdown (markdown, key, gatsby = false) { // TODO maybe refactor this to just take key and get markdown from nugget
+  #processMarkdown (markdown, key, gatsby = false) {
     const processor = unified()
       .use(remarkParse)
       .use(remarkDirective)
@@ -389,20 +401,20 @@ export class NuggetCatalog {
       entries.slug = (entries.paths.length > 0) ? entries.paths[0] : '/'
     }
 
+    const hLevel = (entries.direction || entries.inseam) ? 2 : 1
+
     // it is decreed that breadcrumbs are not required in outbound vertices
     const breadcrumbs = (entries.direction === 'outbound' || entries.inseam)
       ? ''
       : nugget.getBreadcrumbs()
 
-    const body = ('__media' in entries)
-      ? `![${entries.label}](${entries._key})`
-      : (('body' in nugget) ? nugget.body : '### ' + nugget.label)
+    const body = getBody(entries, nugget)
 
     const mostOfTheMdx = format(
       '<%s %s>\n<NuggetBody>\n%s\n</NuggetBody>\n%s\n%s',
       component,
       Object.keys(entries).map(a => `${a}="${entries[a]}"`).join(' '),
-      this.#processMarkdown(body, entries._key, true),
+      this.#rewriteHeadings(this.#processMarkdown(body, entries._key, true), hLevel),
       breadcrumbs,
       append
     )
@@ -450,7 +462,7 @@ export class NuggetCatalog {
           // skip if it is a hidden nugget
           if (nug.isHidden()) return
 
-          if (type === 'passage') {
+          if (type === Nugget.PASSAGE) {
             isOutbound ? passagesOutbound.push(nug) : passagesInbound.push(nug)
           } else {
             isOutbound ? nuggetsOutbound.push(nug) : nuggetsInbound.push(nug)
@@ -509,4 +521,48 @@ export class NuggetCatalog {
     await Promise.all(promises)
     return mdxNuggets
   }
+}
+
+function getBody (entries, nugget) {
+  if ('__media' in entries) {
+    // for now media nuggets are represented by a markdown image link
+    return `![${entries.label}](${entries._key})`
+  }
+
+  if ('body' in nugget) {
+    // truncate markdown in inbound/outbound nuggets to save space
+    return entries.direction ? truncateMd(nugget.body) : nugget.body
+  }
+
+  // fall back to just the label as a heading
+  return '### ' + nugget.label
+}
+
+// keep truncating markdown until it's valid
+function truncateMd (markdown) {
+  let numErrors = 1
+  let truncationLength = 100
+
+  do {
+    const truncated = truncateMarkdown(markdown, {
+      limit: truncationLength,
+      ellipsis: true
+    })
+
+    const errors = markdownlint.sync({
+      strings: { truncated },
+      config: {
+        'line-length': false,
+        'first-line-heading': false,
+        MD047: false
+      }
+    })
+
+    numErrors = errors.truncated.length
+    if (numErrors === 0) return truncated
+
+    truncationLength--
+  } while (numErrors > 0 && truncationLength > 0)
+
+  throw new Error('Not able to truncate markdown: ' + markdown)
 }

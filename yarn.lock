@@ -254,6 +254,10 @@ acorn@^8.9.0:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.11.3.tgz#71e0b14e13a4ec160724b38fb7b0f233b1b81d7a"
   integrity sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==
 
+"adf-builder@github:orval/adf-builder-javascript":
+  version "3.3.0"
+  resolved "https://codeload.github.com/orval/adf-builder-javascript/tar.gz/e45995372841dba8033aa9481da75c98b7441187"
+
 agent-base@^7.0.2, agent-base@^7.1.0:
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/agent-base/-/agent-base-7.1.0.tgz#536802b76bc0b34aa50195eb2442276d613e3434"
@@ -2664,6 +2668,11 @@ markdown-toc@^1.2.0:
     repeat-string "^1.6.1"
     strip-color "^0.1.0"
 
+markdown-truncate@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/markdown-truncate/-/markdown-truncate-1.1.1.tgz#3927545587e1575a2210068179a4ee20eab879fc"
+  integrity sha512-OZz3pPA3VNbfRDjLYk/lSkl6pUvHiCh1pefd+5t38jVGzAOWjQPpFTSzO5Dl7xKTIQf99ri9If6a6cQ0kBWcHg==
+
 markdownlint-micromark@0.1.8:
   version "0.1.8"
   resolved "https://registry.yarnpkg.com/markdownlint-micromark/-/markdownlint-micromark-0.1.8.tgz#d39297e9988169a846cda1ca99df86f982ae69ba"
@@ -2689,6 +2698,11 @@ marked-terminal@^5.2.0:
     node-emoji "^1.11.0"
     supports-hyperlinks "^2.3.0"
 
+marked@^0.8.2:
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-0.8.2.tgz#4faad28d26ede351a7a1aaa5fec67915c869e355"
+  integrity sha512-EGwzEeCcLniFX51DhTpmTom+dSA/MG/OBUDjnWtHbEnjAH180VzUeAw+oE4+Zv+CoYBWyRlYOTR0N8SO9R1PVw==
+
 marked@^4.0.18:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/marked/-/marked-4.3.0.tgz#796362821b019f734054582038b116481b456cf3"
@@ -2703,6 +2717,13 @@ math-random@^1.0.1:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/math-random/-/math-random-1.0.4.tgz#5dd6943c938548267016d4e34f057583080c514c"
   integrity sha512-rUxjysqif/BZQH2yhd5Aaq7vXMSx9NdEsQcyA07uEzIvxgI7zIr33gGsh+RU0/XjmQpCW7RsVof1vlkvQVCK5A==
+
+"md-to-adf-orval@github:orval/md-to-adf-orval":
+  version "0.1.1"
+  resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/5cc8656d127db10739121dccde2729756fe5b0cc"
+  dependencies:
+    adf-builder "github:orval/adf-builder-javascript"
+    marked "^0.8.2"
 
 mdast-util-directive@^3.0.0:
   version "3.0.0"

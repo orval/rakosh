@@ -28,7 +28,3 @@ Then another paragraph.
 :::note[Duncan]
 An admonition with a title.
 :::
-
-## Bogus Heading
-
-This heading is a higher level than at the start of the nugget.

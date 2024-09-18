@@ -3,10 +3,15 @@ import assert from 'assert'
 import { FormData } from 'formdata-node'
 import { fileFromPathSync } from 'formdata-node/file-from-path'
 import log from 'loglevel'
-import md2c from '@shogobg/markdown2confluence'
+import fnTranslate from 'md-to-adf-orval'
 import fetch from 'node-fetch'
+import _ from 'lodash'
+import { Panel } from 'adf-builder'
 
 export class Confluence {
+  static ADMON_OPEN = '<Admonition '
+  static ADMON_CLOSE = '</Admonition>'
+
   constructor (argv) {
     this.spacekey = argv.spacekey
     this.startpageid = argv.startpageid
@@ -85,14 +90,80 @@ export class Confluence {
       .then(j => JSON.parse(j).results)
   }
 
-  static format (markdown) {
-    return md2c(markdown, {
-      codeBlock: {
-        options: {
-          title: '' // prevent 'none' title on all the code blocks
+  static getParaText (node) {
+    if (node.content && node.content.type === 'paragraph' && node.content.content[0].constructor.name === 'Text') {
+      return node.content.content[0].text
+    }
+    return undefined
+  }
+
+  static isAdmonOpen (node) {
+    const text = this.getParaText(node)
+    return (text && text.startsWith(this.ADMON_OPEN))
+  }
+
+  static isAdmonClose (node) {
+    const text = this.getParaText(node)
+    return (text && text === this.ADMON_CLOSE)
+  }
+
+  static getAdmonType (node) {
+    const text = this.getParaText(node)
+    if (text) {
+      const match = text.match(/type="([^"]+)"/)
+      if (match && match.length > 1) {
+        // convert directive type to panel type
+        switch (match[1]) {
+          case 'warning':
+            return 'warning'
+          case 'tip':
+            return 'info'
+          case 'caution':
+            return 'error'
+          case 'note':
+            return 'note'
+          case 'important':
+            return 'success'
+          case 'question':
+            return 'info'
+          default:
+            return 'note'
         }
       }
-    })
+    }
+    return 'note'
+  }
+
+  static format (markdown) {
+    const adfo = fnTranslate(markdown)
+
+    const hasAdmonition = adfo.content.content.filter(c => this.isAdmonClose(c))
+
+    // React Admonition elements are replaced by an ADF Panel
+    if (hasAdmonition.length > 0) {
+      let panel
+      let inAdmon = false
+      let startIdx = 0
+      const removeIndexes = []
+      adfo.content.content.forEach((node, idx) => {
+        if (this.isAdmonOpen(node)) {
+          inAdmon = true
+          panel = new Panel(this.getAdmonType(node))
+          startIdx = idx
+        } else if (this.isAdmonClose(node) && inAdmon) {
+          inAdmon = false
+          adfo.content.content[startIdx] = panel
+          removeIndexes.push(idx)
+        } else if (inAdmon) {
+          panel.content.add(node)
+          removeIndexes.push(idx)
+        }
+      })
+
+      _.pullAt(adfo.content.content, removeIndexes)
+    }
+
+    return adfo.toJSON()
   }
 
   getPage (pageId) {
@@ -136,7 +207,7 @@ export class Confluence {
   getPageByTitle (title) {
     const queryString = new URLSearchParams({
       spaceKey: this.spacekey,
-      expand: 'body.view,version',
+      expand: 'body.atlas_doc_format,version',
       title
     }).toString()
 
@@ -165,7 +236,7 @@ export class Confluence {
         title,
         parentId: pageId,
         body: {
-          representation: 'wiki',
+          representation: 'atlas_doc_format',
           value: formatted
         }
       })
@@ -181,22 +252,25 @@ export class Confluence {
 
   updatePage (pageId, version, title, markdown) {
     const formatted = Confluence.format(markdown)
+
+    const body = JSON.stringify({
+      id: pageId,
+      spaceId: this.spaceId,
+      status: 'current',
+      title,
+      body: {
+        representation: 'atlas_doc_format',
+        value: String(JSON.stringify(formatted, null, 2))
+      },
+      version: {
+        number: version
+      }
+    })
+
     return fetch(`${this.wiki}/api/v2/pages/${encodeURIComponent(pageId)}`, {
       method: 'PUT',
       headers: this.headers,
-      body: JSON.stringify({
-        id: pageId,
-        spaceId: this.spaceId,
-        status: 'current',
-        title,
-        body: {
-          representation: 'wiki',
-          value: formatted
-        },
-        version: {
-          number: version
-        }
-      })
+      body
     })
       .then(response => {
         if (response.status !== 200) {

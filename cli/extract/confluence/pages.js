@@ -23,9 +23,10 @@ export async function confluencePages (db, argv) {
   const root = await catalog.getSeamNuggetTree()
 
   // append confluence children macro to pages with children
-  for (const nug of Object.values(catalog.allNuggets)) {
-    if ('page' in nug) nug.page += '\n---\n\n{children}'
-  }
+  // TODO macro not supported in ADF
+  // for (const nug of Object.values(catalog.allNuggets)) {
+  //   if ('page' in nug) nug.page += '\n---\n\n{children}'
+  // }
 
   // hidden option for just printing the tree
   if (argv.treedebug) {

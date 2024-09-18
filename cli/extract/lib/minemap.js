@@ -1,8 +1,7 @@
-import { Nugget } from '../../lib/nugget.js'
-
 export class MineMap {
-  constructor (openTo = 2) {
+  constructor (catalog, openTo = 2) {
     this.minemap = {}
+    this.catalog = catalog
     this.openTo = openTo
   }
 
@@ -13,7 +12,7 @@ export class MineMap {
     let longId = ''
 
     vertices.forEach(vertex => {
-      const nug = new Nugget(vertex, vertex.body)
+      const nug = this.catalog.allNuggets[vertex._key]
       if (nug.isHidden()) return // do not show hidden nuggets in MineMap
 
       longId = longId + '|' + nug._key

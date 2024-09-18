@@ -13,6 +13,8 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import { unified } from 'unified'
 
+import rehypeAdmonitions from '../lib/rehype_admonitions.js'
+
 export async function generateHtml (catalog, output, style, cssLink) {
   // this gets a chunk of markdown for each seam then for any remaining nuggets
   const [mdChunks] = await catalog.getSeamNuggetMarkdown()
@@ -28,6 +30,7 @@ export async function generateHtml (catalog, output, style, cssLink) {
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
+    .use(rehypeAdmonitions)
     .use(rehypeHighlight)
     .use(rehypeSlug)
     .use(rehypeDocument, {
