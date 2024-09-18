@@ -90,18 +90,48 @@ export class Confluence {
       .then(j => JSON.parse(j).results)
   }
 
+  static getParaText (node) {
+    if (node.content && node.content.type === 'paragraph' && node.content.content[0].constructor.name === 'Text') {
+      return node.content.content[0].text
+    }
+    return undefined
+  }
+
   static isAdmonOpen (node) {
-    return (node.content &&
-      node.content.type === 'paragraph' &&
-      node.content.content[0].constructor.name === 'Text' &&
-      node.content.content[0].text.startsWith(this.ADMON_OPEN))
+    const text = this.getParaText(node)
+    return (text && text.startsWith(this.ADMON_OPEN))
   }
 
   static isAdmonClose (node) {
-    return (node.content &&
-      node.content.type === 'paragraph' &&
-      node.content.content[0].constructor.name === 'Text' &&
-      node.content.content[0].text === this.ADMON_CLOSE)
+    const text = this.getParaText(node)
+    return (text && text === this.ADMON_CLOSE)
+  }
+
+  static getAdmonType (node) {
+    const text = this.getParaText(node)
+    if (text) {
+      const match = text.match(/type="([^"]+)"/)
+      if (match && match.length > 1) {
+        // convert directive type to panel type
+        switch (match[1]) {
+          case 'warning':
+            return 'warning'
+          case 'tip':
+            return 'info'
+          case 'caution':
+            return 'error'
+          case 'note':
+            return 'note'
+          case 'important':
+            return 'success'
+          case 'question':
+            return 'info'
+          default:
+            return 'note'
+        }
+      }
+    }
+    return 'note'
   }
 
   static format (markdown) {
@@ -111,14 +141,14 @@ export class Confluence {
 
     // React Admonition elements are replaced by an ADF Panel
     if (hasAdmonition.length > 0) {
-      let panel = new Panel('warning')
+      let panel
       let inAdmon = false
       let startIdx = 0
       const removeIndexes = []
       adfo.content.content.forEach((node, idx) => {
         if (this.isAdmonOpen(node)) {
           inAdmon = true
-          panel = new Panel('warning')
+          panel = new Panel(this.getAdmonType(node))
           startIdx = idx
         } else if (this.isAdmonClose(node) && inAdmon) {
           inAdmon = false
