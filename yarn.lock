@@ -2720,7 +2720,7 @@ math-random@^1.0.1:
 
 "md-to-adf-orval@github:orval/md-to-adf-orval":
   version "0.1.1"
-  resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/2a4ae41efe943823e636b52d628f1430f3dfc126"
+  resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/5cc8656d127db10739121dccde2729756fe5b0cc"
   dependencies:
     adf-builder "github:orval/adf-builder-javascript"
     marked "^0.8.2"
