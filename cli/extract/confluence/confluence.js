@@ -75,7 +75,7 @@ export class Confluence {
       }
       log.error(`Space ${this.spacekey} not found`)
     } catch (error) {
-      log.error(`Could not retrieve Confluence spaces [${error}]`)
+      log.error(`Could not retrieve Confluence spaces [${error.message}]`)
       throw error
     }
   }
@@ -91,7 +91,12 @@ export class Confluence {
   }
 
   static getParaText (node) {
-    if (node.content && node.content.type === 'paragraph' && node.content.content[0].constructor.name === 'Text') {
+    if (node.content &&
+      node.content.type === 'paragraph' &&
+      node.content.content &&
+      node.content.content.length > 0 &&
+      node.content.content[0].constructor &&
+      node.content.content[0].constructor.name === 'Text') {
       return node.content.content[0].text
     }
     return undefined
@@ -182,7 +187,7 @@ export class Confluence {
         return response.json()
       })
       .then(data => data.id)
-      .catch(error => log.error('getPage', error))
+      .catch(error => log.error('getPage', error.message))
   }
 
   getPages () {
@@ -201,7 +206,7 @@ export class Confluence {
         }
         return response.json()
       })
-      .catch(error => log.error('getPages', error))
+      .catch(error => log.error('getPages', error.message))
   }
 
   getPageByTitle (title) {
@@ -222,7 +227,7 @@ export class Confluence {
         return response.json()
       })
       .then(data => data.results[0])
-      .catch(error => log.error('getPageByTitle', error))
+      .catch(error => log.error('getPageByTitle', error.message))
   }
 
   addPage (pageId, title, markdown) {
@@ -247,7 +252,7 @@ export class Confluence {
         }
         return response.json()
       })
-      .catch(error => log.error('addPage', error))
+      .catch(error => log.error('addPage', error.message))
   }
 
   updatePage (pageId, version, title, markdown) {
@@ -278,7 +283,7 @@ export class Confluence {
         }
         return response.json()
       })
-      .catch(error => log.error('updatePage', error))
+      .catch(error => log.error('updatePage', error.message))
   }
 
   deletePage (pageId) {
@@ -292,7 +297,7 @@ export class Confluence {
         }
         return response.text()
       })
-      .catch(error => log.error('deletePage', error))
+      .catch(error => log.error('deletePage', error.message))
   }
 
   attach (pageId, uuidName, media) {
@@ -317,7 +322,7 @@ export class Confluence {
         return response.json()
       })
       .then(data => data.results[0])
-      .catch(error => log.error('attach', error))
+      .catch(error => log.error('attach', error.message))
   }
 
   async addOrReplacePage (parentId, nugget, title) {
@@ -334,6 +339,11 @@ export class Confluence {
         title,
         markdown
       )
+
+      if (!updatedPage) {
+        log.error(`failed to update page "${title}"`)
+        return
+      }
 
       log.info(`updated page ${updatedPage.id} "${title}"`)
 
