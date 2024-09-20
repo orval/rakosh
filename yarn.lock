@@ -256,7 +256,7 @@ acorn@^8.9.0:
 
 "adf-builder@github:orval/adf-builder-javascript":
   version "3.3.0"
-  resolved "https://codeload.github.com/orval/adf-builder-javascript/tar.gz/e45995372841dba8033aa9481da75c98b7441187"
+  resolved "https://codeload.github.com/orval/adf-builder-javascript/tar.gz/7500b1a7b9b860fa19a250a3dac2cd90b4939370"
 
 agent-base@^7.0.2, agent-base@^7.1.0:
   version "7.1.0"
@@ -2720,7 +2720,7 @@ math-random@^1.0.1:
 
 "md-to-adf-orval@github:orval/md-to-adf-orval":
   version "0.1.1"
-  resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/5cc8656d127db10739121dccde2729756fe5b0cc"
+  resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/0d99be773a9500c0a81d70b83099d93727b7c5c9"
   dependencies:
     adf-builder "github:orval/adf-builder-javascript"
     marked "^0.8.2"
