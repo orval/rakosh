@@ -212,7 +212,7 @@ export class Confluence {
   getPageByTitle (title) {
     const queryString = new URLSearchParams({
       spaceKey: this.spacekey,
-      expand: 'body.atlas_doc_format,version',
+      expand: 'body.view',
       title
     }).toString()
 
