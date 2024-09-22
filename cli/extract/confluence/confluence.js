@@ -212,7 +212,7 @@ export class Confluence {
   getPageByTitle (title) {
     const queryString = new URLSearchParams({
       spaceKey: this.spacekey,
-      expand: 'body.view',
+      expand: 'body.view,version',
       title
     }).toString()
 
@@ -232,19 +232,22 @@ export class Confluence {
 
   addPage (pageId, title, markdown) {
     const formatted = Confluence.format(markdown)
+
+    const body = JSON.stringify({
+      spaceId: this.spaceId,
+      status: 'current',
+      title,
+      parentId: pageId,
+      body: {
+        representation: 'atlas_doc_format',
+        value: String(JSON.stringify(formatted))
+      }
+    })
+
     return fetch(`${this.wiki}/api/v2/pages`, {
       method: 'POST',
       headers: this.headers,
-      body: JSON.stringify({
-        spaceId: this.spaceId,
-        status: 'current',
-        title,
-        parentId: pageId,
-        body: {
-          representation: 'atlas_doc_format',
-          value: formatted
-        }
-      })
+      body
     })
       .then(response => {
         if (response.status !== 200) {
