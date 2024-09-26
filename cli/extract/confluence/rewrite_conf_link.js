@@ -6,8 +6,10 @@ export function rewriteConfluenceLink ({ conf }) {
   return (tree) => {
     visitParents(tree, 'link', (node, ancestors) => {
       const uuid = node.url.slice(1)
-      if (!Nugget.UUID_RE.test(uuid)) return
-      node.url = conf.getLookupUrl(uuid)
+
+      if (Nugget.UUID_RE.test(uuid)) {
+        node.url = conf.getLookupUrl(uuid)
+      }
     })
   }
 }

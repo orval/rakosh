@@ -2698,12 +2698,7 @@ marked-terminal@^5.2.0:
     node-emoji "^1.11.0"
     supports-hyperlinks "^2.3.0"
 
-marked@^0.8.2:
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-0.8.2.tgz#4faad28d26ede351a7a1aaa5fec67915c869e355"
-  integrity sha512-EGwzEeCcLniFX51DhTpmTom+dSA/MG/OBUDjnWtHbEnjAH180VzUeAw+oE4+Zv+CoYBWyRlYOTR0N8SO9R1PVw==
-
-marked@^4.0.18:
+marked@^4.0.18, marked@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/marked/-/marked-4.3.0.tgz#796362821b019f734054582038b116481b456cf3"
   integrity sha512-PRsaiG84bK+AMvxziE/lCFss8juXjNaWzVbN5tXAm4XjeaS9NAHhop+PjQxz2A9h8Q4M/xGmzP8vqNwy6JeK0A==
@@ -2720,9 +2715,9 @@ math-random@^1.0.1:
 
 "md-to-adf-orval@github:orval/md-to-adf-orval":
   version "0.1.1"
-  resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/6d590208f52802cea8d19de21fe5bc22c3bea8df"
+  resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/290da5854d7193ca65ef21396482e695bbcb9e5e"
   dependencies:
-    adf-builder "github:orval/adf-builder-javascript"
+    adf-builder "^3.3.0"
     marked "^0.8.2"
 
 mdast-util-directive@^3.0.0:

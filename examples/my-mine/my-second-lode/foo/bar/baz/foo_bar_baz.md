@@ -14,3 +14,5 @@ Win-win gain traction. Today shall be a cloudy day, thanks to blue sky thinking,
 Linking to [some other nugget](/e6ded25a-d6a0-4604-a04a-8cbd85874170).
 
 * [Security and Privacy in SaaS](/f54bfbb9-fb65-46de-95dc-b4b24f8defe4)
+
+Test with complex link [Blah](https://example.com/wibble/bob/foo/123/Floop+Badger#FloopBadger-ABC-111:Bananas('Apples')) that has parentheses in it.

@@ -51,7 +51,10 @@ export async function confluencePages (db, argv) {
     if (!confluence.inLookup(nugget._key) && Object.keys(nugget.pageRefs).length > 0) {
       for (const pageKey of Object.keys(nugget.pageRefs)) {
         const url = confluence.getLookupUrl(pageKey)
-        if (url) confluence.addLookupUrl(nugget._key, `/wiki${url}#${nugget.label.replace(/\s/g, '-')}`)
+        if (url) {
+          const fragment = encodeURIComponent(nugget.label.replace(/\s/g, '-'))
+          confluence.addLookupUrl(nugget._key, `/wiki${url}#${fragment}`)
+        }
       }
     }
   })
