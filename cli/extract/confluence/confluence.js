@@ -139,10 +139,33 @@ export class Confluence {
     return 'note'
   }
 
-  static format (markdown) {
+  static format (markdown, attachments) {
     const adfo = fnTranslate(markdown)
 
-    const hasAdmonition = adfo.content.content.filter(c => this.isAdmonClose(c))
+    // replace the filename "titles" with the attachment IDs
+    if (attachments?.length) {
+      function getAttachmentId (id) {
+        const matched = attachments.filter(a => a.title === id)
+        if (matched?.length && matched[0]?.fileId) return matched[0]?.fileId
+      }
+
+      function setImageIds (node) {
+        if (Array.isArray(node)) {
+          node.forEach(setImageIds)
+        } else if (node && typeof node === 'object') {
+          if (node.type === 'media' && node.attrs && node.attrs.id) {
+            node.attrs.id = getAttachmentId(node.attrs.id)
+          }
+          if (node.content) {
+            setImageIds(node.content)
+          }
+        }
+      }
+
+      setImageIds(adfo)
+    }
+
+    const hasAdmonition = adfo.content.filter(c => this.isAdmonClose(c))
 
     // React Admonition elements are replaced by an ADF Panel
     if (hasAdmonition.length > 0) {
@@ -168,7 +191,7 @@ export class Confluence {
       _.pullAt(adfo.content.content, removeIndexes)
     }
 
-    return adfo.toJSON()
+    return adfo
   }
 
   getPage (pageId) {
@@ -230,6 +253,26 @@ export class Confluence {
       .catch(error => log.error('getPageByTitle', error.message))
   }
 
+  getAttachments (pageId) {
+    const queryString = new URLSearchParams({
+      status: 'current',
+      limit: 250
+    }).toString()
+
+    return fetch(`${this.wiki}/api/v2/pages/${encodeURIComponent(pageId)}/attachments?${queryString}`, {
+      method: 'GET',
+      headers: this.headers
+    })
+      .then(response => {
+        if (response.status !== 200) {
+          throw new Error(`${response.status} ${response.statusText}`)
+        }
+        return response.json()
+      })
+      .then(data => data.results)
+      .catch(error => log.error('getPages', error.message))
+  }
+
   addPage (pageId, title, markdown) {
     const formatted = Confluence.format(markdown)
 
@@ -258,8 +301,8 @@ export class Confluence {
       .catch(error => log.error('addPage', error.message))
   }
 
-  updatePage (pageId, version, title, markdown) {
-    const formatted = Confluence.format(markdown)
+  updatePage (pageId, version, title, markdown, attachments) {
+    const formatted = Confluence.format(markdown, attachments)
 
     const body = JSON.stringify({
       id: pageId,
@@ -324,7 +367,9 @@ export class Confluence {
         }
         return response.json()
       })
-      .then(data => data.results[0])
+      .then(data => {
+        return data.results[0]
+      })
       .catch(error => log.error('attach', error.message))
   }
 
@@ -336,11 +381,15 @@ export class Confluence {
 
     const page = await this.getPageByTitle(title)
     if (page) {
+      // gather data on any attachments
+      const attachments = await this.getAttachments(page.id)
+
       const updatedPage = await this.updatePage(
         page.id,
         page.version.number + 1,
         title,
-        markdown
+        markdown,
+        attachments
       )
 
       if (!updatedPage) {
@@ -349,6 +398,9 @@ export class Confluence {
       }
 
       log.info(`updated page ${updatedPage.id} "${title}"`)
+
+      // skip attachments if any were found -- delete the page to change the attachments
+      if (attachments?.length) return updatedPage
 
       // TODO do this for `add` as well
       for (const [uuidName, media] of Object.entries(nugget.refs)) {
