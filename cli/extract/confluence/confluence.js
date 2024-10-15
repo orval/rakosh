@@ -6,7 +6,7 @@ import log from 'loglevel'
 import fnTranslate from 'md-to-adf-orval'
 import fetch from 'node-fetch'
 import _ from 'lodash'
-import { Panel } from 'adf-builder'
+import { panel } from '@atlaskit/adf-utils/dist/cjs/builders.js'
 
 export class Confluence {
   static ADMON_OPEN = '<Admonition '
@@ -92,12 +92,10 @@ export class Confluence {
 
   static getParaText (node) {
     if (node.content &&
-      node.content.type === 'paragraph' &&
-      node.content.content &&
-      node.content.content.length > 0 &&
-      node.content.content[0].constructor &&
-      node.content.content[0].constructor.name === 'Text') {
-      return node.content.content[0].text
+      node.type === 'paragraph' &&
+      node.content.length > 0 &&
+      node.content[0].type === 'text') {
+      return node.content[0].text
     }
     return undefined
   }
@@ -169,26 +167,28 @@ export class Confluence {
 
     // React Admonition elements are replaced by an ADF Panel
     if (hasAdmonition.length > 0) {
-      let panel
+      let panelType
+      let admon = []
       let inAdmon = false
       let startIdx = 0
       const removeIndexes = []
-      adfo.content.content.forEach((node, idx) => {
+      adfo.content.forEach((node, idx) => {
         if (this.isAdmonOpen(node)) {
           inAdmon = true
-          panel = new Panel(this.getAdmonType(node))
+          admon = []
+          panelType = this.getAdmonType(node)
           startIdx = idx
         } else if (this.isAdmonClose(node) && inAdmon) {
           inAdmon = false
-          adfo.content.content[startIdx] = panel
+          adfo.content[startIdx] = panel({ panelType })(...admon)
           removeIndexes.push(idx)
         } else if (inAdmon) {
-          panel.content.add(node)
+          admon.push(node)
           removeIndexes.push(idx)
         }
       })
 
-      _.pullAt(adfo.content.content, removeIndexes)
+      _.pullAt(adfo.content, removeIndexes)
     }
 
     return adfo
