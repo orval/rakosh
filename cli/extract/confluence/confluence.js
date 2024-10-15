@@ -168,26 +168,23 @@ export class Confluence {
     // React Admonition elements are replaced by an ADF Panel
     if (hasAdmonition.length > 0) {
       let panelType
-      let admon = []
-      let inAdmon = false
+      let admonContent
       let startIdx = 0
       const removeIndexes = []
       adfo.content.forEach((node, idx) => {
         if (this.isAdmonOpen(node)) {
-          inAdmon = true
-          admon = []
+          admonContent = []
           panelType = this.getAdmonType(node)
           startIdx = idx
-        } else if (this.isAdmonClose(node) && inAdmon) {
-          inAdmon = false
-          adfo.content[startIdx] = panel({ panelType })(...admon)
+        } else if (this.isAdmonClose(node) && admonContent) {
+          adfo.content[startIdx] = panel({ panelType })(...admonContent)
           removeIndexes.push(idx)
-        } else if (inAdmon) {
-          admon.push(node)
+          admonContent = undefined
+        } else if (admonContent) {
+          admonContent.push(node)
           removeIndexes.push(idx)
         }
       })
-
       _.pullAt(adfo.content, removeIndexes)
     }
 
