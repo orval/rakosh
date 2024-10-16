@@ -51,7 +51,10 @@ export async function confluencePages (db, argv) {
     if (!confluence.inLookup(nugget._key) && Object.keys(nugget.pageRefs).length > 0) {
       for (const pageKey of Object.keys(nugget.pageRefs)) {
         const url = confluence.getLookupUrl(pageKey)
-        if (url) confluence.addLookupUrl(nugget._key, `${url}#${nugget.label}`)
+        if (url) {
+          const fragment = encodeURIComponent(nugget.label.replace(/\s/g, '-'))
+          confluence.addLookupUrl(nugget._key, `/wiki${url}#${fragment}`)
+        }
       }
     }
   })
@@ -69,7 +72,7 @@ function getPageInfo (confluence, _, nugget, title) {
   // this read-only version populates the Nugget key versus URL lookup
   return confluence.getPageByTitle(title).then(pageData => {
     if (pageData) {
-      confluence.addLookupUrl(nugget._key, title) // pageData._links.webui)
+      confluence.addLookupUrl(nugget._key, pageData._links.webui)
     }
     return pageData
   })
