@@ -6,7 +6,7 @@ import log from 'loglevel'
 import fnTranslate from 'md-to-adf-orval'
 import fetch from 'node-fetch'
 import _ from 'lodash'
-import { panel } from '@atlaskit/adf-utils/dist/cjs/builders.js'
+import { extension, panel, rule } from '@atlaskit/adf-utils/dist/cjs/builders.js'
 
 export class Confluence {
   static ADMON_OPEN = '<Admonition '
@@ -187,6 +187,13 @@ export class Confluence {
       })
       _.pullAt(adfo.content, removeIndexes)
     }
+
+    // append the Children Display macro after a rule
+    adfo.content.push(rule())
+    adfo.content.push(extension({
+      extensionKey: 'children',
+      extensionType: 'com.atlassian.confluence.macro.core'
+    }))
 
     return adfo
   }
