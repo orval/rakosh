@@ -9,7 +9,7 @@ import include from './lib/option_include.js'
 log.setLevel('WARN')
 
 export default {
-  command: 'html <mine> [<directory>]',
+  command: 'html <mine> [--output]',
   describe: 'Extract the data from a mine and publish as an HTML document',
 
   builder: (yargs) => {
