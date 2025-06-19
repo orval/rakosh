@@ -2866,7 +2866,6 @@ math-random@^1.0.1:
   resolved "https://codeload.github.com/orval/md-to-adf-orval/tar.gz/7a50e4fe0700da292ad19625598d456817989788"
   dependencies:
     "@atlaskit/adf-utils" "^19.8.1"
-    adf-builder "github:orval/adf-builder-javascript"
     marked "^4.3.0"
 
 mdast-util-directive@^3.0.0:

@@ -426,7 +426,7 @@ export class NuggetCatalog {
   // generate MDX pages and a lookup table of slugs/paths
   async getAllMdx () {
     const treeRoot = await this.#getTree()
-    this.#generateBreadcrumbs(treeRoot)
+    await this.#generateBreadcrumbs(treeRoot)
 
     function notInTree (key) {
       const node = treeRoot.first(n => { return n.model._key === key })
@@ -521,6 +521,56 @@ export class NuggetCatalog {
     await Promise.all(promises)
     return mdxNuggets
   }
+
+  async getAllNuggets () {
+    const treeRoot = await this.#getTree()
+    await this.#generateBreadcrumbs(treeRoot)
+
+    const slugs = []
+    const promises = []
+
+    treeRoot.walk(async (node) => {
+      const promise = (async () => {
+        const nugget = this.fromNode(node)
+        const slug = (nugget.paths?.length > 0) ? nugget.paths[0] : '/'
+        slugs.push([nugget, slug])
+      })()
+
+      promises.push(promise)
+    })
+
+    await Promise.all(promises)
+    return slugs
+  }
+
+  // keep truncating markdown until it's valid
+  static truncateMd (markdown, len = 100) {
+    let numErrors = 1
+    let truncationLength = len
+
+    do {
+      const truncated = truncateMarkdown(markdown, {
+        limit: truncationLength,
+        ellipsis: true
+      })
+
+      const errors = markdownlint.sync({
+        strings: { truncated },
+        config: {
+          'line-length': false,
+          'first-line-heading': false,
+          MD047: false
+        }
+      })
+
+      numErrors = errors.truncated.length
+      if (numErrors === 0) return truncated
+
+      truncationLength--
+    } while (numErrors > 0 && truncationLength > 0)
+
+    throw new Error('Not able to truncate markdown: ' + markdown)
+  }
 }
 
 function getBody (entries, nugget) {
@@ -531,38 +581,9 @@ function getBody (entries, nugget) {
 
   if ('body' in nugget) {
     // truncate markdown in inbound/outbound nuggets to save space
-    return entries.direction ? truncateMd(nugget.body) : nugget.body
+    return entries.direction ? NuggetCatalog.truncateMd(nugget.body) : nugget.body
   }
 
   // fall back to just the label as a heading
   return '### ' + nugget.label
-}
-
-// keep truncating markdown until it's valid
-function truncateMd (markdown) {
-  let numErrors = 1
-  let truncationLength = 100
-
-  do {
-    const truncated = truncateMarkdown(markdown, {
-      limit: truncationLength,
-      ellipsis: true
-    })
-
-    const errors = markdownlint.sync({
-      strings: { truncated },
-      config: {
-        'line-length': false,
-        'first-line-heading': false,
-        MD047: false
-      }
-    })
-
-    numErrors = errors.truncated.length
-    if (numErrors === 0) return truncated
-
-    truncationLength--
-  } while (numErrors > 0 && truncationLength > 0)
-
-  throw new Error('Not able to truncate markdown: ' + markdown)
 }
