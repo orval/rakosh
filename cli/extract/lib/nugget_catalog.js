@@ -533,7 +533,9 @@ export class NuggetCatalog {
       const promise = (async () => {
         const nugget = this.fromNode(node)
         const slug = (nugget.paths?.length > 0) ? nugget.paths[0] : '/'
-        slugs.push([nugget, slug])
+        if (!slugs.some(([_, s]) => s === slug)) {
+          slugs.push([nugget, slug])
+        }
       })()
 
       promises.push(promise)
