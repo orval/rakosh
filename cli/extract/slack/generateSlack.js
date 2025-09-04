@@ -13,11 +13,8 @@ export async function generateSlack (catalog, output) {
     const markdown = nugget.body
     if (!markdown) continue
 
-    // console.log('L', markdown.length)
-    // if (markdown.length > 1500) console.log(slug)
-    const sm = NuggetCatalog.truncateMd(markdown, 300)
-    // console.log('S', sm.length)
-    const jsonLine = { key: slug, markdown: slackifyMarkdown(markdown) }
+    const sm = NuggetCatalog.truncateMd(markdown, 1000)
+    const jsonLine = { key: slug, markdown: slackifyMarkdown(sm) }
     appendFileSync(output, JSON.stringify(jsonLine) + '\n')
   }
 }
