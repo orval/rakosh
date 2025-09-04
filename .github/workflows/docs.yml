@@ -30,16 +30,16 @@ jobs:
       - name: verify arangodb
         run: |
           docker logs "${{ job.services.arango.id }}"
-        
+
       - name: check out repo
         uses: actions/checkout@v4
-        
+
       - name: setup node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Enable Corepack
+      - name: enable corepack
         run: |
           corepack enable
           yarn --version
@@ -48,7 +48,7 @@ jobs:
         run: |
           yarn install --immutable
           yarn run lint
-          
+
       - name: deposit my-mine
         run: |
           node ./cli/main.js deposit docs -v
@@ -58,15 +58,14 @@ jobs:
           mkdir ./staticsite
           ./cli/main.js gatsby docs docs/cust-prod.json ./staticsite -v --no-build
           cd ./staticsite
-          yarn
-          yarn list
+          yarn install --no-immutable
           yarn run deploy
-          
+
       - name: upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./staticsite/public
-          
+
   deploy:
     environment:
       name: github-pages
