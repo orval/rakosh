@@ -1,12 +1,28 @@
 'use strict'
-import { writeFileSync } from 'node:fs'
+import { writeFileSync, mkdirSync, statSync } from 'node:fs'
+import { join } from 'node:path'
 
-export async function generateTree (catalog, output) {
-  // this gets a chunk of markdown for each seam then for any remaining nuggets
-  const [mdChunks] = await catalog.getSeamNuggetMarkdown()
+export async function generateTree (catalog, directory) {
+  const nugs = await catalog.getAllNuggets()
+  for (const [nugget, slug] of nugs) {
+    const markdown = nugget.body
+    if (!markdown) continue
 
-  mdChunks.shift()
-  const allMd = mdChunks.map(c => c + '\n---\n').join('\n') // TODO write tree into dir not MD into a file
-  writeFileSync(output, allMd)
-  return allMd
+    const dir = join(directory, slug)
+    materializeDir(dir)
+    writeFileSync(join(dir, nugget.getLabel() + '.md'), markdown)
+  }
+}
+
+function materializeDir (dir) {
+  try {
+    const dirStat = statSync(dir)
+    if (!dirStat.isDirectory()) throw new Error(`${dir} is not a directory`)
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      mkdirSync(dir, { recursive: true })
+    } else {
+      throw err
+    }
+  }
 }

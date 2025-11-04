@@ -1,4 +1,6 @@
 'use strict'
+import { statSync } from 'node:fs'
+
 import { Database } from 'arangojs'
 import log from 'loglevel'
 
@@ -9,7 +11,7 @@ import include from './lib/option_include.js'
 log.setLevel('WARN')
 
 export default {
-  command: 'tree <mine> [--output]',
+  command: 'tree <mine> <directory>',
   describe: 'Extract the data from a mine and publish as a tree of Markdown documents',
 
   builder: (yargs) => {
@@ -18,10 +20,22 @@ export default {
         describe: 'The name of the mine to extract',
         string: true
       })
-      .option('output', {
-        description: 'The name of the output Markdown file',
-        alias: 'o',
-        default: 'output.md'
+      .positional('directory', {
+        describe: 'Target directory into which to extract the data',
+        string: true,
+        normalize: true,
+        coerce: d => {
+          try {
+            if (!statSync(d).isDirectory()) throw new Error()
+          } catch {
+            throw new Error(`${d} is not a directory`)
+          }
+          return d
+        }
+      })
+      .option('treedebug', {
+        boolean: true,
+        hidden: true
       })
       .option('include', include)
       .option('exclude', exclude)
