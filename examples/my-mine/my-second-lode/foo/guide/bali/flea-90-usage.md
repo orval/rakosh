@@ -3,7 +3,7 @@ _key: 4a902f18-7115-4f01-8ba5-803c8512538a
 guide: bali-90
 ---
 
-## Usage Examples
+# Usage Examples
 
 ```java
 // ❌ DANGER - Direct user input in Directory queries
