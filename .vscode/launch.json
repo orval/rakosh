@@ -16,7 +16,9 @@
       "args": [
         "tree",
         "my-mine",
-        "-v"
+        "treeout",
+        "-v",
+        // "--treedebug"
       ]
     },
   ]

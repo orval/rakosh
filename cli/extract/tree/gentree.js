@@ -23,6 +23,7 @@ export async function genTree (db, argv) {
 
   log.info('generating tree')
   await generateTree(
+    root,
     catalog,
     argv.directory
   )
