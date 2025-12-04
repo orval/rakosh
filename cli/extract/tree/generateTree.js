@@ -2,6 +2,7 @@
 import { writeFileSync, mkdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
+import log from 'loglevel'
 import slugify from 'slugify'
 
 export async function generateTree (root, catalog, directory) {
@@ -17,6 +18,7 @@ function materializeDir (dir) {
   } catch (err) {
     if (err.code === 'ENOENT') {
       mkdirSync(dir, { recursive: true })
+      log.info(`created directory ${dir}`)
     } else {
       throw err
     }
@@ -35,10 +37,9 @@ function makeMdFile (dir, nugget, slug) {
   }
   materializeDir(dir)
   const writeTo = join(dir, `${slug}.md`)
-  // console.log(`writing ${writeTo}`)
+  log.info(`writing markdown file ${writeTo}`)
   writeFileSync(writeTo, markdown)
   return dir
-  // writeFileSync(join(dir, nugget.getLabel() + '.md'), markdown)
 }
 
 function getSlug (node, catalog, slugMap) {
