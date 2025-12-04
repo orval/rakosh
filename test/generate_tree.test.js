@@ -1,4 +1,4 @@
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -70,6 +70,50 @@ function ensureKeys (root) {
   })
 }
 
+function makeStubNode ({ key, label, page, body, type }) {
+  const node = {
+    model: { _key: key, label, page, body, type },
+    parent: null,
+    children: []
+  }
+
+  node.getPath = function () {
+    const path = []
+    let current = this
+    while (current) {
+      path.unshift(current)
+      current = current.parent
+    }
+    return path
+  }
+
+  node.all = function (predicate) {
+    const matches = []
+    const visit = (n) => {
+      if (predicate(n)) matches.push(n)
+      n.children.forEach(visit)
+    }
+    visit(this)
+    return matches
+  }
+
+  return node
+}
+
+function makeStubCatalog () {
+  return {
+    fromNode (node) {
+      const model = node.model || {}
+      return {
+        getLabel: () => model.label || model._key,
+        page: model.page,
+        body: model.body,
+        type: model.type
+      }
+    }
+  }
+}
+
 describe('generateTree output', function () {
   it('contains all markdown bodies from the source fsLayout', async function () {
     const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -112,5 +156,54 @@ describe('generateTree output', function () {
     } finally {
       rmSync(outDir, { recursive: true, force: true })
     }
+  })
+})
+
+describe('generateTree edge cases', function () {
+  it('skips writing when markdown is missing and falls back to slugify when absent from the map', async function () {
+    const catalog = makeStubCatalog()
+    const phantomRoot = makeStubNode({ key: 'phantom', label: 'Phantom ancestor' })
+    const root = makeStubNode({ key: 'root', label: 'Root page', page: '' })
+    root.parent = phantomRoot
+
+    const outDir = mkdtempSync(join(tmpdir(), 'rakosh-tree-'))
+    try {
+      await generateTree(root, catalog, outDir)
+      expect(readdirSync(outDir)).to.deep.equal([])
+    } finally {
+      rmSync(outDir, { recursive: true, force: true })
+    }
+  })
+
+  it('throws when an output directory is blocked by an existing file', async function () {
+    const catalog = makeStubCatalog()
+    const phantomRoot = makeStubNode({ key: 'phantom', label: 'Phantom ancestor' })
+    const root = makeStubNode({ key: 'root', label: 'Root page', page: '' })
+    const child = makeStubNode({ key: 'child', label: 'Child page', page: '# child page' })
+
+    root.parent = phantomRoot
+    child.parent = root
+    root.children.push(child)
+
+    const outDir = mkdtempSync(join(tmpdir(), 'rakosh-tree-'))
+    const conflictPath = join(
+      outDir,
+      slugify(root.model.label),
+      slugify(child.model.label)
+    )
+    mkdirSync(join(outDir, slugify(root.model.label)), { recursive: true })
+    writeFileSync(conflictPath, 'not a directory')
+
+    let error
+    try {
+      await generateTree(root, catalog, outDir)
+    } catch (err) {
+      error = err
+    } finally {
+      rmSync(outDir, { recursive: true, force: true })
+    }
+
+    expect(error).to.be.an('error')
+    expect(error.message).to.match(/not a directory/)
   })
 })
