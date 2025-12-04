@@ -60,6 +60,24 @@ function collectMarkdown (dir) {
   return contents
 }
 
+function collectMarkdownWithPaths (dir, base = dir) {
+  const files = []
+
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      files.push(...collectMarkdownWithPaths(full, base))
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      files.push({
+        path: full.slice(base.length + 1),
+        content: readFileSync(full, 'utf8')
+      })
+    }
+  }
+
+  return files
+}
+
 function ensureKeys (root) {
   root.walk(node => {
     if (!node.model._key) {
@@ -152,6 +170,61 @@ describe('generateTree output', function () {
       const generated = collectMarkdown(outDir).map(normalize).join(' ')
       expectedPages.forEach(body => {
         expect(generated).to.contain(body)
+      })
+    } finally {
+      rmSync(outDir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('generateTree seams', function () {
+  it('collates seam nuggets into a single markdown file', async function () {
+    const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
+    const fixtureDir = join(repoRoot, 'examples', 'my-mine')
+    const fsLayout = new FsLayout(fixtureDir)
+
+    ensureKeys(fsLayout.root)
+
+    const vertices = []
+    const paths = []
+
+    fsLayout.root.walk(node => {
+      const model = Object.assign({}, node.model)
+      delete model.children
+      vertices.push(model)
+      paths.push(node.getPath().map(n => n.model._key).join('|'))
+    })
+
+    const db = new FakeDb(vertices, paths)
+    const catalog = new NuggetCatalog(db)
+    await catalog.init()
+    const treeRoot = await catalog.getSeamNuggetTree()
+
+    const seamKey = 'aa91b9a7-d73c-4f77-a4a1-eb1080998105'
+    const seamNode = treeRoot.first(n => n.model._key === seamKey)
+    expect(seamNode, 'seam node should exist in the tree').to.not.equal(undefined)
+
+    const outDir = mkdtempSync(join(tmpdir(), 'rakosh-tree-'))
+    try {
+      await generateTree(treeRoot, catalog, outDir)
+      const files = collectMarkdownWithPaths(outDir)
+
+      const seamFiles = files.filter(f => f.content.includes('Seam Test'))
+      expect(seamFiles.length).to.equal(1)
+
+      const seamFile = seamFiles[0]
+      const seamDir = seamFile.path.split('/').slice(0, -1).join('/')
+      const seamDirFiles = files.filter(f => f.path.startsWith(seamDir))
+      expect(seamDirFiles.map(f => f.path)).to.deep.equal([seamFile.path])
+
+      const childHeadings = [
+        'Benefits of SaaS for Small Businesses',
+        'Security and Privacy in SaaS',
+        'Emerging Trends in SaaS'
+      ]
+
+      childHeadings.forEach(head => {
+        expect(seamFile.content).to.include(head)
       })
     } finally {
       rmSync(outDir, { recursive: true, force: true })
