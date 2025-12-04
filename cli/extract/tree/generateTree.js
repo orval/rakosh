@@ -27,7 +27,6 @@ function makeMdFile (dir, nugget, slug) {
   let ret = ''
   if (nugget.type === 'passage') {
     ret = slug
-    console.log(`passage ${ret} ${dir}`)
   }
 
   const markdown = ('page' in nugget) ? nugget.page : nugget.body
@@ -36,7 +35,7 @@ function makeMdFile (dir, nugget, slug) {
   }
   materializeDir(dir)
   const writeTo = join(dir, `${slug}.md`)
-  console.log(`writing ${writeTo}`)
+  // console.log(`writing ${writeTo}`)
   writeFileSync(writeTo, markdown)
   return dir
   // writeFileSync(join(dir, nugget.getLabel() + '.md'), markdown)
