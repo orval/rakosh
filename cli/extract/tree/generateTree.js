@@ -23,9 +23,10 @@ function materializeDir (dir) {
 }
 
 function makeMdFile (dir, nugget) {
+  const slugLabel = slugify(nugget.getLabel())
   let ret = ''
   if (nugget.type === 'passage') {
-    ret = nugget.getLabel()
+    ret = slugLabel
     console.log(`passage ${ret} ${dir}`)
   }
 
@@ -34,7 +35,7 @@ function makeMdFile (dir, nugget) {
     return ret
   }
   materializeDir(dir)
-  const writeTo = join(dir, nugget.getLabel() + '.md')
+  const writeTo = join(dir, slugLabel + '.md')
   console.log(`writing ${writeTo}`)
   writeFileSync(writeTo, markdown)
   return dir
@@ -50,10 +51,8 @@ async function processNodes (catalog, rootDir, nodes) {
     return prev
       .then(() => {
         const nugget = catalog.fromNode(ent.node)
-        if ('page' in nugget) {
-          const path = ent.node.getPath().map(p => slugify(catalog.fromNode(p).getLabel())).slice(1).join('/')
-          return makeMdFile(join(rootDir, path), nugget)
-        }
+        const path = ent.node.getPath().map(p => slugify(catalog.fromNode(p).getLabel())).slice(1).join('/')
+        return makeMdFile(join(rootDir, path), nugget)
       })
       .then((dir) => {
         return ent.node
