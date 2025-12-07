@@ -565,7 +565,7 @@ export class NuggetCatalog {
     do {
       const truncated = truncateMarkdown(markdown, {
         limit: truncationLength,
-        ellipsis: true
+        ellipsis: false
       })
 
       const errors = markdownlint.sync({
