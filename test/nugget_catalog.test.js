@@ -196,7 +196,7 @@ describe('NuggetCatalog class', function () {
   it('getAllMdx returns mdx strings for all nuggets', async function () {
     const vertices = [
       { _key: 'adit', _id: 'passage/adit', label: 'Adit', type: 'passage', fspath: 'adit.md', body: '# Adit', paths: ['/'] },
-      { _key: 'p1', _id: 'passage/p1', label: 'Pass One', shortlabel: 'Pass One', type: 'passage', passage: 'p1', fspath: 'p1.md', body: '# Pass One', paths: ['/pass-one'] },
+      { _key: 'p1', _id: 'passage/p1', label: 'Pass One', shortlabel: 'Pass One', type: 'passage', passage: 'p1', fspath: 'p1.md', body: '# Pass One', paths: ['/pass-one'], nuggets: ['n1'] },
       { _key: 'n1', _id: 'nugget/n1', label: 'Nug One', shortlabel: 'Nug One', type: 'nugget', fspath: 'p1/n1.md', body: '## Body', paths: ['/pass-one/n1'] },
       { _key: 'out1', _id: 'nugget/out1', label: 'Out One', shortlabel: 'Out One', type: 'nugget', fspath: 'p1/out1.md', body: '## Outbound', paths: ['/pass-one/out1'] }
     ]
@@ -245,6 +245,7 @@ describe('NuggetCatalog class', function () {
     expect(rendered).to.include('slug: /pass-one')
     expect(rendered).to.include('Pass One')
     expect(rendered).to.include('Nug One')
+    expect(rendered).to.include('inseam="true"')
     expect(rendered).to.include('Out One')
     expect(rendered).to.include('<NuggetArea>')
   })
