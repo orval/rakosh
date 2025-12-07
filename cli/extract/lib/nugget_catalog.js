@@ -34,9 +34,15 @@ export class NuggetCatalog {
 
     if (includes.length > 0) {
       this.filters.push(join(
-        includes.map((i, index) => (index === 0)
-          ? aql`FILTER v.${i.key} == ${i.value}`
-          : aql`v.${i.key} == ${i.value}`)
+        includes.map((i, index) => {
+          const existsFilter = (index === 0)
+            ? aql`FILTER HAS(v, ${i.key})`
+            : aql`HAS(v, ${i.key})`
+          const equalityFilter = (index === 0)
+            ? aql`FILTER v.${i.key} == ${i.value}`
+            : aql`v.${i.key} == ${i.value}`
+          return (i.value === '*') ? existsFilter : equalityFilter
+        })
         , ' OR '))
     }
 

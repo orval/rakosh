@@ -30,4 +30,16 @@ describe('NuggetCatalog class', function () {
     // eslint-disable-next-line no-unused-expressions
     expect(catalog.initialised).to.be.true
   })
+
+  it('creates HAS filter when include value is a wildcard', function () {
+    const includes = [{ key: 'key1', value: '*' }, { key: 'key2', value: 'foo' }]
+    const catalog = new NuggetCatalog(dbMock, includes)
+
+    expect(catalog.filters).to.have.lengthOf(1)
+    const { query, bindVars } = catalog.filters[0]
+    expect(query).to.include('FILTER HAS(v, @value0)')
+    expect(query).to.include('OR v.@value1 == @value2')
+    expect(query).to.not.include('v.@value0 ==')
+    expect(bindVars).to.include({ value0: 'key1', value1: 'key2', value2: 'foo' })
+  })
 })

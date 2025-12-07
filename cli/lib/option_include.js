@@ -1,6 +1,6 @@
 'use strict'
 const include = {
-  description: 'Only include nuggets with these "[key:value]" pairs; only word chars are allowed',
+  description: 'Only include nuggets with these "[key:value]" pairs; use "*" as value to match presence; only word chars are allowed',
   alias: 'i',
   string: true,
   coerce: inc => {
@@ -9,7 +9,7 @@ const include = {
     }
     const includes = []
     inc.split(',').forEach(p => {
-      const match = p.match(/^([\w]+):([\w\- ]+)$/)
+      const match = p.match(/^([\w]+):([\w\- ]+|\*)$/)
       if (!match) throw new Error(`include [${p}] is not a valid key or value format`)
       includes.push({ key: match[1], value: getValue(match[2]) })
     })
