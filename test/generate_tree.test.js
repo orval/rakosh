@@ -134,7 +134,7 @@ function makeStubCatalog () {
 }
 
 describe('generateTree output', function () {
-  this.slow(600)
+  this.slow(1000)
 
   before(function () {
     log.setLevel('error')
@@ -185,7 +185,7 @@ describe('generateTree output', function () {
 })
 
 describe('generateTree seams', function () {
-  this.slow(600)
+  this.slow(1000)
 
   before(function () {
     log.setLevel('error')
