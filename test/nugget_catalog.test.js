@@ -197,9 +197,10 @@ describe('NuggetCatalog class', function () {
     const vertices = [
       { _key: 'adit', _id: 'passage/adit', label: 'Adit', type: 'passage', fspath: 'adit.md', body: '# Adit', paths: ['/'] },
       { _key: 'p1', _id: 'passage/p1', label: 'Pass One', shortlabel: 'Pass One', type: 'passage', passage: 'p1', fspath: 'p1.md', body: '# Pass One', paths: ['/pass-one'] },
-      { _key: 'n1', _id: 'nugget/n1', label: 'Nug One', shortlabel: 'Nug One', type: 'nugget', fspath: 'p1/n1.md', body: '## Body', paths: ['/pass-one/n1'] }
+      { _key: 'n1', _id: 'nugget/n1', label: 'Nug One', shortlabel: 'Nug One', type: 'nugget', fspath: 'p1/n1.md', body: '## Body', paths: ['/pass-one/n1'] },
+      { _key: 'out1', _id: 'nugget/out1', label: 'Out One', shortlabel: 'Out One', type: 'nugget', fspath: 'p1/out1.md', body: '## Outbound', paths: ['/pass-one/out1'] }
     ]
-    const paths = ['adit|p1', 'adit|p1|n1']
+    const paths = ['adit|p1', 'adit|p1|n1', 'adit|p1|out1']
 
     class FakeDb {
       constructor (v, p) { this.vertices = v; this.paths = p }
@@ -218,7 +219,11 @@ describe('NuggetCatalog class', function () {
           }
           return this.#cursor([path])
         }
-        if (queryText.includes('RETURN { v, e }')) return this.#cursor([])
+        if (queryText.includes('RETURN { v, e }')) {
+          return this.#cursor([
+            { v: { _id: 'nugget/out1' }, e: { _from: 'nugget/n1', _to: 'nugget/out1' } }
+          ])
+        }
         return { async forEach () {}, async * [Symbol.asyncIterator] () {} }
       }
 
@@ -235,11 +240,12 @@ describe('NuggetCatalog class', function () {
     await catalog.init()
 
     const mdx = await catalog.getAllMdx()
-    expect(mdx).to.have.length(3)
+    expect(mdx).to.have.length(4)
     const rendered = mdx.map(([n, m]) => m).join('\n')
     expect(rendered).to.include('slug: /pass-one')
     expect(rendered).to.include('Pass One')
     expect(rendered).to.include('Nug One')
+    expect(rendered).to.include('Out One')
     expect(rendered).to.include('<NuggetArea>')
   })
 })
