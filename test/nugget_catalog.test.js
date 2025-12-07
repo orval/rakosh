@@ -43,6 +43,21 @@ describe('NuggetCatalog class', function () {
     expect(bindVars).to.include({ value0: 'key1', value1: 'key2', value2: 'foo' })
   })
 
+  it('builds include/exclude filters when values are explicit', function () {
+    const includes = [{ key: 'key1', value: 'foo' }]
+    const excludes = [{ key: 'key2', value: 'bar' }]
+    const catalog = new NuggetCatalog(dbMock, includes, excludes)
+
+    expect(catalog.filters).to.have.lengthOf(2)
+    const [inc, exc] = catalog.filters
+    expect(inc.query).to.include('FILTER v.')
+    expect(exc.query).to.include('FILTER v.')
+    expect(inc.bindVars.value0).to.equal('key1')
+    expect(inc.bindVars.value1).to.equal('foo')
+    expect(exc.bindVars.value0).to.equal('key2')
+    expect(exc.bindVars.value1).to.equal('bar')
+  })
+
   it('paginates nuggets into ordered markdown pages', async function () {
     const vertices = [
       { _key: 'adit', label: 'Adit', type: 'passage', fspath: 'adit.md', body: '# Adit' },
@@ -101,5 +116,37 @@ describe('NuggetCatalog class', function () {
     expect(mdx).to.include('# Heading')
     expect(mdx).to.include('<Breadcrumbs />')
     expect(mdx).to.include('</Nugget>')
+  })
+
+  it('getMdx handles media and truncates outbound bodies', function () {
+    const catalog = new NuggetCatalog({}, [], [], false)
+
+    const mediaNugget = {
+      document: { _key: 'm1', type: 'nugget', label: 'Pic', body: '', __media: true, paths: ['/pic'] },
+      getBreadcrumbs: () => '',
+      type: 'nugget'
+    }
+    const longBody = '# Title\n\n' + 'content '.repeat(50)
+    const outboundNugget = {
+      document: { _key: 'o1', type: 'nugget', label: 'Outbound', body: longBody, paths: ['/out'] },
+      body: longBody,
+      getBreadcrumbs: () => '',
+      type: 'nugget'
+    }
+
+    catalog.allNuggets = { m1: mediaNugget, o1: outboundNugget }
+
+    const mediaMdx = catalog.getMdx(mediaNugget, { slug: '/pic' })
+    expect(mediaMdx).to.include('![Pic](m1)')
+
+    const outboundMdx = catalog.getMdx(outboundNugget, { slug: '/out', direction: 'outbound' })
+    const bodySection = outboundMdx.split('<NuggetBody>')[1].split('</NuggetBody>')[0]
+    expect(bodySection.length).to.be.lessThan(longBody.length)
+  })
+
+  it('truncateMd reduces markdown length', function () {
+    const text = 'This is a long body '.repeat(20)
+    const truncated = NuggetCatalog.truncateMd(text, 50)
+    expect(truncated.length).to.be.at.most(55)
   })
 })
