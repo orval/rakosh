@@ -192,4 +192,54 @@ describe('NuggetCatalog class', function () {
 
     expect(primarySlugs).to.deep.equal(['/passage-one'])
   })
+
+  it('getAllMdx returns mdx strings for all nuggets', async function () {
+    const vertices = [
+      { _key: 'adit', _id: 'passage/adit', label: 'Adit', type: 'passage', fspath: 'adit.md', body: '# Adit', paths: ['/'] },
+      { _key: 'p1', _id: 'passage/p1', label: 'Pass One', shortlabel: 'Pass One', type: 'passage', passage: 'p1', fspath: 'p1.md', body: '# Pass One', paths: ['/pass-one'] },
+      { _key: 'n1', _id: 'nugget/n1', label: 'Nug One', shortlabel: 'Nug One', type: 'nugget', fspath: 'p1/n1.md', body: '## Body', paths: ['/pass-one/n1'] }
+    ]
+    const paths = ['adit|p1', 'adit|p1|n1']
+
+    class FakeDb {
+      constructor (v, p) { this.vertices = v; this.paths = p }
+      async query (q) {
+        const queryText = (typeof q === 'string') ? q : (q.query || '')
+        if (queryText.includes('RETURN v')) return this.#cursor(this.vertices)
+        if (queryText.includes('RETURN { keys')) return this.#cursor(this.paths.map(keys => ({ keys })))
+        if (queryText.includes('RETURN REVERSE')) {
+          const match = queryText.match(/INBOUND\\s+([^\\s]+)/)
+          const targetId = match ? match[1].replace(/"/g, '') : ''
+          const path = [
+            { _id: 'passage/adit', label: 'Adit', shortlabel: 'Adit', _key: 'adit' }
+          ]
+          if (targetId !== 'passage/adit') {
+            path.push({ _id: targetId, label: 'Pass One', shortlabel: 'Pass One', _key: targetId.split('/')[1] })
+          }
+          return this.#cursor([path])
+        }
+        if (queryText.includes('RETURN { v, e }')) return this.#cursor([])
+        return { async forEach () {}, async * [Symbol.asyncIterator] () {} }
+      }
+
+      #cursor (items) {
+        return {
+          async forEach (fn) { for (const i of items) fn(i) },
+          async * [Symbol.asyncIterator] () { for (const i of items) { yield i } }
+        }
+      }
+    }
+
+    const db = new FakeDb(vertices, paths)
+    const catalog = new NuggetCatalog(db, [], [], true)
+    await catalog.init()
+
+    const mdx = await catalog.getAllMdx()
+    expect(mdx).to.have.length(3)
+    const rendered = mdx.map(([n, m]) => m).join('\n')
+    expect(rendered).to.include('slug: /pass-one')
+    expect(rendered).to.include('Pass One')
+    expect(rendered).to.include('Nug One')
+    expect(rendered).to.include('<NuggetArea>')
+  })
 })
