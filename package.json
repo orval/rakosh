@@ -80,7 +80,8 @@
     "fsadd": "./cli/main.js fs -v add",
     "fslint": "./cli/main.js fs -v lint",
     "test": "NODE_NO_WARNINGS=1 mocha --loader=testdouble",
-    "test:cov": "NODE_NO_WARNINGS=1 c8 mocha --loader=testdouble && c8 report --reporter=text-lcov > coverage/lcov.info"
+    "test:cov": "NODE_NO_WARNINGS=1 c8 mocha --loader=testdouble && c8 report --reporter=text-lcov > coverage/lcov.info",
+    "test:cov:one": "NODE_NO_WARNINGS=1 c8 mocha --loader=testdouble"
   },
   "packageManager": "yarn@4.9.2"
 }
