@@ -149,4 +149,47 @@ describe('NuggetCatalog class', function () {
     const truncated = NuggetCatalog.truncateMd(text, 50)
     expect(truncated.length).to.be.at.most(55)
   })
+
+  it('getAllNuggets collects primary slugs without duplicates', async function () {
+    const vertices = [
+      { _key: 'adit', label: 'Adit', type: 'passage', fspath: 'adit.md', body: '# Adit', paths: ['/'] },
+      { _key: 'pass1', label: 'Passage One', shortlabel: 'Passage One', type: 'passage', passage: 'pass1', fspath: 'pass1.md', body: '# Passage One', paths: ['/passage-one'] },
+      { _key: 'nug1', label: 'Nugget One', shortlabel: 'Nugget One', type: 'nugget', fspath: 'pass1/nug1.md', body: '## Nugget Body', paths: ['/nugget-one'] }
+    ]
+    const paths = ['adit|pass1', 'adit|pass1|nug1']
+
+    class FakeDb {
+      constructor (v, p) { this.vertices = v; this.paths = p }
+      async query (q) {
+        const queryText = (typeof q === 'string') ? q : (q.query || '')
+        if (queryText.includes('RETURN v')) return this.#cursor(this.vertices)
+        if (queryText.includes('RETURN { keys')) return this.#cursor(this.paths.map(keys => ({ keys })))
+        if (queryText.includes('RETURN REVERSE')) {
+          return this.#cursor([[{ _id: 'passage/adit', label: 'Adit', _key: 'adit' }, { _id: 'passage/pass1', label: 'Passage One', shortlabel: 'Passage One', _key: 'pass1' }]])
+        }
+        return {
+          async forEach () {},
+          [Symbol.asyncIterator]: async function * () {}
+        }
+      }
+
+      #cursor (items) {
+        return {
+          async forEach (fn) {
+            for (const i of items) fn(i)
+          },
+          async * [Symbol.asyncIterator] () { for (const i of items) { yield i } }
+        }
+      }
+    }
+
+    const db = new FakeDb(vertices, paths)
+    const catalog = new NuggetCatalog(db)
+    await catalog.init()
+
+    const slugs = await catalog.getAllNuggets()
+    const primarySlugs = slugs.map(([_, slug]) => slug)
+
+    expect(primarySlugs).to.deep.equal(['/passage-one'])
+  })
 })
