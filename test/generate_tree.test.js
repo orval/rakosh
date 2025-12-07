@@ -4,6 +4,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { expect } from 'chai'
+import log from 'loglevel'
 import slugify from 'slugify'
 
 import { generateTree } from '../cli/extract/tree/generateTree.js'
@@ -133,6 +134,12 @@ function makeStubCatalog () {
 }
 
 describe('generateTree output', function () {
+  this.slow(600)
+
+  before(function () {
+    log.setLevel('error')
+  })
+
   it('contains all markdown bodies from the source fsLayout', async function () {
     const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
     const fixtureDir = join(repoRoot, 'examples', 'my-mine')
@@ -178,6 +185,12 @@ describe('generateTree output', function () {
 })
 
 describe('generateTree seams', function () {
+  this.slow(600)
+
+  before(function () {
+    log.setLevel('error')
+  })
+
   it('collates seam nuggets into a single markdown file', async function () {
     const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
     const fixtureDir = join(repoRoot, 'examples', 'my-mine')
