@@ -1,6 +1,6 @@
 'use strict'
 const exclude = {
-  description: 'Exclude nuggets with these "[key:value]" pairs; only word chars are allowed',
+  description: 'Exclude nuggets with these "[key:value]" pairs; use "*" as value to match presence; only word chars are allowed',
   alias: 'e',
   string: true,
   coerce: exc => {
@@ -9,7 +9,7 @@ const exclude = {
     }
     const excludes = []
     exc.split(',').forEach(p => {
-      const match = p.match(/^([\w]+):([\w\- ]+)$/)
+      const match = p.match(/^([\w]+):([\w\- ]+|\*)$/)
       if (!match) throw new Error(`exclude [${p}] is not a valid key or value format`)
       excludes.push({ key: match[1], value: getValue(match[2]) })
     })

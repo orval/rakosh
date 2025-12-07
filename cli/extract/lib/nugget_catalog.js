@@ -48,9 +48,15 @@ export class NuggetCatalog {
 
     if (excludes.length > 0) {
       this.filters.push(join(
-        excludes.map((e, index) => (index === 0)
-          ? aql`FILTER v.${e.key} != ${e.value}`
-          : aql`v.${e.key} != ${e.value}`)
+        excludes.map((e, index) => {
+          const existsFilter = (index === 0)
+            ? aql`FILTER !HAS(v, ${e.key})`
+            : aql`!HAS(v, ${e.key})`
+          const inequalityFilter = (index === 0)
+            ? aql`FILTER v.${e.key} != ${e.value}`
+            : aql`v.${e.key} != ${e.value}`
+          return (e.value === '*') ? existsFilter : inequalityFilter
+        })
         , ' AND '))
     }
   }

@@ -39,7 +39,5 @@ describe('include function', () => {
         { key: 'key1', value: '*' }
       ])
     })
-
-    // Additional test cases...
   })
 })
