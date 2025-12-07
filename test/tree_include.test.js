@@ -14,7 +14,7 @@ describe('genTree with include wildcard', function () {
       { _key: 'adit', label: 'Adit', type: 'passage', fspath: 'adit.md', body: '# Adit' },
       { _key: 'msl', label: 'My Second Lode', type: 'passage', passage: 'msl', fspath: 'msl.md', body: '# My Second Lode' },
       { _key: 'foo', label: 'Foo', type: 'passage', passage: 'foo', fspath: 'foo.md', body: '# Foo' },
-      { _key: 'guide', label: 'guide', type: 'passage', passage: 'guide', fspath: 'guide.md', body: '# Guide Content', guide: true },
+      { _key: 'guide', label: 'guide', type: 'passage', passage: 'guide', fspath: 'guide.md', body: '### guide', guide: true },
       { _key: 'bali', label: 'Bali', type: 'passage', passage: 'bali', fspath: 'bali.md', body: '# Bali', guide: 'bali-90' },
       {
         _key: 'flea-90',
@@ -62,7 +62,7 @@ describe('genTree with include wildcard', function () {
       const guidePath = join(outDir, slugify('My Second Lode'), slugify('Foo'), 'guide', 'guide.md')
       expect(statSync(guidePath).isFile()).to.equal(true)
       const content = readFileSync(guidePath, 'utf8')
-      expect(content).to.include('# Guide Content')
+      expect(content).to.include('### guide')
 
       // also ensure nested flea guide content is emitted
       const files = []
