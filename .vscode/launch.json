@@ -18,6 +18,8 @@
         "my-mine",
         "treeout",
         "-v",
+        "-i",
+        "guide:*",
         // "--treedebug"
       ]
     },

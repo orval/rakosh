@@ -69,7 +69,7 @@
     "devext": "./cli/main.js gatsby my-mine examples/my-mine/cust-dev.json heap --no-build -v -m 3",
     "devpdf": "./cli/main.js pdf my-mine -v",
     "devhtm": "./cli/main.js html my-mine -v",
-    "devtre": "./cli/main.js tree my-mine treeout -v",
+    "devtre": "./cli/main.js tree my-mine treeout -v -i 'guide:*'",
     "devslk": "./cli/main.js slack my-mine -v",
     "docdep": "./cli/main.js deposit docs -r -v",
     "docext": "./cli/main.js gatsby docs docs/cust-dev.json heap --no-build -v",
