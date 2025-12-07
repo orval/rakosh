@@ -59,9 +59,30 @@ describe('FsLayout', function () {
   })
 
   it('builds tree from sample mine and sets adit root', function () {
+    this.slow(1000)
     const here = dirname(fileURLToPath(import.meta.url))
     const layout = new FsLayout(join(here, '..', 'examples', 'my-mine'))
     expect(layout.root.model._key).to.equal('adit')
     expect(layout.size()).to.be.greaterThan(5)
+  })
+
+  it('uses child tags when creating a new nugget', function () {
+    const dir = mkdtempSync(join(tmpdir(), 'fs-layout-tags-'))
+    const layout = new FsLayout(dir)
+
+    // simulate existing children with extra tags and order
+    layout.root.model.children = [
+      { type: 'nugget', label: 'One', topic: 'a', order: 1 },
+      { type: 'nugget', label: 'Two', topic: 'b', order: 2, custom: 'x' },
+      { type: 'nugget', label: 'Three', topic: 'a' }
+    ]
+
+    const nuggetPath = join(dir, 'new.md')
+    layout.addNugget(nuggetPath, 'New Title')
+
+    const content = readFileSync(nuggetPath, 'utf8')
+    expect(content).to.match(/topic: a, b/)
+    expect(content).to.match(/custom: x/)
+    expect(content).to.match(/order: 3/)
   })
 })
