@@ -66,7 +66,7 @@ export class Nugget {
     const label = (match && match.length > 0) ? match[0].replace(/^[#\s]*/, '') : this.body.replace(/^\s*/, '')
 
     // limit to 25 characters long
-    return (label.length > 25) ? label.slice(0, 24).concat('…') : label
+    return (label.length > 25) ? label.slice(0, 25) : label
   }
 
   static fromMdFile (relativePath) {

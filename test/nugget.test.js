@@ -36,7 +36,7 @@ describe('Nugget', function () {
       const attributes = { _key: '123', fspath: 'path/to/file' }
       const body = '# this is a very long body that should be trimmed'
       const nugget = new Nugget(attributes, body)
-      expect(nugget.getLabel()).to.equal('this is a very long body…')
+      expect(nugget.getLabel()).to.equal('this is a very long body ')
     })
   })
 
