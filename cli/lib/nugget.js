@@ -61,10 +61,11 @@ export class Nugget {
     if (!this.body) return this._key
 
     const match = this.body.match(/^(#+)\s(.+)$/gm)
-    if (match) return match[0].replace(/^[#\s]*/, '')
 
-    // trim any preceeding white space and limit to 25 characters long
-    const label = this.body.replace(/^\s*/, '')
+    // use first markdown heading as label if present
+    const label = (match && match.length > 0) ? match[0].replace(/^[#\s]*/, '') : this.body.replace(/^\s*/, '')
+
+    // limit to 25 characters long
     return (label.length > 25) ? label.slice(0, 24).concat('…') : label
   }
 
