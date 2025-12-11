@@ -166,6 +166,9 @@ describe('generateTree output', function () {
     treeRoot.walk(node => {
       const nugget = catalog.fromNode(node)
       if ('page' in nugget) {
+        const trimmed = nugget.page.trim()
+        // skip heading-only pages (these are no longer written)
+        if (/^#+\s+\S+\s*$/.test(trimmed)) return
         expectedPages.push(normalize(nugget.page))
       }
     })
