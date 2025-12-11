@@ -126,10 +126,6 @@ export class Nugget {
     this.pageRefs[key] = 1
   }
 
-  inChunk () {
-    return Object.keys(this.pageRefs).length > 0
-  }
-
   isHidden () {
     return ('__hidden' in this && this.__hidden)
   }
