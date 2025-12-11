@@ -20,7 +20,7 @@ describe('Nugget', function () {
     })
 
     it('should throw an error if the media type is unknown', () => {
-      expect(() => new Nugget({ ...base, __media: { type: 'foo', path: 'x'} })).to.throw(Error, 'Unknown media type')
+      expect(() => new Nugget({ ...base, __media: { type: 'foo', path: 'x' } })).to.throw(Error, 'Unknown media type')
     })
   })
 

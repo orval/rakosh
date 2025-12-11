@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, statSync, readdirSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -58,9 +58,6 @@ describe('genTree with include wildcard', function () {
     const outDir = mkdtempSync(join(tmpdir(), 'rakosh-tree-include-'))
     try {
       await genTree(new FakeDb(), { include: [{ key: 'guide', value: '*' }], exclude: [], directory: outDir })
-
-      // const guideDir = join(outDir, slugify('My Second Lode'), slugify('Foo'), 'guide')
-      // expect(statSync(guideDir).isDirectory()).to.equal(true)
 
       // ensure nested flea guide content is emitted
       const files = []
