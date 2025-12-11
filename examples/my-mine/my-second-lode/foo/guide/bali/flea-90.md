@@ -1,6 +1,7 @@
 ---
 _key: 37e25500-ab3d-4a66-b2c8-391592120957
 guide: bali-90
+label: FLEA-90
 nuggets:
   - 4a902f18-7115-4f01-8ba5-803c8512538a
 ---
