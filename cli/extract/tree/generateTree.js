@@ -15,6 +15,7 @@ function materializeDir (dir) {
   try {
     const dirStat = statSync(dir)
     if (!dirStat.isDirectory()) throw new Error(`${dir} is not a directory`)
+    log.info(`found directory ${dir}`)
   } catch (err) {
     if (err.code === 'ENOENT') {
       mkdirSync(dir, { recursive: true })
@@ -35,6 +36,13 @@ function makeMdFile (dir, nugget, slug) {
   if (!markdown) {
     return ret
   }
+
+  // skip content that only has a bare heading
+  const trimmed = markdown.trim()
+  if (/^#+\s+\S+\s*$/.test(trimmed)) {
+    return ret
+  }
+
   materializeDir(dir)
   const writeTo = join(dir, `${slug}.md`)
   log.info(`writing markdown file ${writeTo}`)
