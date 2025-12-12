@@ -43,10 +43,12 @@ function makeMdFile (dir, nugget, slug) {
     return ret
   }
 
+  const normalised = normaliseHeadings(trimmed)
+
   materializeDir(dir)
   const writeTo = join(dir, `${slug}.md`)
   log.info(`writing markdown file ${writeTo}`)
-  writeFileSync(writeTo, markdown)
+  writeFileSync(writeTo, normalised)
   return dir
 }
 
@@ -93,4 +95,27 @@ async function processNodes (catalog, rootDir, nodes, slugMap) {
   }, Promise.resolve())
 
   await processNodes(catalog, rootDir, children, slugMap)
+}
+
+// reduce all headings so the minimum level becomes H1
+function normaliseHeadings (markdown) {
+  const lines = markdown.split('\n')
+  const depths = lines
+    .map(l => l.match(/^(#{1,6})\s+/))
+    .filter(Boolean)
+    .map(m => m[1].length)
+
+  if (depths.length === 0) return markdown
+
+  const shift = Math.min(...depths) - 1
+  let firstHeadingSeen = false
+
+  return lines.map(line => {
+    const m = line.match(/^(#{1,6})\s+(.*)/)
+    if (!m) return line
+    const base = Math.max(1, m[1].length - (shift > 0 ? shift : 0))
+    const level = firstHeadingSeen ? Math.min(6, base + 1) : base
+    firstHeadingSeen = true
+    return `${'#'.repeat(level)} ${m[2]}`
+  }).join('\n')
 }
