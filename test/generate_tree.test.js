@@ -10,6 +10,7 @@ import slugify from 'slugify'
 import { generateTree } from '../cli/extract/tree/generateTree.js'
 import { NuggetCatalog } from '../cli/extract/lib/nugget_catalog.js'
 import { FsLayout } from '../cli/lib/fs_layout.js'
+import { Nugget } from '../cli/lib/nugget.js'
 
 class FakeDb {
   constructor (vertices, paths) {
@@ -127,7 +128,7 @@ function makeStubCatalog () {
         getLabel: () => model.label || model._key,
         page: model.page,
         body: model.body,
-        type: model.type
+        type: model.type || Nugget.NUGGET
       }
     }
   }
@@ -252,7 +253,7 @@ describe('generateTree edge cases', function () {
   it('skips writing when markdown is missing and falls back to slugify when absent from the map', async function () {
     const catalog = makeStubCatalog()
     const phantomRoot = makeStubNode({ key: 'phantom', label: 'Phantom ancestor' })
-    const root = makeStubNode({ key: 'root', label: 'Root page', page: '' })
+    const root = makeStubNode({ key: 'root', label: 'Root page', page: '', type: Nugget.PASSAGE })
     root.parent = phantomRoot
 
     const outDir = mkdtempSync(join(tmpdir(), 'rakosh-tree-'))
@@ -267,20 +268,15 @@ describe('generateTree edge cases', function () {
   it('throws when an output directory is blocked by an existing file', async function () {
     const catalog = makeStubCatalog()
     const phantomRoot = makeStubNode({ key: 'phantom', label: 'Phantom ancestor' })
-    const root = makeStubNode({ key: 'root', label: 'Root page', page: '' })
-    const child = makeStubNode({ key: 'child', label: 'Child page', page: '# child page' })
+    const root = makeStubNode({ key: 'root', label: 'Root page', page: '', type: Nugget.PASSAGE })
+    const child = makeStubNode({ key: 'child', label: 'Child page', page: '# child page', type: Nugget.PASSAGE })
 
     root.parent = phantomRoot
     child.parent = root
     root.children.push(child)
 
     const outDir = mkdtempSync(join(tmpdir(), 'rakosh-tree-'))
-    const conflictPath = join(
-      outDir,
-      slugify(root.model.label),
-      slugify(child.model.label)
-    )
-    mkdirSync(join(outDir, slugify(root.model.label)), { recursive: true })
+    const conflictPath = join(outDir, slugify(child.model.label))
     writeFileSync(conflictPath, 'not a directory')
 
     let error
@@ -294,5 +290,38 @@ describe('generateTree edge cases', function () {
 
     expect(error).to.be.an('error')
     expect(error.message).to.match(/not a directory/)
+  })
+
+  it('only creates directories for passage nodes when writing files', async function () {
+    const catalog = makeStubCatalog()
+    const root = makeStubNode({ key: 'root', label: 'Root passage', page: '# root\nroot body', type: Nugget.PASSAGE })
+    const passage = makeStubNode({ key: 'passage', label: 'Child Passage', page: '# child\nchild body', type: Nugget.PASSAGE })
+    const mid = makeStubNode({ key: 'mid', label: 'Mid Nugget', page: '# mid\nmid body' })
+    const leaf = makeStubNode({ key: 'leaf', label: 'Leaf Nugget', page: '# leaf\nleaf body' })
+
+    passage.parent = root
+    root.children.push(passage)
+
+    mid.parent = passage
+    passage.children.push(mid)
+
+    leaf.parent = mid
+    mid.children.push(leaf)
+
+    const outDir = mkdtempSync(join(tmpdir(), 'rakosh-tree-'))
+    try {
+      await generateTree(root, catalog, outDir)
+      const paths = collectMarkdownWithPaths(outDir).map(f => f.path).sort()
+      const expected = [
+        `${slugify(root.model.label)}.md`,
+        `${slugify(passage.model.label)}/${slugify(passage.model.label)}.md`,
+        `${slugify(passage.model.label)}/${slugify(mid.model.label)}.md`,
+        `${slugify(passage.model.label)}/${slugify(leaf.model.label)}.md`
+      ].sort()
+
+      expect(paths).to.deep.equal(expected)
+    } finally {
+      rmSync(outDir, { recursive: true, force: true })
+    }
   })
 })

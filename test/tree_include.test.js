@@ -74,7 +74,7 @@ describe('genTree with include wildcard', function () {
       const flea = files.find(f => f.content.includes('Badger-Approved Floop Functions'))
       expect(flea, 'flea-90 nugget not found').to.not.equal(undefined)
       const fleaSlug = slugify('FLEA-90: Bali Directory Insert - Badger Approved Floops')
-      const expectedFleaPath = join(outDir, slugify('My Second Lode'), slugify('Foo'), 'guide', slugify('Bali'), fleaSlug, `${fleaSlug}.md`)
+      const expectedFleaPath = join(outDir, slugify('My Second Lode'), slugify('Foo'), 'guide', slugify('Bali'), `${fleaSlug}.md`)
       expect(flea.path).to.equal(expectedFleaPath)
     } finally {
       rmSync(outDir, { recursive: true, force: true })

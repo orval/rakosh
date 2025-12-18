@@ -5,6 +5,8 @@ import { join } from 'node:path'
 import log from 'loglevel'
 import slugify from 'slugify'
 
+import { Nugget } from '../../lib/nugget.js'
+
 export async function generateTree (root, catalog, directory) {
   const start = [{ node: root }]
   const slugMap = new Map()
@@ -77,6 +79,7 @@ async function processNodes (catalog, rootDir, nodes, slugMap) {
 
         if ('page' in nugget) {
           const path = ent.node.getPath()
+            .filter(p => catalog.fromNode(p).type === Nugget.PASSAGE)
             .map(p => getSlug(p, catalog, slugMap))
             .slice(1)
             .join('/')
