@@ -30,4 +30,223 @@ describe('NuggetCatalog class', function () {
     // eslint-disable-next-line no-unused-expressions
     expect(catalog.initialised).to.be.true
   })
+
+  it('creates HAS filter when include value is a wildcard', function () {
+    const includes = [{ key: 'key1', value: '*' }, { key: 'key2', value: 'foo' }]
+    const catalog = new NuggetCatalog(dbMock, includes)
+
+    expect(catalog.filters).to.have.lengthOf(1)
+    const { query, bindVars } = catalog.filters[0]
+    expect(query).to.include('FILTER HAS(v, @value0)')
+    expect(query).to.include('OR v.@value1 == @value2')
+    expect(query).to.not.include('v.@value0 ==')
+    expect(bindVars).to.include({ value0: 'key1', value1: 'key2', value2: 'foo' })
+  })
+
+  it('builds include/exclude filters when values are explicit', function () {
+    const includes = [{ key: 'key1', value: 'foo' }]
+    const excludes = [{ key: 'key2', value: 'bar' }]
+    const catalog = new NuggetCatalog(dbMock, includes, excludes)
+
+    expect(catalog.filters).to.have.lengthOf(2)
+    const [inc, exc] = catalog.filters
+    expect(inc.query).to.include('FILTER v.')
+    expect(exc.query).to.include('FILTER v.')
+    expect(inc.bindVars.value0).to.equal('key1')
+    expect(inc.bindVars.value1).to.equal('foo')
+    expect(exc.bindVars.value0).to.equal('key2')
+    expect(exc.bindVars.value1).to.equal('bar')
+  })
+
+  it('paginates nuggets into ordered markdown pages', async function () {
+    const vertices = [
+      { _key: 'adit', label: 'Adit', type: 'passage', fspath: 'adit.md', body: '# Adit' },
+      { _key: 'pass1', label: 'Passage One', type: 'passage', passage: 'pass1', fspath: 'pass1.md', body: '# Passage One' },
+      { _key: 'nug1', label: 'Nugget One', type: 'nugget', fspath: 'pass1/nug1.md', body: '## Nugget Body' }
+    ]
+    const paths = ['adit|pass1', 'adit|pass1|nug1']
+
+    // simple FakeDb with path-based responses
+    class FakeDb {
+      constructor (v, p) { this.vertices = v; this.paths = p }
+      async query (q) {
+        const queryText = (typeof q === 'string') ? q : (q.query || '')
+        if (queryText.includes('RETURN v')) return this.#cursor(this.vertices)
+        if (queryText.includes('RETURN { keys')) return this.#cursor(this.paths.map(keys => ({ keys })))
+        throw new Error(`Unexpected query: ${queryText}`)
+      }
+
+      #cursor (items) {
+        return { async * [Symbol.asyncIterator] () { for (const i of items) { yield i } } }
+      }
+    }
+
+    const db = new FakeDb(vertices, paths)
+    const catalog = new NuggetCatalog(db, [], [], true)
+    await catalog.init()
+
+    const [pages, refs] = await catalog.getSeamNuggetMarkdown()
+
+    expect(pages).to.have.length(2)
+    expect(pages[0]).to.include('# Adit')
+    expect(pages[1]).to.include('# Passage One')
+    expect(pages[1]).to.include('## Nugget Body')
+    expect(refs).to.deep.equal({})
+    expect(catalog.embedImages).to.equal(true)
+  })
+
+  it('getMdx renders attributes and body content', function () {
+    const catalog = new NuggetCatalog({}, [], [], false)
+
+    const nugget = {
+      document: { _key: 'n1', type: 'nugget', label: 'Label One', body: '# Heading', paths: ['/foo'] },
+      body: '# Heading',
+      getBreadcrumbs: () => '<Breadcrumbs />',
+      type: 'nugget'
+    }
+    catalog.allNuggets = { n1: nugget }
+
+    const mdx = catalog.getMdx(nugget, { slug: '/foo' })
+
+    expect(mdx).to.include('<Nugget slug="/foo"')
+    expect(mdx).to.include('_key="n1"')
+    expect(mdx).to.include('type="nugget"')
+    expect(mdx).to.include('paths="/foo"')
+    expect(mdx).to.include('<NuggetBody>')
+    expect(mdx).to.include('# Heading')
+    expect(mdx).to.include('<Breadcrumbs />')
+    expect(mdx).to.include('</Nugget>')
+  })
+
+  it('getMdx handles media and truncates outbound bodies', function () {
+    const catalog = new NuggetCatalog({}, [], [], false)
+
+    const mediaNugget = {
+      document: { _key: 'm1', type: 'nugget', label: 'Pic', body: '', __media: true, paths: ['/pic'] },
+      getBreadcrumbs: () => '',
+      type: 'nugget'
+    }
+    const longBody = '# Title\n\n' + 'content '.repeat(50)
+    const outboundNugget = {
+      document: { _key: 'o1', type: 'nugget', label: 'Outbound', body: longBody, paths: ['/out'] },
+      body: longBody,
+      getBreadcrumbs: () => '',
+      type: 'nugget'
+    }
+
+    catalog.allNuggets = { m1: mediaNugget, o1: outboundNugget }
+
+    const mediaMdx = catalog.getMdx(mediaNugget, { slug: '/pic' })
+    expect(mediaMdx).to.include('![Pic](m1)')
+
+    const outboundMdx = catalog.getMdx(outboundNugget, { slug: '/out', direction: 'outbound' })
+    const bodySection = outboundMdx.split('<NuggetBody>')[1].split('</NuggetBody>')[0]
+    expect(bodySection.length).to.be.lessThan(longBody.length)
+  })
+
+  it('truncateMd reduces markdown length', function () {
+    const text = 'This is a long body '.repeat(20)
+    const truncated = NuggetCatalog.truncateMd(text, 50)
+    expect(truncated.length).to.be.at.most(55)
+  })
+
+  it('getAllNuggets collects primary slugs without duplicates', async function () {
+    const vertices = [
+      { _key: 'adit', label: 'Adit', type: 'passage', fspath: 'adit.md', body: '# Adit', paths: ['/'] },
+      { _key: 'pass1', label: 'Passage One', shortlabel: 'Passage One', type: 'passage', passage: 'pass1', fspath: 'pass1.md', body: '# Passage One', paths: ['/passage-one'] },
+      { _key: 'nug1', label: 'Nugget One', shortlabel: 'Nugget One', type: 'nugget', fspath: 'pass1/nug1.md', body: '## Nugget Body', paths: ['/nugget-one'] }
+    ]
+    const paths = ['adit|pass1', 'adit|pass1|nug1']
+
+    class FakeDb {
+      constructor (v, p) { this.vertices = v; this.paths = p }
+      async query (q) {
+        const queryText = (typeof q === 'string') ? q : (q.query || '')
+        if (queryText.includes('RETURN v')) return this.#cursor(this.vertices)
+        if (queryText.includes('RETURN { keys')) return this.#cursor(this.paths.map(keys => ({ keys })))
+        if (queryText.includes('RETURN REVERSE')) {
+          return this.#cursor([[{ _id: 'passage/adit', label: 'Adit', _key: 'adit' }, { _id: 'passage/pass1', label: 'Passage One', shortlabel: 'Passage One', _key: 'pass1' }]])
+        }
+        return {
+          async forEach () {},
+          [Symbol.asyncIterator]: async function * () {}
+        }
+      }
+
+      #cursor (items) {
+        return {
+          async forEach (fn) {
+            for (const i of items) fn(i)
+          },
+          async * [Symbol.asyncIterator] () { for (const i of items) { yield i } }
+        }
+      }
+    }
+
+    const db = new FakeDb(vertices, paths)
+    const catalog = new NuggetCatalog(db)
+    await catalog.init()
+
+    const slugs = await catalog.getAllNuggets()
+    const primarySlugs = slugs.map(([_, slug]) => slug)
+
+    expect(primarySlugs).to.deep.equal(['/passage-one'])
+  })
+
+  it('getAllMdx returns mdx strings for all nuggets', async function () {
+    const vertices = [
+      { _key: 'adit', _id: 'passage/adit', label: 'Adit', type: 'passage', fspath: 'adit.md', body: '# Adit', paths: ['/'] },
+      { _key: 'p1', _id: 'passage/p1', label: 'Pass One', shortlabel: 'Pass One', type: 'passage', passage: 'p1', fspath: 'p1.md', body: '# Pass One', paths: ['/pass-one'], nuggets: ['n1'] },
+      { _key: 'n1', _id: 'nugget/n1', label: 'Nug One', shortlabel: 'Nug One', type: 'nugget', fspath: 'p1/n1.md', body: '## Body', paths: ['/pass-one/n1'] },
+      { _key: 'out1', _id: 'nugget/out1', label: 'Out One', shortlabel: 'Out One', type: 'nugget', fspath: 'p1/out1.md', body: '## Outbound', paths: ['/pass-one/out1'] }
+    ]
+    const paths = ['adit|p1', 'adit|p1|n1', 'adit|p1|out1']
+
+    class FakeDb {
+      constructor (v, p) { this.vertices = v; this.paths = p }
+      async query (q) {
+        const queryText = (typeof q === 'string') ? q : (q.query || '')
+        if (queryText.includes('RETURN v')) return this.#cursor(this.vertices)
+        if (queryText.includes('RETURN { keys')) return this.#cursor(this.paths.map(keys => ({ keys })))
+        if (queryText.includes('RETURN REVERSE')) {
+          const match = queryText.match(/INBOUND\\s+([^\\s]+)/)
+          const targetId = match ? match[1].replace(/"/g, '') : ''
+          const path = [
+            { _id: 'passage/adit', label: 'Adit', shortlabel: 'Adit', _key: 'adit' }
+          ]
+          if (targetId !== 'passage/adit') {
+            path.push({ _id: targetId, label: 'Pass One', shortlabel: 'Pass One', _key: targetId.split('/')[1] })
+          }
+          return this.#cursor([path])
+        }
+        if (queryText.includes('RETURN { v, e }')) {
+          return this.#cursor([
+            { v: { _id: 'nugget/out1' }, e: { _from: 'nugget/n1', _to: 'nugget/out1' } }
+          ])
+        }
+        return { async forEach () {}, async * [Symbol.asyncIterator] () {} }
+      }
+
+      #cursor (items) {
+        return {
+          async forEach (fn) { for (const i of items) fn(i) },
+          async * [Symbol.asyncIterator] () { for (const i of items) { yield i } }
+        }
+      }
+    }
+
+    const db = new FakeDb(vertices, paths)
+    const catalog = new NuggetCatalog(db, [], [], true)
+    await catalog.init()
+
+    const mdx = await catalog.getAllMdx()
+    expect(mdx).to.have.length(4)
+    const rendered = mdx.map(([n, m]) => m).join('\n')
+    expect(rendered).to.include('slug: /pass-one')
+    expect(rendered).to.include('Pass One')
+    expect(rendered).to.include('Nug One')
+    expect(rendered).to.include('inseam="true"')
+    expect(rendered).to.include('Out One')
+    expect(rendered).to.include('<NuggetArea>')
+  })
 })

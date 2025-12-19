@@ -32,6 +32,12 @@ describe('include function', () => {
       expect(() => include.coerce(input)).to.throw('--include requires key:value pair(s)')
     })
 
-    // Additional test cases...
+    it('should allow wildcard value to match presence of key', () => {
+      const input = 'key1:*'
+      const result = include.coerce(input)
+      expect(result).to.deep.equal([
+        { key: 'key1', value: '*' }
+      ])
+    })
   })
 })

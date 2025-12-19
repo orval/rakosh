@@ -34,17 +34,29 @@ export class NuggetCatalog {
 
     if (includes.length > 0) {
       this.filters.push(join(
-        includes.map((i, index) => (index === 0)
-          ? aql`FILTER v.${i.key} == ${i.value}`
-          : aql`v.${i.key} == ${i.value}`)
+        includes.map((i, index) => {
+          const existsFilter = (index === 0)
+            ? aql`FILTER HAS(v, ${i.key})`
+            : aql`HAS(v, ${i.key})`
+          const equalityFilter = (index === 0)
+            ? aql`FILTER v.${i.key} == ${i.value}`
+            : aql`v.${i.key} == ${i.value}`
+          return (i.value === '*') ? existsFilter : equalityFilter
+        })
         , ' OR '))
     }
 
     if (excludes.length > 0) {
       this.filters.push(join(
-        excludes.map((e, index) => (index === 0)
-          ? aql`FILTER v.${e.key} != ${e.value}`
-          : aql`v.${e.key} != ${e.value}`)
+        excludes.map((e, index) => {
+          const existsFilter = (index === 0)
+            ? aql`FILTER !HAS(v, ${e.key})`
+            : aql`!HAS(v, ${e.key})`
+          const inequalityFilter = (index === 0)
+            ? aql`FILTER v.${e.key} != ${e.value}`
+            : aql`v.${e.key} != ${e.value}`
+          return (e.value === '*') ? existsFilter : inequalityFilter
+        })
         , ' AND '))
     }
   }
@@ -553,7 +565,7 @@ export class NuggetCatalog {
     do {
       const truncated = truncateMarkdown(markdown, {
         limit: truncationLength,
-        ellipsis: true
+        ellipsis: false
       })
 
       const errors = markdownlint.sync({

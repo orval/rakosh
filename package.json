@@ -1,6 +1,6 @@
 {
   "name": "rakosh",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "yet another knowledge base system -- this time with nuggets",
   "author": "Duncan Rance",
   "license": "MIT",
@@ -69,6 +69,7 @@
     "devext": "./cli/main.js gatsby my-mine examples/my-mine/cust-dev.json heap --no-build -v -m 3",
     "devpdf": "./cli/main.js pdf my-mine -v",
     "devhtm": "./cli/main.js html my-mine -v",
+    "devtre": "./cli/main.js tree my-mine treeout -v -i 'guide:*'",
     "devslk": "./cli/main.js slack my-mine -v",
     "docdep": "./cli/main.js deposit docs -r -v",
     "docext": "./cli/main.js gatsby docs docs/cust-dev.json heap --no-build -v",
@@ -79,7 +80,8 @@
     "fsadd": "./cli/main.js fs -v add",
     "fslint": "./cli/main.js fs -v lint",
     "test": "NODE_NO_WARNINGS=1 mocha --loader=testdouble",
-    "test:cov": "NODE_NO_WARNINGS=1 c8 mocha --loader=testdouble && c8 report --reporter=text-lcov > coverage/lcov.info"
+    "test:cov": "NODE_NO_WARNINGS=1 c8 mocha --loader=testdouble && c8 report --reporter=text-lcov > coverage/lcov.info",
+    "test:cov:one": "NODE_NO_WARNINGS=1 c8 mocha --loader=testdouble"
   },
   "packageManager": "yarn@4.9.2"
 }

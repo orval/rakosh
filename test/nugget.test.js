@@ -20,7 +20,7 @@ describe('Nugget', function () {
     })
 
     it('should throw an error if the media type is unknown', () => {
-      expect(() => new Nugget({ ...base, __media: { type: 'foo', path: 'x'} })).to.throw(Error, 'Unknown media type')
+      expect(() => new Nugget({ ...base, __media: { type: 'foo', path: 'x' } })).to.throw(Error, 'Unknown media type')
     })
   })
 
@@ -32,7 +32,12 @@ describe('Nugget', function () {
       expect(nugget.getLabel()).to.equal('Test Label')
     })
 
-    // Add more getLabel tests here
+    it('truncates long body text when no heading is present', function () {
+      const attributes = { _key: '123', fspath: 'path/to/file' }
+      const body = '# this is a very long body that should be trimmed'
+      const nugget = new Nugget(attributes, body)
+      expect(nugget.getLabel()).to.equal('this is a very long body ')
+    })
   })
 
   // Add more test cases for other methods of Nugget class
