@@ -111,14 +111,15 @@ function normaliseHeadings (markdown) {
   if (depths.length === 0) return markdown
 
   const shift = Math.min(...depths) - 1
-  let firstHeadingSeen = false
+  let nuggetIndex = 0
 
   return lines.map(line => {
     const m = line.match(/^(#{1,6})\s+(.*)/)
     if (!m) return line
     const base = Math.max(1, m[1].length - (shift > 0 ? shift : 0))
-    const level = firstHeadingSeen ? Math.min(6, base + 1) : base
-    firstHeadingSeen = true
+    if (base === 1) nuggetIndex += 1
+    const bump = (nuggetIndex > 1) ? 1 : 0
+    const level = Math.min(6, base + bump)
     return `${'#'.repeat(level)} ${m[2]}`
   }).join('\n')
 }
