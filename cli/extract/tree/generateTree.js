@@ -1,5 +1,5 @@
 'use strict'
-import { writeFileSync, mkdirSync, statSync } from 'node:fs'
+import { writeFileSync, mkdirSync, statSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 import log from 'loglevel'
@@ -49,6 +49,9 @@ function makeMdFile (dir, nugget, slug) {
 
   materializeDir(dir)
   const writeTo = join(dir, `${slug}.md`)
+  if (existsSync(writeTo)) {
+    log.warn(`overwriting existing markdown file ${writeTo}`)
+  }
   log.info(`writing markdown file ${writeTo}`)
   writeFileSync(writeTo, normalised)
   return dir
@@ -63,18 +66,13 @@ function getSlug (node, catalog, slugMap) {
 async function processNodes (catalog, rootDir, nodes, slugMap) {
   if (nodes.length === 0) return
 
-  const siblingSlugCounts = {}
-
   // reduce() ensures pages are added in order
   const children = []
   await nodes.reduce((prev, ent) => {
     return prev
       .then(() => {
         const nugget = catalog.fromNode(ent.node)
-        const baseSlug = slugify(nugget.getLabel())
-        const count = (siblingSlugCounts[baseSlug] || 0) + 1
-        siblingSlugCounts[baseSlug] = count
-        const slug = (count === 1) ? baseSlug : `${baseSlug}-${count}`
+        const slug = slugify(nugget.getLabel())
         slugMap.set(ent.node.model._key, slug)
 
         if ('page' in nugget) {
